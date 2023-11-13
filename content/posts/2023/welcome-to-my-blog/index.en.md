@@ -18,97 +18,15 @@ categories: ["blog"]
 hiddenFromHomePage: false
 ---
 
-The `typeit` shortcode provides typing animation based on [TypeIt](https://typeitjs.com/) library.
+## My blog
+Well, here it is; My blog.
+I hope you'll find it useful or even that I can help you out with my content for whatever problem you're facing. If you have any questions or remarks, please let me know.
 
-<!--more-->
+## The content
+You'll may have noticed that I write about both Ops and Dev subjects because, well, I'm JeffOps :wink:
 
-Just insert your content in the `typeit` shortcode and that’s it.
+## Why Dev *and* Ops?
+All kidding aside, in the beginning of my professional career I started as purely Ops but quickly started to automate my own work. But then, at the Microsoft MVP Summit of 2016, I walked into a session (because I had some time to fill) about what was coming in the future version of .NET: Dot NET Core (!!!). This awakened something in me, and I immediately started fiddling around with it. Please keep in mind that I had no .NET experience other than calling some basic .NET classes in PowerShell, so basically no experience whatsoever :wink:.
 
-## 1 Simple Content {#simple-content}
-
-Simple content is allowed in `Markdown` format and **without** rich block content such as images and more...
-
-Example `typeit` input:
-
-```markdown
-{{</* typeit */>}}
-This is a *paragraph* with **typing animation** based on [TypeIt](https://typeitjs.com/)...
-{{</* /typeit */>}}
-```
-
-The rendered output looks like this:
-
-{{< typeit >}}
-This is a *paragraph* with **typing animation** based on [TypeIt](https://typeitjs.com/)...
-{{< /typeit >}}
-
-Alternatively, you can use custom **HTML tags**.
-
-Example `typeit` input with `h4` tag:
-
-```markdown
-{{</* typeit tag=h4 */>}}
-This is a *paragraph* with **typing animation** based on [TypeIt](https://typeitjs.com/)...
-{{</* /typeit */>}}
-```
-
-The rendered output looks like this:
-
-{{< typeit tag=h4 >}}
-This is a *paragraph* with **typing animation** based on [TypeIt](https://typeitjs.com/)...
-{{< /typeit >}}
-
-## 2 Code Content {#code-content}
-
-Code content is allowed and will be highlighted by named parameter `code` for the type of code language.
-
-Example `typeit` input with `code`:
-
-```markdown
-{{</* typeit code=java */>}}
-public class HelloWorld {
-    public static void main(String []args) {
-        System.out.println("Hello World");
-    }
-}
-{{</* /typeit */>}}
-```
-
-The rendered output looks like this:
-
-{{< typeit code=java >}}
-public class HelloWorld {
-    public static void main(String []args) {
-        System.out.println("Hello World");
-    }
-}
-{{< /typeit >}}
-
-## 3 Group Content {#group-content}
-
-All typing animations start at the same time by default.
-But sometimes you may want to start a set of `typeit` contents in order.
-
-A set of `typeit` contents with the same value of named parameter `group` will start typing animation in sequence.
-
-Example `typeit` input with `group`:
-
-```markdown
-{{</* typeit group=paragraph */>}}
-**First** this paragraph begins
-{{</* /typeit */>}}
-
-{{</* typeit group=paragraph */>}}
-**Then** this paragraph begins
-{{</* /typeit */>}}
-```
-
-The rendered output looks like this:
-
-{{< typeit group=paragraph >}}
-**First** this paragraph begins
-{{< /typeit >}}
-
-{{< typeit group=paragraph >}}
-**Then** this paragraph begins
-{{< /typeit >}}
+## The result
+Fast-forward a year or 7 and I've ended up quite proficient in making things do what I want in .NET. I've never followed a class, read and analyzed a LOT of code, copy-pasted and learned from the code of others. I especially want to thank [Nick Chapsas](https://www.youtube.com/@nickchapsas) and [Milan Jovanovic](https://www.youtube.com/@MilanJovanovicTech) for their content because they have helped me a lot wiht their content. There have been many more men and woman that helped me, either in person or by online content, but these two I want to thank in particular. Thanks, all! :blush:

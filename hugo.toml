@@ -42,7 +42,7 @@
     pre = ""
     post = ""
     name = "About"
-    url = "/about/"
+    url = "/posts/2023/welcome-to-my-blog/"
     title = ""
 
 
