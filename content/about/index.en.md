@@ -6,7 +6,11 @@ author: "JeffOps"
 authorLink: "https://jeffwouters.nl"
 description: "About JeffOps"
 lightgallery: true
-
+images: ["/featured-image.png"]
+resources:
+- name: "featured-image"
+  src: "featured-image.jpg"
+lightgallery: true
 math:
   enable: true
 ---
