@@ -13,7 +13,7 @@ resources:
   src: "featured-image.png"
 
 tags: ["introduction"]
-categories: ["blog"]
+categories: ["Blog"]
 
 hiddenFromHomePage: false
 ---

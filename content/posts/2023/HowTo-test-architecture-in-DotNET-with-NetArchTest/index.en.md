@@ -1,19 +1,19 @@
 ---
 weight: 10
-title: "How to Test Architecture in .NET with NetArchTest"
+title: "HowTo test Architecture in .NET with NetArchTest"
 date: 2023-11-13T00:00:01+08:00
 lastmod: 2023-11-13T00:00:01+08:00
 draft: false
 author: "JeffOps"
 authorLink: "https://jeffwouters.nl"
-description: "How to Test Architecture in .NET with NetArchTest"
+description: "HowTo test Architecture in .NET with NetArchTest"
 images: []
 resources:
 - name: "featured-image"
   src: "featured-image.jpg"
 
 tags: ["DotNET","NetArchTest"]
-categories: ["blog"]
+categories: ["Dev"]
 
 hiddenFromHomePage: false
 ---
