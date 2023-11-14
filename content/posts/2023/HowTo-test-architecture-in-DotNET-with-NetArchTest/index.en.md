@@ -5,14 +5,14 @@ date: 2023-11-13T00:00:01+08:00
 lastmod: 2023-11-13T00:00:01+08:00
 draft: false
 author: "JeffOps"
-authorLink: "https://jeffops.com"
+authorLink: "https://jeffwouters.nl"
 description: "How to Test Architecture in .NET with NetArchTest"
 images: []
 resources:
 - name: "featured-image"
   src: "featured-image.jpg"
 
-tags: ["introduction"]
+tags: ["DotNET","NetArchTest"]
 categories: ["blog"]
 
 hiddenFromHomePage: false
