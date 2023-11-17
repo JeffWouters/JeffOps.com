@@ -15,20 +15,15 @@ math:
   enable: true
 ---
 
-# My blog
-Well, here it is; My blog. I hope you’ll find it useful or even that I can help you out with my content for whatever problem you’re facing. If you have any questions or remarks, please let me know.
+# This Blog
+Welcome to my blog. I hope you’ll find it useful, and hopefully my content can help you with whatever problem you’re facing. Should you have any questions or remarks, don’t hesitate to contact me. 
 
-Just to give you a fair warning: I tend to be very direct, politically incorrect and sometimes people feel that I'm downright rude. However, with only very few exceptions, I never do this with the intention to harm or hurt anyone.
-
-If I've offended you in any way, I ask that you think about it first:  
-  
-In case you ARE offended => Please tell me how I caused this so that I better myself and not do it again, and of course so that I can appologize to you.  
-In case you FEEL offended => Suck it up, buttercup. Grow a spine, and please don't bother me with your issues.
-
+To give you a fair warning; I’m Dutch. This means I tend to be direct, sometimes with a dash of politically incorrect humor, but I never intent to be rude or harmful. If you find I’ve offended you in any way, please let me know so I can apologize to you and better myself.
 
 ![JeffOps](featured-image.jpg " ")  
-# The content
-You'll may notice that the content goes from Ops to Dev and back. Why is this? Well, I started my carreer in Ops, started automating my own work and eventually the work of others. Then my certain situations gave me the chance to embrace processed and methodologies related to Dev, and eventually I actually started doing some junior Dev work. Fast-forward a few years and now I'm ready to share what I've learned and continue to learn every day. And for fun I'll throw some coaching and management content in there every now and then.
+
+The Content
+You may notice that my content goes from Ops to Dev and back again. I’ve started my career in Ops, started automating my own work and eventually that of others, and certain situations gave me the chance to embrace processes and methodologies related to Dev, so I actually started doing some junior Dev work. Fast forward a few years and now I’m ready to share what I’ve learned so far, and what I continue to learn each day. For fun I might throw in some coaching and management content every now and then.
 
 # Other locations
 You can find my content on other locations, specifically social media.
