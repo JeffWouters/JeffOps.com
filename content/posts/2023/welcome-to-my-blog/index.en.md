@@ -12,8 +12,7 @@ resources:
 - name: "featured-image"
   src: "featured-image.png"
 
-tags: ["introduction"]
-categories: ["Blog"]
+tags: ["Introduction"]
 
 hiddenFromHomePage: false
 ---
