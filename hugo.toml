@@ -75,7 +75,7 @@
       # URL of the LOGO
       logo = "https://jeffops.com/images/Jeff001.png"
       # title name
-      name = "JeffOps #> ...."
+      name = "JeffOps #> "
       # you can add extra information before the name (HTML format is supported), such as icons
       pre = " "
       # you can add extra information after the name (HTML format is supported), such as icons

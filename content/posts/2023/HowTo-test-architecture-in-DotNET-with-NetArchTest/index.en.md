@@ -7,16 +7,13 @@ draft: false
 author: "JeffOps"
 authorLink: "https://jeffwouters.nl"
 description: "HowTo test Architecture in .NET with NetArchTest"
-images: []
-resources:
-- name: "featured-image"
-  src: "featured-image.jpg"
 
 tags: ["DotNET","NetArchTest"]
 categories: ["Dev"]
 
 hiddenFromHomePage: false
 ---
+{{< image src="./featured-image.jpg" height="400px" width="400px" src_s="./featured-image.jpg" src_l="./featured-image.jpg" >}}  
 
 Have you ever wondered how to ensure that your .NET code follows the architectural design and conventions that you have chosen? Do you want to avoid the common pitfalls of violating the principles of separation of concerns, dependency inversion, or layering? If so, then you might be interested in NetArchTest, a fluent API for .NET Standard that can enforce architectural rules in unit tests.
 
