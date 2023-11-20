@@ -87,7 +87,7 @@
   [params.footer]
     enable = true
     # Custom content (HTML format is supported)
-    custom = "There can be only one..."
+    custom = "Generalization => Standardization => Automation => ...?"
     # whether to show Hugo and theme info
     hugo = false
     # whether to show copyright info
