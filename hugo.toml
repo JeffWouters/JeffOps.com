@@ -194,7 +194,7 @@
     Gitlab = ""
     Youtubelegacy = ""
     Youtubecustom = ""
-    Youtubechannel = ""
+    Youtubechannel = "https://www.youtube.com/channel/UCBDhcv3sVKFkpKU6dHoqyVg"
     Tumblr = ""
     Quora = ""
     Keybase = ""
@@ -258,7 +258,7 @@
     RootMe= ""
     Email = "jeff@methos.nl"
     Phone = "+31 6 81244811"
-    RSS = ""
+    RSS = "http://www.jeffops.com/index.xml"
 
   # Page global config
   [params.page]
