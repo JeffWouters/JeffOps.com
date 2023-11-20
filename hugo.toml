@@ -91,11 +91,11 @@
     # whether to show Hugo and theme info
     hugo = false
     # whether to show copyright info
-    copyright = true
+    copyright = false
     # whether to show the author
     author = true
     # site creation time
-    since = 
+    since = "2023"
     # ICP info only in China (HTML format is supported)
     icp = ""
     # license info (HTML format is supported)
