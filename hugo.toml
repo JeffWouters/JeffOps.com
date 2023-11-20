@@ -73,7 +73,7 @@
     # Header title config
     [params.header.title]
       # URL of the LOGO
-      logo = "/images/jeff001.png"
+      logo = "https://jeffops.com/images/Jeff001.png"
       # title name
       name = "JeffOps #> ...."
       # you can add extra information before the name (HTML format is supported), such as icons
@@ -328,7 +328,7 @@
       enable = true
       Twitter = true
       Facebook = true
-      Linkedin = false
+      Linkedin = true
       Whatsapp = false
       Pinterest = false
       Tumblr = false
@@ -350,18 +350,14 @@
       Trello = false
       Mix = false
     # Comment config
-    # 评论系统设置
     [params.page.comment]
       enable = false
       # Disqus comment config (https://disqus.com/)
-      # Disqus 评论系统设置 (https://disqus.com/)
       [params.page.comment.disqus]
         enable = false
         # Disqus shortname to use Disqus in posts
-        # Disqus 的 shortname，用来在文章中启用 Disqus 评论系统
         shortname = ""
       # Gitalk comment config (https://github.com/gitalk/gitalk)
-      # Gitalk 评论系统设置 (https://github.com/gitalk/gitalk)
       [params.page.comment.gitalk]
         enable = false
         owner = ""
@@ -369,7 +365,6 @@
         clientId = ""
         clientSecret = ""
       # Valine comment config (https://github.com/xCss/Valine)
-      # Valine 评论系统设置 (https://github.com/xCss/Valine)
       [params.page.comment.valine]
         enable = false
         appId = ""
@@ -379,7 +374,6 @@
         meta= ""
         pageSize = 10
         # automatically adapt the current theme i18n configuration when empty
-        # 为空时自动适配当前主题 i18n 配置
         lang = ""
         visitor = true
         recordIP = true
@@ -391,14 +385,10 @@
         # located in "themes/LoveIt/assets/lib/valine/emoji/" directory
         # you can store your own data files in the same path under your project:
         # "assets/lib/valine/emoji/"
-        # emoji 数据文件名称, 默认是 "google.yml"
         # ["apple.yml", "google.yml", "facebook.yml", "twitter.yml"]
-        # 位于 "themes/LoveIt/assets/lib/valine/emoji/" 目录
-        # 可以在你的项目下相同路径存放你自己的数据文件:
         # "assets/lib/valine/emoji/"
         emoji = ""
       # Facebook comment config (https://developers.facebook.com/docs/plugins/comments)
-      # Facebook 评论系统设置 (https://developers.facebook.com/docs/plugins/comments)
       [params.page.comment.facebook]
         enable = false
         width = "100%"
