@@ -87,7 +87,7 @@
   [params.footer]
     enable = true
     # Custom content (HTML format is supported)
-    custom = "Generalization => Standardization => Automation => ...?"
+    custom = "#>_ Generalization => Standardization => Automation => ...? _<#"
     # whether to show Hugo and theme info
     hugo = false
     # whether to show copyright info
