@@ -184,9 +184,9 @@
       paginate = 6
   # Social config in home page
   [params.social]
-    GitHub = "https://www.github.com/jeffwouters"
-    Linkedin = "http://www.linkedin.com/in/jeffwouters"
-    Twitter = "http://www.x.com/jeffwouters"
+    GitHub = "jeffwouters"
+    Linkedin = "jeffwouters"
+    Twitter = "jeffwouters"
     Instagram = ""
     Facebook = ""
     Telegram = ""
@@ -194,7 +194,7 @@
     Gitlab = ""
     Youtubelegacy = ""
     Youtubecustom = ""
-    Youtubechannel = "https://www.youtube.com/channel/UCBDhcv3sVKFkpKU6dHoqyVg"
+    Youtubechannel = "UCBDhcv3sVKFkpKU6dHoqyVg"
     Tumblr = ""
     Quora = ""
     Keybase = ""
@@ -257,7 +257,7 @@
     HackTheBox = ""
     RootMe= ""
     Email = "jeff@methos.nl"
-    Phone = "+31 6 81244811"
+    Phone = ""
     RSS = "http://www.jeffops.com/index.xml"
 
   # Page global config
