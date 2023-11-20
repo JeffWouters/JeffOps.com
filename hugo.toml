@@ -95,7 +95,7 @@
     # whether to show the author
     author = true
     # site creation time
-    since = 2023
+    since = 
     # ICP info only in China (HTML format is supported)
     icp = ""
     # license info (HTML format is supported)
