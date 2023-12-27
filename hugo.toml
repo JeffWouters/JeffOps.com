@@ -126,7 +126,7 @@
     # whether to omit favicon resource links
     noFavicon = false
     # modern SVG favicon to use in place of older style .png and .ico files
-    svgFavicon = "/images/JeffOps-element.png"
+    svgFavicon = "/images/JeffOps-Element.svg"
     # Android browser theme color
     themeColor = "#ffffff"
     # Safari mask icon color
@@ -170,7 +170,7 @@
       # title shown in home page (HTML format is supported)
       #title = "JeffOps blog!"
       # subtitle shown in home page (HTML format is supported)
-      subtitle = "Welcome, to the blog of JeffOps!"
+      #subtitle = "Welcome to my blog"
       # whether to use typeit animation for subtitle
       typeit = true
       # whether to show social links
