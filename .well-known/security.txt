@@ -1,0 +1,27 @@
+# Security contact for jeffops.com
+#
+# Found a security problem with this site? Please tell me. It reaches a real
+# inbox and I read it myself. The policy below sets out scope, what is out of
+# scope, and what you can expect back.
+#
+# The "+" in the address is part of it, not a typo. It routes reports away
+# from everything else in my inbox.
+#
+# Format: RFC 9116. https://www.rfc-editor.org/rfc/rfc9116
+
+Contact: mailto:jeff+jeffopscom@jeffops.com
+Policy: https://jeffops.com/security-policy/
+Acknowledgments: https://jeffops.com/security-policy/#acknowledgments
+Preferred-Languages: en, nl
+
+# Both locations are served, and both are listed here deliberately. RFC 9116
+# says a file retrieved from a URI absent from every Canonical field should not
+# be trusted, so omitting the legacy path would undermine the copy served there.
+Canonical: https://jeffops.com/.well-known/security.txt
+Canonical: https://jeffops.com/security.txt
+
+# The date this file stops speaking for itself. If you are reading it after
+# this date, the details above have not been reviewed since, so treat them as
+# unverified. The build refuses to publish once this date is within 30 days,
+# which is what stops it going stale quietly.
+Expires: 2027-07-01T00:00:00Z

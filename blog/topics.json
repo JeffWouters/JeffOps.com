@@ -1,0 +1,57 @@
+[
+  {
+    "key": "enterprise",
+    "label": "Enterprise",
+    "count": 2
+  },
+  {
+    "key": "idp",
+    "label": "IDP",
+    "count": 2
+  },
+  {
+    "key": "ops",
+    "label": "OPS",
+    "count": 2
+  },
+  {
+    "key": "platform-engineering",
+    "label": "Platform Engineering",
+    "count": 2
+  },
+  {
+    "key": "adoption",
+    "label": "Adoption",
+    "count": 1
+  },
+  {
+    "key": "architecture",
+    "label": "Architecture",
+    "count": 1
+  },
+  {
+    "key": "azure",
+    "label": "Azure",
+    "count": 1
+  },
+  {
+    "key": "dev",
+    "label": "DEV",
+    "count": 1
+  },
+  {
+    "key": "dotnet",
+    "label": "Dotnet",
+    "count": 1
+  },
+  {
+    "key": "netarchtest",
+    "label": "Netarchtest",
+    "count": 1
+  },
+  {
+    "key": "testing",
+    "label": "Testing",
+    "count": 1
+  }
+]

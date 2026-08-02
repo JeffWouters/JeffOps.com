@@ -1,0 +1,8 @@
+[
+  { "value": "platform-engineering", "label": "Platform Engineering & IDPs" },
+  { "value": "kubernetes-cloud-native", "label": "Kubernetes & Cloud Native" },
+  { "value": "devops-culture", "label": "DevOps Culture & DORA" },
+  { "value": "observability-reliability", "label": "Observability & Reliability" },
+  { "value": "developer-experience", "label": "Developer Experience" },
+  { "value": "other", "label": "Other" }
+]

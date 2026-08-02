@@ -1,0 +1,74 @@
+name: Build and deploy JeffOps.com
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  # A static site has no clock. A post dated next Tuesday only appears if a build
+  # runs on or after next Tuesday, so this daily run is the publishing mechanism,
+  # not a nicety. It also keeps the security.txt expiry check running: nothing
+  # about that file changes on the day it lapses, it simply stops being
+  # trustworthy, and verify_build fails once the date is within 30 days.
+  #
+  # 05:17 UTC is 07:17 in Amsterdam in summer and 06:17 in winter, so a post
+  # dated the 17th is live before the working day starts. The odd minute is
+  # deliberate: GitHub's scheduler is heavily oversubscribed on the hour and
+  # runs booked for :00 are routinely delayed.
+  #
+  # GitHub disables scheduled workflows after 60 days without repository
+  # activity, and emails before it does. If that happens, re-enable it from the
+  # Actions tab, or the site simply stops publishing on schedule.
+  schedule:
+    - cron: '17 5 * * *'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  # deploy-pages v4 and later fetch the artifact by ID and need this.
+  actions: read
+
+# One deploy at a time. Queued runs wait rather than racing each other, but a
+# run already in progress is allowed to finish so a deploy is never half-applied.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build site
+        run: python build.py --out _site
+
+      - name: Check every post rendered, and security.txt is still valid
+        run: python verify_build.py _site
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+          # Without this, /.well-known/security.txt is stripped from the deploy
+          # and the build still goes green. v4 of this action started excluding
+          # dotfiles by default; v5 added this input to turn that back off. It
+          # covers .nojekyll too. .git and .github are excluded regardless.
+          include-hidden-files: true
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JeffOps — Tech. Ops. Dev.</title>
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://jeffops.com/">
+<meta property="og:title" content="JeffOps — Tech. Ops. Dev.">
+<meta property="og:description" content="Deep dives into DevOps, platform engineering, and the tools that actually matter. No fluff. No hype.">
+<meta property="og:image" content="https://jeffops.com/og-card.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@jeffops">
+<meta name="twitter:title" content="JeffOps — Tech. Ops. Dev.">
+<meta name="twitter:description" content="Deep dives into DevOps, platform engineering, and the tools that actually matter.">
+<meta name="twitter:image" content="https://jeffops.com/og-card.png">
+<link rel="alternate" type="application/rss+xml" title="JeffOps Blog" href="https://jeffops.com/rss.xml">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#00d9ff">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="msapplication-TileColor" content="#0a0c0f">
+<meta name="theme-color" content="#0a0c0f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div id="read-progress"></div>
+<nav>
+  <a class="nav-logo" href="#home">JeffOps<span>.com</span></a>
+  <ul class="nav-links">
+
+    <li><a href="#home" id="nav-home" class="active">Home</a></li>
+
+    <!-- Content dropdown: Blog, Videos, Newsletter -->
+    <li class="nav-has-sub">
+      <a href="#" id="nav-content" onclick="return false;">Content</a>
+      <div class="nav-dropdown">
+        <a href="#blog"       id="nav-blog">Blog</a>
+        <a href="#videos"     id="nav-videos">Videos</a>
+        <a href="#newsletter" id="nav-newsletter">Newsletter</a>
+      </div>
+    </li>
+
+    <!-- Services dropdown: Speaking, Training -->
+    <li class="nav-has-sub">
+      <a href="#" id="nav-services" onclick="return false;">Services</a>
+      <div class="nav-dropdown">
+        <a href="#consulting" id="nav-consulting">Consulting</a>
+        <a href="#speaking" id="nav-speaking">Speaking</a>
+        <a href="#training" id="nav-training">Training</a>
+      </div>
+    </li>
+    <li><a href="#projects"   id="nav-projects">Projects</a></li>
+    <li><a href="#about"      id="nav-about">About</a></li>
+
+  </ul>
+  <a class="nav-cta" href="#consulting">Work with Jeff</a>
+</nav>
+<div class="site-content">
+<!-- ═══════════ HOME ═══════════ -->
+<div id="page-home" class="page active">
+  <div class="orbital-hero">
+    <div class="orbital-glow"></div>
+    <div class="orbital-system" id="orbital-system">
+      <svg class="orbit-rings" viewBox="0 0 560 560" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="280" cy="280" r="170" fill="none" stroke="rgba(0,217,255,0.10)" stroke-width="1" stroke-dasharray="4 8"/>
+      </svg>
+      <div id="connectors"></div>
+      <div class="center-node" onclick="showPage('about')" title="About Jeff">
+        <img class="center-image" src="JeffOps_Speaking.jpg" alt="JeffOps speaking photo">
+      </div>
+      <div class="orbit-node" data-angle="-90" data-r="170" data-page="blog">
+        <div class="orbit-pill"><span class="orbit-icon">&#x270D;&#xFE0F;</span><span class="orbit-label">Blog</span></div>
+        <div class="orbit-tooltip">128+ articles on DevOps, Platform Eng &amp; Leadership</div>
+      </div>
+      <div class="orbit-node" data-angle="-38.6" data-r="170" data-page="videos">
+        <div class="orbit-pill"><span class="orbit-icon">&#x25B6;&#xFE0F;</span><span class="orbit-label">Videos</span></div>
+        <div class="orbit-tooltip">YouTube deep dives &mdash; new video every 2 weeks</div>
+      </div>
+      <div class="orbit-node" data-angle="12.9" data-r="170" data-page="newsletter">
+        <div class="orbit-pill"><span class="orbit-icon">&#x1F4E1;</span><span class="orbit-label">Newsletter</span></div>
+        <div class="orbit-tooltip">The JeffOps Dispatch &mdash; published on LinkedIn</div>
+      </div>
+      <div class="orbit-node" data-angle="64.3" data-r="170" data-page="speaking">
+        <div class="orbit-pill"><span class="orbit-icon">&#x1F3A4;</span><span class="orbit-label">Speaking</span></div>
+        <div class="orbit-tooltip">40+ conference talks &mdash; KubeCon, LeadDev, HashiConf</div>
+      </div>
+      <div class="orbit-node" data-angle="115.7" data-r="170" data-page="consulting">
+        <div class="orbit-pill"><span class="orbit-icon">&#x1F9ED;</span><span class="orbit-label">Consulting</span></div>
+        <div class="orbit-tooltip">Fractional EM &middot; Team Assessments &middot; Tech Lead Coaching</div>
+      </div>
+      <div class="orbit-node" data-angle="167.1" data-r="170" data-page="training">
+        <div class="orbit-pill"><span class="orbit-icon">&#x1F3AF;</span><span class="orbit-label">Training</span></div>
+        <div class="orbit-tooltip">PowerShell &middot; Bicep &middot; Azure &middot; .NET Aspire</div>
+      </div>
+      <div class="orbit-node" data-angle="218.6" data-r="170" data-page="projects">
+        <div class="orbit-pill"><span class="orbit-icon">&#x1F9EA;</span><span class="orbit-label">Projects</span></div>
+        <div class="orbit-tooltip">Open source, side projects &amp; experiments</div>
+      </div>
+    </div>
+    <div class="orbital-tagline">
+      <h1>Engineering <em>Leadership</em><br>meets Platform Engineering</h1>
+      <p>I help engineering teams ship faster by fixing the system around them &mdash; not just the code. Technical leader, platform engineer, writer, and speaker.</p>
+      <div class="orbital-actions">
+        <a class="btn-primary" href="#consulting">Work with Jeff</a>
+        <a class="btn-ghost" href="#blog">Read the Blog</a>
+        <a class="btn-ghost" href="#newsletter">Subscribe</a>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-cell"><span class="stat-val">128+</span><span class="stat-lbl">Articles</span></div>
+        <div class="stat-cell"><span class="stat-val">12K</span><span class="stat-lbl">Subscribers</span></div>
+        <div class="stat-cell"><span class="stat-val">40+</span><span class="stat-lbl">Talks</span></div>
+        <div class="stat-cell"><span class="stat-val">5</span><span class="stat-lbl">Teams Led</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="logos-bar">
+    <div class="logos-label">// As seen at</div>
+    <div class="logos-track">
+      <span class="logo-item"><span class="logo-dot"></span>KubeCon EU</span>
+      <span class="logo-item"><span class="logo-dot"></span>LeadDev London</span>
+      <span class="logo-item"><span class="logo-dot"></span>HashiConf</span>
+      <span class="logo-item"><span class="logo-dot"></span>DockerCon</span>
+      <span class="logo-item"><span class="logo-dot"></span>DevOpsDays Amsterdam</span>
+      <span class="logo-item"><span class="logo-dot"></span>Platform Eng Con</span>
+      <span class="logo-item"><span class="logo-dot"></span>GOTO Copenhagen</span>
+      <span class="logo-item"><span class="logo-dot"></span>GitHub Universe</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ BLOG ═══════════ -->
+<div id="page-blog" class="page">
+  <div class="section">
+    <div class="section-header"><span class="section-tag">// writing</span><h2 class="section-title">Blog</h2><div class="section-line"></div></div>
+    <div class="blog-layout">
+      <aside class="blog-sidebar">
+        <div class="sidebar-section"><div class="sidebar-label">Search</div><input class="search-input" type="text" placeholder="search posts..." oninput="filterPosts(this.value)"></div>
+        <div class="sidebar-section">
+          <div class="sidebar-label">Filter by topic</div>
+          <div class="tag-filter" id="topic-filter-buttons">
+            <button class="tag-btn active" onclick="setTag('all',this)">All Posts <span class="tag-count">0</span></button>
+          </div>
+        </div>
+        <div class="sidebar-section">
+          <div class="sidebar-label">Series</div>
+          <div class="tag-filter" id="series-filter-buttons">
+            <button class="series-btn active" onclick="setSeries('all',this)">All Series <span class="tag-count">0</span></button>
+          </div>
+        </div>
+      </aside>
+      <main>
+        <div class="post-list" id="post-list">
+          <div class="post-item"><div><div class="post-title">Loading posts…</div></div></div>
+        </div>
+      </main>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ POST VIEW ═══════════ -->
+<div id="page-post" class="page">
+  <div class="post-page-wrap">
+    <div style="padding-top:2rem;"><button class="back-btn" onclick="showPage('blog')">← Back to Blog</button></div>
+    <div class="post-page-layout">
+      <aside class="post-toc-aside">
+        <div class="toc-label">Contents</div>
+        <div id="toc-links"></div>
+      </aside>
+      <article>
+        <div class="post-header">
+          <div class="post-header-type">// Blog Post</div>
+          <h1 id="post-title"></h1>
+          <div class="post-header-meta"><span id="post-date"></span><span id="post-readtime"></span><span>Jeff</span></div>
+        </div>
+        <div class="post-content" id="post-content"></div>
+        <div id="related-section"></div>
+      </article>
+      <aside class="post-right-aside">
+        <div class="post-aside-box">
+          <div class="post-aside-title">// Share</div>
+          <button class="share-btn" id="copy-link-btn" onclick="copyLink()">⎘ Copy link</button>
+          <button class="share-btn">𝕏 Twitter / X</button>
+          <button class="share-btn">in LinkedIn</button>
+        </div>
+        <div class="post-aside-box">
+          <div class="post-aside-title">// The JeffOps Dispatch</div>
+          <p style="font-family:var(--mono);font-size:0.7rem;color:var(--text-dim);line-height:1.6;margin-bottom:0.75rem;">Every other Monday — one topic, in more depth than fits in a post.</p>
+          <button class="share-btn" style="background:var(--cyan-glow);border-color:var(--border);color:var(--cyan);" onclick="showPage('newsletter')">Subscribe free →</button>
+        </div>
+        <div class="post-aside-box">
+          <div class="post-aside-title">// Progress</div>
+          <div id="scroll-pct" style="font-family:var(--mono);font-size:1.4rem;font-weight:700;color:var(--cyan);">0%</div>
+          <div style="height:3px;background:var(--bg3);margin-top:8px;border-radius:2px;">
+            <div id="scroll-bar" style="height:100%;width:0%;background:var(--cyan);border-radius:2px;transition:width 0.1s;"></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ VIDEOS ═══════════ -->
+<div id="page-videos" class="page">
+  <div class="section">
+    <div class="section-header"><span class="section-tag">// youtube</span><h2 class="section-title">Videos</h2><div class="section-line"></div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;">
+      <p style="color:var(--text-mid);font-size:0.9rem;">Platform engineering, DevOps deep dives, and live demos. New video every two weeks.</p>
+      <a class="btn-ghost" href="https://youtube.com" target="_blank">Subscribe on YouTube →</a>
+    </div>
+    <div class="video-grid">
+      <div class="video-card"><div class="video-thumb"><div class="video-thumb-bg" style="background:linear-gradient(135deg,#0a1628,#0f2a1a);"></div><div class="video-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="video-thumb-label">18:42</div></div><div class="video-info"><div class="video-title">Platform Engineering vs DevOps: What's the Real Difference?</div><div class="video-meta"><span>Nov 12, 2024</span><span>4.2K views</span></div></div></div>
+      <div class="video-card"><div class="video-thumb"><div class="video-thumb-bg" style="background:linear-gradient(135deg,#1a0a28,#0f1a2a);"></div><div class="video-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="video-thumb-label">44:17</div></div><div class="video-info"><div class="video-title">Build a Production-Ready CI/CD Pipeline in 45 Minutes</div><div class="video-meta"><span>Oct 22, 2024</span><span>7.8K views</span></div></div></div>
+      <div class="video-card"><div class="video-thumb"><div class="video-thumb-bg" style="background:linear-gradient(135deg,#0a1a1a,#0a2808);"></div><div class="video-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="video-thumb-label">28:05</div></div><div class="video-info"><div class="video-title">Helm vs Kustomize: An Honest Comparison After Using Both in Prod</div><div class="video-meta"><span>Oct 8, 2024</span><span>5.1K views</span></div></div></div>
+      <div class="video-card"><div class="video-thumb"><div class="video-thumb-bg" style="background:linear-gradient(135deg,#281a0a,#1a0a0a);"></div><div class="video-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="video-thumb-label">35:22</div></div><div class="video-info"><div class="video-title">OpenTelemetry from Zero to Production in Node.js</div><div class="video-meta"><span>Sep 24, 2024</span><span>3.6K views</span></div></div></div>
+      <div class="video-card"><div class="video-thumb"><div class="video-thumb-bg" style="background:linear-gradient(135deg,#0a0a28,#180a28);"></div><div class="video-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="video-thumb-label">22:48</div></div><div class="video-info"><div class="video-title">Argo Rollouts: Progressive Delivery Without the Complexity</div><div class="video-meta"><span>Sep 10, 2024</span><span>2.9K views</span></div></div></div>
+      <div class="video-card"><div class="video-thumb"><div class="video-thumb-bg" style="background:linear-gradient(135deg,#0f280a,#0a1a0a);"></div><div class="video-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div class="video-thumb-label">51:03</div></div><div class="video-info"><div class="video-title">Kubernetes Multi-Tenancy: Namespaces, RBAC, and Network Policies</div><div class="video-meta"><span>Aug 27, 2024</span><span>6.2K views</span></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ NEWSLETTER ═══════════ -->
+<div id="page-newsletter" class="page">
+  <div class="section">
+    <div class="newsletter-hero">
+      <div class="hero-tag" style="justify-content:center;">// biweekly dispatch</div>
+      <h1 class="nl-big">The <em>JeffOps</em><br>Dispatch</h1>
+      <p class="nl-sub">Every other Monday: one argument about where AI belongs in engineering and operations, worked through properly. Published on LinkedIn. Unsubscribe any time.</p>
+      <!-- The newsletter lives on LinkedIn. This is a real anchor rather than a
+           JS handler so it works with scripts disabled, can be opened in a new
+           tab, and is followable by a crawler. It is also the single place the
+           newsletter URL appears — everything else links to #newsletter. -->
+      <div class="nl-form"><a class="nl-btn" id="nl-subscribe" href="https://www.linkedin.com/newsletters/the-jeffops-dispatch-7403738606533505024/" target="_blank" rel="noopener">Subscribe on LinkedIn →</a></div>
+      <p style="font-family:var(--mono);font-size:0.68rem;color:var(--text-dim);">Published on LinkedIn. Unsubscribe any time.</p>
+    </div>
+    <div class="nl-perks">
+      <div class="nl-perk"><div class="nl-perk-icon">⚡</div><h3>Biweekly Deep Dives</h3><p>One technical topic, fully explored — not a link roundup.</p></div>
+      <div class="nl-perk"><div class="nl-perk-icon">🛠</div><h3>Tool Picks</h3><p>Curated tools Jeff actually uses — tested in production.</p></div>
+      <div class="nl-perk"><div class="nl-perk-icon">📡</div><h3>Signal Over Noise</h3><p>What matters in the DevOps ecosystem this week, filtered.</p></div>
+    </div>
+    <div class="section-header"><span class="section-tag">// archive</span><h2 class="section-title">Past Issues</h2><div class="section-line"></div></div>
+    <div class="issue-list" id="issue-list">
+      <!-- Generated at build time from newsletter_editions.json. Do not edit by hand. -->
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ SPEAKING ═══════════ -->
+<div id="page-speaking" class="page">
+  <div class="section">
+    <div class="section-header"><span class="section-tag">// events</span><h2 class="section-title">Speaking</h2><div class="section-line"></div></div>
+    <div class="talks-layout">
+      <div id="talks-list"></div>
+      <aside>
+        <div class="booking-card">
+          <div class="booking-title">Book Jeff to Speak</div>
+          <p class="booking-sub">Jeff speaks at conferences, meetups, and corporate events on platform engineering, DevOps culture, and cloud-native architecture.</p>
+          <ul class="booking-topics">
+            <li>Platform Engineering</li>
+            <li>Business Transformation</li>
+            <li>CI/CD pipelines</li>
+            <li>Cloud Native</li>
+            <li>DevOps Culture</li>
+            <li>Team Building</li>
+            <li>Automation</li>
+            <li>PowerShell</li>
+            <li>Developer Experience</li>
+          </ul>
+          <div class="enquiry-form">
+            <div class="enquiry-form-title">// Send an enquiry</div>
+            <div class="form-field"><label class="form-label">Your name</label><input class="form-input" type="text" id="eq-name" placeholder="Jane Smith"></div>
+            <div class="form-field"><label class="form-label">Email</label><input class="form-input" type="email" id="eq-email" placeholder="jane@company.com"></div>
+            <div class="form-field"><label class="form-label">Event / Organisation</label><input class="form-input" type="text" id="eq-event" placeholder="KubeCon / Acme Corp"></div>
+            <div class="form-field"><label class="form-label">Approximate date</label><input class="form-input" type="text" id="eq-date" placeholder="Q1 2025 / March 15"></div>
+            <div class="form-field">
+              <label class="form-label">Topic area</label>
+              <select class="form-select" id="eq-topic" onchange="handleTopicChange()">
+                <option value="">— Select —</option>
+              </select>
+            </div>
+            <div class="form-field" id="eq-topic-other-field" style="display:none;">
+              <label class="form-label">Other topic</label>
+              <input class="form-input" type="text" id="eq-topic-other" placeholder="Describe the topic you have in mind">
+            </div>
+            <div class="form-field"><label class="form-label">Message (optional)</label><textarea class="form-textarea" id="eq-msg" placeholder="Tell Jeff about the event, audience size, format..."></textarea></div>
+            <button class="form-submit" onclick="submitEnquiry()">Send Enquiry →</button>
+            <div class="form-success" id="eq-success">✓ Opening your email client to jeff@jeffops.com</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ABOUT ═══════════ -->
+<div id="page-about" class="page">
+  <div class="section">
+    <div class="section-header"><span class="section-tag">// whoami</span><h2 class="section-title">About Jeff</h2><div class="section-line"></div></div>
+    <div class="about-grid">
+      <div class="about-content">
+        <p>Hey — I'm Jeff. I've spent the last decade in the trenches of DevOps and platform engineering, working with teams ranging from scrappy startups to large-scale distributed systems. I started JeffOps because I was tired of content that was either too shallow or too academic.</p>
+        <p>Everything I write, record, or present is grounded in real production experience. If I haven't run it at scale, I won't write about it as if I have. The blog, newsletter, and YouTube channel are my way of giving back to a community I learned everything from.</p>
+        <h2>What I Focus On</h2>
+        <p>My sweet spot is the intersection of platform engineering, DevOps culture, and cloud-native infrastructure. I care deeply about developer experience — the idea that the right internal tooling and processes unlock engineering velocity in a way that no amount of "move faster" top-down pressure ever could.</p>
+        <p>I'm currently exploring: eBPF-based observability, platform engineering maturity models, and AI-assisted operations (the real stuff, not the hype).</p>
+        <h2>My Stack</h2>
+        <div class="stack-grid" style="margin-bottom:2rem;">
+          <div class="stack-item">Kubernetes / k3s</div><div class="stack-item">ArgoCD / Flux</div>
+          <div class="stack-item">Terraform / OpenTofu</div><div class="stack-item">GitHub Actions</div>
+          <div class="stack-item">Prometheus / Grafana</div><div class="stack-item">OpenTelemetry</div>
+          <div class="stack-item">Vault by HashiCorp</div><div class="stack-item">Go / Python / Bash</div>
+        </div>
+        <h2>Get in Touch</h2>
+        <p>For speaking enquiries, collaboration, or consulting — reach out via the links on the right or use the <a href="#speaking" style="color:var(--cyan)">speaking enquiry form</a>. Response within 48 hours.</p>
+      </div>
+      <aside class="about-aside">
+        <div class="avatar-box">
+          <div class="avatar-circle">J</div>
+          <div class="avatar-name">Jeff</div>
+          <div class="avatar-handle">@jeffops</div>
+          <p style="font-size:0.8rem;color:var(--text-dim);margin-bottom:1rem;">Platform Engineer · Blogger<br>Speaker · YouTuber</p>
+          <div class="social-links">
+            <button class="social-link">Twitter / X <span>@jeffops →</span></button>
+            <button class="social-link">LinkedIn <span>in/jeff →</span></button>
+            <button class="social-link">GitHub <span>github.com/jeff →</span></button>
+            <button class="social-link">YouTube <span>JeffOps →</span></button>
+            <button class="social-link">Email <span>jeff@jeffops.com →</span></button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════ TRAINING ═══════════ -->
+<div id="page-training" class="page">
+  <div class="section">
+    <div class="training-hero">
+      <div class="hero-tag" style="justify-content:center;">// microsoft &middot; cloud &middot; devops</div>
+      <h1>Technical <em>Training</em><br>that sticks.</h1>
+      <p>Hands-on, instructor-led courses grounded in real production experience. Not slide-deck theory &mdash; actual skills your team can use on Monday morning. Available in Dutch and English.</p>
+    </div>
+    <div class="section-header"><span class="section-tag">// courses</span><h2 class="section-title">Course Catalogue</h2><div class="section-line"></div></div>
+    <div class="courses-grid">
+      <div class="course-card">
+        <div class="course-icon">&#x1F4BB;</div>
+        <div class="course-level">Beginner &rarr; Advanced</div>
+        <div class="course-title">PowerShell</div>
+        <div class="course-desc">From first script to enterprise automation. Scripting fundamentals, modules, error handling, Pester testing, and real-world automation patterns for Windows and Azure.</div>
+        <ul class="course-topics">
+          <li>Core language &amp; pipeline</li>
+          <li>Functions, modules &amp; scoping</li>
+          <li>Error handling &amp; logging</li>
+          <li>Pester testing framework</li>
+          <li>REST APIs &amp; JSON</li>
+          <li>Azure &amp; M365 automation</li>
+        </ul>
+        <div class="course-meta"><span>1&ndash;3 days</span><span>Up to 16 participants</span></div>
+      </div>
+      <div class="course-card">
+        <div class="course-icon">&#x1F3D7;&#xFE0F;</div>
+        <div class="course-level">Intermediate &rarr; Advanced</div>
+        <div class="course-title">Bicep</div>
+        <div class="course-desc">Infrastructure as Code on Azure using Bicep. Move beyond ARM templates into clean, readable IaC with reusable modules, parameter files, and CI/CD integration.</div>
+        <ul class="course-topics">
+          <li>Bicep vs ARM vs Terraform</li>
+          <li>Resource declarations &amp; dependencies</li>
+          <li>Modules &amp; registries</li>
+          <li>Parameter files &amp; environments</li>
+          <li>Bicep in GitHub Actions / ADO</li>
+          <li>Linting, validation &amp; what-if</li>
+        </ul>
+        <div class="course-meta"><span>1&ndash;2 days</span><span>Up to 12 participants</span></div>
+      </div>
+      <div class="course-card">
+        <div class="course-icon">&#x26A1;</div>
+        <div class="course-level">Intermediate</div>
+        <div class="course-title">Azure Serverless</div>
+        <div class="course-desc">Build event-driven, scalable solutions on Azure Functions, Logic Apps, and Event Grid. Design patterns for serverless architectures that are maintainable and cost-effective.</div>
+        <ul class="course-topics">
+          <li>Azure Functions deep dive</li>
+          <li>Triggers, bindings &amp; Durable Functions</li>
+          <li>Logic Apps &amp; connectors</li>
+          <li>Event Grid &amp; Service Bus</li>
+          <li>Serverless security patterns</li>
+          <li>Observability with App Insights</li>
+        </ul>
+        <div class="course-meta"><span>2 days</span><span>Up to 12 participants</span></div>
+      </div>
+      <div class="course-card">
+        <div class="course-icon">&#x2601;&#xFE0F;</div>
+        <div class="course-level">Beginner &rarr; Advanced</div>
+        <div class="course-title">Azure Infrastructure</div>
+        <div class="course-desc">Design and deploy production-ready Azure infrastructure. Networking, compute, storage, identity, and governance &mdash; with a platform engineering mindset throughout.</div>
+        <ul class="course-topics">
+          <li>Landing zones &amp; governance</li>
+          <li>Virtual networks &amp; hub-spoke</li>
+          <li>Compute: VMs, AKS, Container Apps</li>
+          <li>Storage &amp; data services</li>
+          <li>Azure AD / Entra ID &amp; RBAC</li>
+          <li>Cost management &amp; FinOps</li>
+        </ul>
+        <div class="course-meta"><span>2&ndash;4 days</span><span>Up to 16 participants</span></div>
+      </div>
+      <div class="course-card" style="border-top:2px solid var(--cyan);">
+        <div class="course-icon">&#x1F331;</div>
+        <div class="course-level">Intermediate &middot; New for 2025</div>
+        <div class="course-title">.NET Aspire</div>
+        <div class="course-desc">The new cloud-native application stack for .NET developers. Build observable, composable distributed apps with service discovery, telemetry, and local orchestration built in.</div>
+        <ul class="course-topics">
+          <li>.NET Aspire architecture &amp; AppHost</li>
+          <li>Service discovery &amp; configuration</li>
+          <li>Integrations: Redis, SQL, RabbitMQ</li>
+          <li>Built-in OpenTelemetry</li>
+          <li>Dashboard &amp; local dev experience</li>
+          <li>Deploying Aspire to Azure</li>
+        </ul>
+        <div class="course-meta"><span>1&ndash;2 days</span><span>Up to 12 participants</span></div>
+      </div>
+      <div class="course-card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:1rem;">
+        <div style="font-size:2rem;">&#x1F3AF;</div>
+        <div style="font-size:0.95rem;font-weight:600;">Custom course?</div>
+        <div style="font-size:0.82rem;color:var(--text-dim);line-height:1.6;">Need a tailored curriculum? Jeff builds bespoke training for specific tools, stacks, or team maturity levels.</div>
+        <button class="btn-primary" onclick="showPage('consulting')" style="font-size:0.72rem;padding:8px 18px;">Get in touch &rarr;</button>
+      </div>
+    </div>
+    <div class="section-header"><span class="section-tag">// delivery</span><h2 class="section-title">How Training is Delivered</h2><div class="section-line"></div></div>
+    <div class="training-formats">
+      <div class="format-card"><div class="format-icon">&#x1F3E2;</div><h3>On-site</h3><p>At your office. Full-day or half-day sessions. Jeff brings labs, exercises, and real scenarios from your stack.</p></div>
+      <div class="format-card"><div class="format-icon">&#x1F4BB;</div><h3>Remote / Virtual</h3><p>Live instructor-led via Teams or Zoom. Small groups, interactive labs, same quality as in-person.</p></div>
+      <div class="format-card"><div class="format-icon">&#x1F501;</div><h3>Blended</h3><p>Pre-recorded foundations + live Q&amp;A and labs. Ideal for distributed teams across time zones.</p></div>
+    </div>
+    <div class="training-cta">
+      <h2>Ready to upskill your team?</h2>
+      <p>All courses available in Dutch and English. Group pricing for 5+ participants. Jeff can combine multiple courses into a multi-day programme.</p>
+      <div class="training-cta-btns">
+        <a class="btn-primary" href="#consulting">Enquire Now</a>
+        <a class="btn-ghost" href="mailto:jeff@jeffops.com">jeff@jeffops.com</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════ CONSULTING ═══════════ -->
+<div id="page-consulting" class="page">
+  <div class="section">
+    <div class="section-header"><span class="section-tag">// work with jeff</span><h2 class="section-title">Consulting &amp; Advisory</h2><div class="section-line"></div></div>
+    <div style="max-width:720px;margin-bottom:3.5rem;">
+      <p style="font-size:1.25rem;line-height:1.7;color:var(--text);font-weight:600;margin-bottom:1rem;">I help engineering teams ship faster by fixing the system around them &mdash; not just the code.</p>
+      <p style="font-size:1rem;color:var(--text-mid);line-height:1.8;">With a decade of hands-on platform and DevOps experience, and a more recent move into engineering leadership, I work with CTOs, VPs of Engineering, and tech leads who want to level up their teams &mdash; technically and organisationally.</p>
+    </div>
+    <div class="section-header"><span class="section-tag">// services</span><h2 class="section-title" style="font-size:1.4rem;">What I Offer</h2><div class="section-line"></div></div>
+    <div class="consulting-grid">
+      <div class="consulting-card consulting-card-featured">
+        <div class="consulting-card-icon">&#x1F9ED;</div>
+        <h3 class="consulting-card-title">Fractional Engineering Manager</h3>
+        <p class="consulting-card-desc">Embedded part-time EM for teams that need leadership continuity during a hire, a gap, or a growth phase. I run 1:1s, unblock engineers, coordinate with product, and give you honest assessments of what the team actually needs.</p>
+        <div class="consulting-card-meta">Typically 2&ndash;3 days/week &middot; 3&ndash;6 month engagements</div>
+      </div>
+      <div class="consulting-card">
+        <div class="consulting-card-icon">&#x1F52C;</div>
+        <h3 class="consulting-card-title">Engineering Team Assessment</h3>
+        <p class="consulting-card-desc">A structured 4-week deep dive into your team's processes, tooling, culture, and delivery. Plain-language report with prioritised recommendations &mdash; no consultant jargon.</p>
+        <div class="consulting-card-meta">4-week engagement &middot; Fixed fee</div>
+      </div>
+      <div class="consulting-card">
+        <div class="consulting-card-icon">&#x1F3AF;</div>
+        <h3 class="consulting-card-title">Tech Lead &amp; New EM Coaching</h3>
+        <p class="consulting-card-desc">1:1 coaching for engineers stepping into leadership for the first time. Bi-weekly sessions covering the IC-to-EM transition, difficult conversations, team health, and personal effectiveness as a leader.</p>
+        <div class="consulting-card-meta">Bi-weekly 1:1s &middot; 3-month minimum</div>
+      </div>
+      <div class="consulting-card">
+        <div class="consulting-card-icon">&#x1F3D7;&#xFE0F;</div>
+        <h3 class="consulting-card-title">Platform Engineering Advisory</h3>
+        <p class="consulting-card-desc">Strategic advice on building or scaling an internal developer platform. From golden path definition to team topology decisions, I help platform teams articulate their value and build for adoption.</p>
+        <div class="consulting-card-meta">Monthly retainer &middot; Workshop options available</div>
+      </div>
+      <div class="consulting-card">
+        <div class="consulting-card-icon">&#x1F5E3;&#xFE0F;</div>
+        <h3 class="consulting-card-title">Workshop Facilitation</h3>
+        <p class="consulting-card-desc">Half-day or full-day workshops for engineering teams and leadership groups. Topics: Team Topologies mapping, DORA metrics baseline, incident culture, or the IC-to-EM path.</p>
+        <div class="consulting-card-meta">On-site or remote &middot; From half-day</div>
+      </div>
+      <div class="consulting-card">
+        <div class="consulting-card-icon">&#x1F4A1;</div>
+        <h3 class="consulting-card-title">Advisory / Sounding Board</h3>
+        <p class="consulting-card-desc">A standing monthly call for CTOs and VPs of Engineering who want an experienced outside perspective on org design, hiring decisions, technical strategy, or team health.</p>
+        <div class="consulting-card-meta">Monthly 90-min session &middot; Flexible</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 360px;gap:3rem;align-items:start;margin-top:4rem;">
+      <div>
+        <div class="section-header" style="margin-bottom:1.5rem;"><span class="section-tag">// approach</span><h2 class="section-title" style="font-size:1.4rem;">How I Work</h2><div class="section-line"></div></div>
+        <p style="color:var(--text-mid);line-height:1.8;margin-bottom:1rem;">I don't arrive with a framework and leave with a report. I get involved in the work &mdash; sitting in on standups, reading your RFCs, talking to your engineers &mdash; and give you observations from the inside, not the balcony.</p>
+        <p style="color:var(--text-mid);line-height:1.8;margin-bottom:2rem;">I work with a small number of clients at a time &mdash; usually no more than three engagements concurrently &mdash; so you get real attention, not templated advice.</p>
+      </div>
+      <div>
+        <div class="booking-card" style="position:sticky;top:80px;">
+          <div class="booking-title">Let's Talk</div>
+          <p class="booking-sub">Tell me what you're working on. I'll respond within 48 hours.</p>
+          <div class="form-field"><label class="form-label">Your name</label><input class="form-input" type="text" id="con-name" placeholder="Alex de Vries"></div>
+          <div class="form-field"><label class="form-label">Email</label><input class="form-input" type="email" id="con-email" placeholder="alex@company.com"></div>
+          <div class="form-field"><label class="form-label">Company &amp; role</label><input class="form-input" type="text" id="con-role" placeholder="CTO @ Acme"></div>
+          <div class="form-field">
+            <label class="form-label">Service</label>
+            <select class="form-select" id="con-service">
+              <option value="">-- Select --</option>
+              <option>Fractional Engineering Manager</option>
+              <option>Team Assessment</option>
+              <option>Tech Lead / New EM Coaching</option>
+              <option>Platform Engineering Advisory</option>
+              <option>Workshop Facilitation</option>
+              <option>Advisory / Sounding Board</option>
+              <option>Not sure yet</option>
+            </select>
+          </div>
+          <div class="form-field"><label class="form-label">Message</label><textarea class="form-textarea" id="con-msg" placeholder="What's the challenge?"></textarea></div>
+          <button class="form-submit" onclick="submitConsulting()">Send Message &rarr;</button>
+          <div class="form-success" id="con-success">&#x2713; Opening email to jeff@jeffops.com</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════ PROJECTS ═══════════ -->
+<div id="page-projects" class="page">
+  <div class="section">
+    <div class="section-header"><span class="section-tag">// open source &amp; experiments</span><h2 class="section-title">Projects</h2><div class="section-line"></div></div>
+
+    <div style="max-width:720px;margin-bottom:3rem;">
+      <p style="font-size:1.05rem;color:var(--text-mid);line-height:1.8;">Side projects, open source tools, and experiments — things I build to scratch an itch, explore a new idea, or give something back to the community that taught me everything.</p>
+    </div>
+
+    <div class="projects-oss-banner">
+      <div>
+        <strong>Everything I build is open source by default.</strong>
+        <p>I believe in building in public. All active projects are on GitHub. PRs, issues, and feedback are always welcome.</p>
+      </div>
+      <a class="btn-primary" href="https://github.com/jeffwouters" target="_blank">github.com/jeffwouters &rarr;</a>
+    </div>
+
+    <div class="section-header"><span class="section-tag">// active</span><h2 class="section-title" style="font-size:1.4rem;">Active Projects</h2><div class="section-line"></div></div>
+    <div class="projects-grid">
+
+      <!-- PSWinDocumentation -->
+      <div class="project-card" style="--accent:#00D9FF;" onclick="window.open('https://github.com/jeffwouters','_blank')">
+        <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--cyan);"></div>
+        <div class="project-header">
+          <span class="project-icon">📄</span>
+          <div class="project-badges"><span class="project-badge active">Active</span></div>
+        </div>
+        <div class="project-title">PSWinDocumentation</div>
+        <div class="project-desc">PowerShell module that automatically generates Word and Excel documentation from Active Directory, Exchange, Azure AD, and Teams environments. One command, full infrastructure docs.</div>
+        <div class="project-tech"><span>PowerShell</span><span>Active Directory</span><span>Azure AD</span><span>Word</span></div>
+        <div class="project-links">
+          <a class="project-link primary" href="https://github.com/jeffwouters" target="_blank">GitHub</a>
+          <a class="project-link" href="https://www.powershellgallery.com" target="_blank">PSGallery</a>
+        </div>
+      </div>
+
+      <!-- AzureLandingZone Bicep -->
+      <div class="project-card" onclick="window.open('https://github.com/jeffwouters','_blank')">
+        <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:#f3720d;"></div>
+        <div class="project-header">
+          <span class="project-icon">🏗️</span>
+          <div class="project-badges"><span class="project-badge active">Active</span></div>
+        </div>
+        <div class="project-title">AzLZ — Azure Landing Zone Bicep</div>
+        <div class="project-desc">Opinionated Bicep templates for provisioning enterprise-grade Azure Landing Zones. Hub-spoke networking, policy assignments, RBAC, and monitoring — all composable and versioned.</div>
+        <div class="project-tech"><span>Bicep</span><span>Azure Policy</span><span>GitHub Actions</span></div>
+        <div class="project-links">
+          <a class="project-link primary" href="https://github.com/jeffwouters" target="_blank">GitHub</a>
+          <a class="project-link" href="#post=platform">Blog post</a>
+        </div>
+      </div>
+
+      <!-- JeffOps.com itself -->
+      <div class="project-card" onclick="window.open('https://github.com/jeffwouters','_blank')">
+        <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--cyan);"></div>
+        <div class="project-header">
+          <span class="project-icon">🌐</span>
+          <div class="project-badges"><span class="project-badge active">Active</span></div>
+        </div>
+        <div class="project-title">JeffOps.com</div>
+        <div class="project-desc">This site. A fully static website with Markdown-rendered blog posts (including Mermaid diagrams), no build step, no framework, no npm. Just HTML, CSS, and vanilla JS.</div>
+        <div class="project-tech"><span>HTML</span><span>CSS</span><span>Vanilla JS</span><span>Mermaid</span><span>Marked.js</span></div>
+        <div class="project-links">
+          <a class="project-link primary" href="https://github.com/jeffwouters" target="_blank">GitHub</a>
+        </div>
+      </div>
+
+      <!-- .NET Aspire Dashboard Exporter -->
+      <div class="project-card" onclick="window.open('https://github.com/jeffwouters','_blank')">
+        <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:#3ddc84;"></div>
+        <div class="project-header">
+          <span class="project-icon">🌱</span>
+          <div class="project-badges"><span class="project-badge active">Active</span><span class="project-badge wip">WIP</span></div>
+        </div>
+        <div class="project-title">Aspire Dashboard Exporter</div>
+        <div class="project-desc">A .NET tool that exports .NET Aspire's local dashboard telemetry to Prometheus and Grafana, bridging the gap between the dev-time dashboard and production observability stacks.</div>
+        <div class="project-tech"><span>.NET Aspire</span><span>OpenTelemetry</span><span>Prometheus</span><span>Grafana</span></div>
+        <div class="project-links">
+          <a class="project-link primary" href="https://github.com/jeffwouters" target="_blank">GitHub</a>
+        </div>
+      </div>
+
+      <!-- PowerShell Universal Snippets -->
+      <div class="project-card" onclick="window.open('https://github.com/jeffwouters','_blank')">
+        <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:#a78bfa;"></div>
+        <div class="project-header">
+          <span class="project-icon">⚡</span>
+          <div class="project-badges"><span class="project-badge active">Active</span></div>
+        </div>
+        <div class="project-title">PSSnippets</div>
+        <div class="project-desc">A curated, community-contributed collection of production-ready PowerShell snippets for common Azure, M365, and Windows admin tasks. Searchable, documented, and Pester-tested.</div>
+        <div class="project-tech"><span>PowerShell</span><span>Pester</span><span>Azure</span><span>M365</span></div>
+        <div class="project-links">
+          <a class="project-link primary" href="https://github.com/jeffwouters" target="_blank">GitHub</a>
+          <a class="project-link" href="https://www.powershellgallery.com" target="_blank">PSGallery</a>
+        </div>
+      </div>
+
+      <!-- AI Ops experiments -->
+      <div class="project-card" style="border:1px solid rgba(255,107,107,0.2);" onclick="window.open('https://github.com/jeffwouters','_blank')">
+        <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:#ff6b6b;"></div>
+        <div class="project-header">
+          <span class="project-icon">🤖</span>
+          <div class="project-badges"><span class="project-badge wip">WIP</span></div>
+        </div>
+        <div class="project-title">OpsAgent</div>
+        <div class="project-desc">Experimental AI-assisted ops tooling — an LLM-powered agent that can query Azure Resource Graph, interpret alerts, and suggest remediation steps. Early days. Watch this space.</div>
+        <div class="project-tech"><span>Python</span><span>Azure</span><span>OpenAI</span><span>Semantic Kernel</span></div>
+        <div class="project-links">
+          <a class="project-link primary" href="https://github.com/jeffwouters" target="_blank">GitHub</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="section-header"><span class="section-tag">// archived</span><h2 class="section-title" style="font-size:1.4rem;">Archived / Completed</h2><div class="section-line"></div></div>
+    <div class="projects-grid">
+
+      <div class="project-card" style="opacity:0.7;" onclick="window.open('https://github.com/jeffwouters','_blank')">
+        <div class="project-header">
+          <span class="project-icon">📦</span>
+          <div class="project-badges"><span class="project-badge archived">Archived</span></div>
+        </div>
+        <div class="project-title">DSCWorkshop</div>
+        <div class="project-desc">PowerShell Desired State Configuration workshop materials and examples. Superseded by modern Azure Policy and Bicep, but still referenced in training sessions.</div>
+        <div class="project-tech"><span>PowerShell DSC</span><span>Windows</span></div>
+        <div class="project-links"><a class="project-link" href="https://github.com/jeffwouters" target="_blank">GitHub</a></div>
+      </div>
+
+      <div class="project-card" style="opacity:0.7;" onclick="window.open('https://github.com/jeffwouters','_blank')">
+        <div class="project-header">
+          <span class="project-icon">🔧</span>
+          <div class="project-badges"><span class="project-badge archived">Archived</span></div>
+        </div>
+        <div class="project-title">ADHealthCheck</div>
+        <div class="project-desc">Automated Active Directory health reporting tool. Generates HTML reports covering replication, GPO hygiene, and account auditing. Legacy but still widely used.</div>
+        <div class="project-tech"><span>PowerShell</span><span>Active Directory</span><span>HTML</span></div>
+        <div class="project-links"><a class="project-link" href="https://github.com/jeffwouters" target="_blank">GitHub</a></div>
+      </div>
+
+      <div class="project-card" style="opacity:0.7;" onclick="window.open('https://github.com/jeffwouters','_blank')">
+        <div class="project-header">
+          <span class="project-icon">📊</span>
+          <div class="project-badges"><span class="project-badge archived">Archived</span></div>
+        </div>
+        <div class="project-title">O365Reporting</div>
+        <div class="project-desc">Microsoft 365 licence and usage reporting via PowerShell and Graph API. Helped IT admins understand actual vs paid licence utilisation. Pre-Entra ID era.</div>
+        <div class="project-tech"><span>PowerShell</span><span>Graph API</span><span>M365</span></div>
+        <div class="project-links"><a class="project-link" href="https://github.com/jeffwouters" target="_blank">GitHub</a></div>
+      </div>
+
+    </div>
+
+    <!-- Contribute CTA -->
+    <div class="training-cta" style="margin-top:0;">
+      <h2>Want to collaborate?</h2>
+      <p>Found a bug, have a feature idea, or want to contribute? All projects welcome PRs. For larger collaborations or sponsored features, reach out directly.</p>
+      <div class="training-cta-btns">
+        <a class="btn-primary" href="https://github.com/jeffwouters" target="_blank">View on GitHub</a>
+        <a class="btn-ghost" href="mailto:jeff@jeffops.com">jeff@jeffops.com</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /site-content -->
+
+<footer>
+  <span class="footer-logo">JeffOps.com</span>
+  <span>Built with Markdown, Mermaid &amp; strong opinions · © 2024 Jeff</span>
+  <a class="footer-rss" href="/rss.xml">RSS ↗</a>
+</footer>
+  <script src="blog/index.js"></script>
+  <script src="blog/speaking.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

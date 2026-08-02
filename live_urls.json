@@ -1,0 +1,24 @@
+{
+  "_comment": "Every path jeffops.com served before the rebuild. verify_build asserts each one still resolves, as a page, a redirect or a file. Sourced from the live site's own navigation and post index on 2 August 2026, not from the Hugo content folder, because the folder contains drafts that were never published.",
+  "paths": [
+    "/",
+    "/posts/",
+    "/posts/2023/howto-test-architecture-in-dotnet-with-netarchtest/",
+    "/posts/2023/welcome-to-my-blog/",
+    "/tags/",
+    "/categories/",
+    "/about/",
+    "/index.xml",
+    "/sitemap.xml",
+    "/favicon.ico",
+    "/favicon-16x16.png",
+    "/favicon-32x32.png",
+    "/apple-touch-icon.png",
+    "/android-chrome-192x192.png",
+    "/android-chrome-512x512.png",
+    "/mstile-150x150.png",
+    "/safari-pinned-tab.svg",
+    "/site.webmanifest",
+    "/browserconfig.xml"
+  ]
+}
