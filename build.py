@@ -244,14 +244,15 @@ def build_stat_cells(posts, talks, editions, fail=print) -> str:
 
 def inject_stats(index_html: str, cells: str) -> str:
     """Replace the hero stat cells with the generated ones."""
-    m = re.search(r'<div class="stats-bar">(.*?)</div>\s*\n', index_html, re.DOTALL)
+    m = re.search(r'<div class="stats-bar">.*?\n\s*</div>', index_html, re.DOTALL)
     if not m:
         # Silence here would mean shipping whatever numbers happen to be typed
         # into the HTML, which is the exact failure this replaced.
         raise SystemExit('Could not find <div class="stats-bar"> in index.html. '
                          'The home page statistics could not be generated, and '
                          'hand-written ones must not ship.')
-    return index_html[:m.start(1)] + cells + index_html[m.end(1):]
+    return (index_html[:m.start()] + '<div class="stats-bar">' + cells + '</div>'
+            + index_html[m.end():])
 
 
 def normalise_talks(talks: list[dict]) -> list[dict]:
@@ -321,6 +322,19 @@ def home_json_ld(posts: list[dict]) -> str:
     return json.dumps({'@context': 'https://schema.org',
                        '@graph': [person, website, blog]},
                       ensure_ascii=False, indent=2)
+
+
+def inject_counts(index_html: str, posts: list[dict], talks: list[dict]) -> str:
+    """Fill the {posts} and {talks} placeholders in the hero orbit tooltips.
+
+    These are the same claims as the statistics bar, one layer down and easy to
+    miss: they read "128+ articles" and "40+ conference talks, KubeCon, LeadDev,
+    HashiConf" while the site had seven posts, five talks and no LeadDev
+    appearance anywhere. Anything with a number in it gets counted.
+    """
+    return (index_html
+            .replace('{posts}', str(len(posts)))
+            .replace('{talks}', str(len(talks))))
 
 
 def inject_home_meta(index_html: str, posts: list[dict]) -> str:
@@ -1217,6 +1231,7 @@ def main() -> None:
     for problem in problems:
         print(f'  ! {problem}')
     index_source = inject_stats(index_source, cells)
+    index_source = inject_counts(index_source, live, talks)
     index_source = inject_home_meta(index_source, live)
     print(f'Injected {cells.count("stat-cell")} home page statistic(s), all derived')
 

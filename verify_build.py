@@ -418,11 +418,26 @@ def check_home_page(out: Path, fail) -> None:
             fail(f'the home page is missing {what}, on the one URL most likely to '
                  f'rank for the author\'s own name')
 
-    stats = re.search(r'<div class="stats-bar">(.*?)</div>\s*\n', markup, re.DOTALL)
+    leftover = re.search(r'\{(posts|talks|editions)\}', markup)
+    if leftover:
+        fail(f'the home page still contains the placeholder {leftover.group(0)}, '
+             f'so a count was never substituted')
+
+    stats = re.search(r'<div class="stats-bar">(.*?)\n?\s*</div>(?!\s*<div class="stat-cell")',
+                      markup, re.DOTALL)
     if not stats:
         fail('the home page statistics block is missing')
     else:
         block = stats.group(1)
+        # Counted separately from the retired-claim scan below: the first version
+        # of this check used a non-greedy match that stopped at the first
+        # </div>, so it inspected one cell out of four and three hand-written
+        # figures sailed past it.
+        rendered = block.count('class="stat-cell"')
+        generated = len(re.findall(r'class="stat-val">[^<]*</span>', block))
+        if rendered != generated:
+            fail(f'the statistics block has {rendered} cell(s) but {generated} value(s); '
+                 f'the injection did not replace the whole block')
         if not block.strip():
             fail('the home page statistics block is empty')
         for claim in RETIRED_CLAIMS:
