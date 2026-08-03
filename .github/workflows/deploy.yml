@@ -54,6 +54,18 @@ jobs:
       - name: Check every post rendered, and security.txt is still valid
         run: python verify_build.py _site
 
+      # Strictly after the verifier, never before. Several of its checks match
+      # markup patterns that whitespace collapsing rearranges — running it
+      # against a minified build fails on the newsletter archive container —
+      # and the TODO(jeff) guard reads HTML comments on purpose, because they
+      # are invisible on the page. Strip those first and that guard passes
+      # forever without ever having looked at anything.
+      - name: Minify the built site
+        run: python minify.py _site
+
+      # The artifact that ships is therefore not byte-identical to the one that
+      # was verified. That gap is what the post-deploy smoke test covers: it
+      # fetches the live origin after the deploy rather than trusting the build.
       - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
