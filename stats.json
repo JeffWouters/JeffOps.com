@@ -1,6 +1,12 @@
 {
-  "_comment": "Numbers shown on the home page that cannot be counted from the repository. Anything countable (articles, talks, newsletter editions) is derived at build time and must not be listed here. A null value is omitted from the page rather than guessed. A value with a 'verified' date older than STATS_MAX_AGE_DAYS fails the build, so a stale claim becomes an error instead of something nobody notices for a year.",
+  "_comment": "Numbers shown on the home page that cannot be counted from the repository. Anything countable is derived at build time and must not be duplicated here, with one exception: an entry whose label matches a derived one replaces it, which is how a career total overrides a count of whatever happens to be listed on the site. A null value is omitted from the page rather than guessed. A value with a 'verified' date older than STATS_MAX_AGE_DAYS fails the build, so a stale claim becomes an error instead of something nobody notices for a year.",
   "stats": {
+    "talks": {
+      "value": "100+",
+      "label": "Talks",
+      "source": "Jeff's own count, given directly. Overrides the derived figure, which counts only the talks listed in speaking_talks.json and is a selection rather than a career total. No repository source exists for this.",
+      "verified": "2026-08-03"
+    },
     "subscribers": {
       "value": null,
       "label": "Subscribers",

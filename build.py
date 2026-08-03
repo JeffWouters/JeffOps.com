@@ -222,8 +222,15 @@ def derived_stats(posts: list[dict], talks: list[dict], editions: list[dict]) ->
     return out
 
 
-def build_stat_cells(posts, talks, editions, fail=print) -> str:
+def build_stat_cells(posts, talks, editions, fail=print) -> tuple[str, int]:
+    """Return the rendered cells and how many of them came from stats.json.
+
+    The count is of figures actually accepted, not of figures present in the
+    file: a rejected one falls back to the derived number, and a build log that
+    said otherwise would be describing a page that was not built.
+    """
     cells = derived_stats(posts, talks, editions)
+    declared = 0
 
     today = datetime.now(timezone.utc).date()
     for key, meta in load_stats().items():
@@ -239,13 +246,28 @@ def build_stat_cells(posts, talks, editions, fail=print) -> str:
             fail(f'stats.json: "{key}" was last verified {age} days ago. '
                  f'Re-check it or remove the value.')
             continue
-        cells.append((str(value), meta.get('label', key)))
+        # A stats.json entry whose label matches a derived one replaces it in
+        # place rather than appending. The derived Talks figure counts the talks
+        # listed in speaking_talks.json, which is a selection, not a career
+        # total -- it read "5 Talks" for someone who has given far more. Where a
+        # declared figure and a derived one describe the same thing, the
+        # declared one wins, and the cell keeps its position so the bar does not
+        # reshuffle. Delete the value and the derived count comes back.
+        label = meta.get('label', key)
+        declared += 1
+        for i, (_, existing) in enumerate(cells):
+            if existing.casefold() == label.casefold():
+                cells[i] = (str(value), label)
+                break
+        else:
+            cells.append((str(value), label))
 
-    return ''.join(
+    markup = ''.join(
         f'<div class="stat-cell"><span class="stat-val">{html.escape(v)}</span>'
         f'<span class="stat-lbl">{html.escape(l)}</span></div>'
         for v, l in cells[:4]
     )
+    return markup, declared
 
 
 def inject_stats(index_html: str, cells: str) -> str:
@@ -1283,14 +1305,16 @@ def main() -> None:
     index_source = inject_editions(index_source, editions)
 
     problems: list[str] = []
-    cells = build_stat_cells(live, talks, editions, problems.append)
+    cells, declared = build_stat_cells(live, talks, editions, problems.append)
     for problem in problems:
         print(f'  ! {problem}')
     index_source = inject_stats(index_source, cells)
     index_source = inject_events(index_source)
     index_source = inject_counts(index_source, live, talks)
     index_source = inject_home_meta(index_source, live)
-    print(f'Injected {cells.count("stat-cell")} home page statistic(s), all derived')
+    total = cells.count('stat-cell')
+    print(f'Injected {total} home page statistic(s): {total - declared} derived, '
+          f'{declared} declared in stats.json')
 
     (out / 'index.html').write_text(index_source, encoding='utf-8')
     print(f'Injected {len(editions)} newsletter edition(s) into index.html')
