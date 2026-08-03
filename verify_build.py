@@ -767,6 +767,40 @@ def main() -> int:
                 fail(f'/{page.relative_to(out).as_posix()} loads {url.group(1)} '
                      f'from another origin')
 
+    # The Content Security Policy has to be on every page, and it has to still
+    # be worth having. An inline event handler anywhere would force
+    # 'unsafe-inline' back into script-src, at which point the policy stops
+    # defending against the thing it exists for — so both are checked, and the
+    # handler check is the one that will actually catch a regression, because
+    # writing onclick="" is the natural thing to reach for.
+    for page in sorted(out.rglob('*.html')):
+        label = '/' + page.relative_to(out).as_posix()
+        markup = page.read_text(encoding='utf-8', errors='ignore')
+
+        csp = re.search(r'<meta http-equiv="Content-Security-Policy" content="([^"]+)"', markup)
+        if not csp:
+            fail(f'{label} has no Content Security Policy')
+            continue
+        policy = csp.group(1)
+        for directive in ("script-src 'self'", "object-src", "default-src 'none'",
+                          "base-uri 'none'", "require-trusted-types-for 'script'"):
+            if directive.split()[0] not in policy:
+                fail(f'{label} — CSP is missing {directive.split()[0]}')
+        if "'unsafe-inline'" in policy.split('style-src')[0]:
+            fail(f'{label} — CSP allows inline script, which defeats it')
+        if "'unsafe-eval'" in policy:
+            fail(f'{label} — CSP allows eval')
+
+        handlers = re.findall(r'\son[a-z]+\s*=\s*["\']?[^>\s]', markup)
+        if handlers:
+            fail(f'{label} carries {len(handlers)} inline event handler(s); '
+                 f'they cannot run under this CSP and would need unsafe-inline')
+
+        if '/js/trusted-types.js' not in markup and 'js/trusted-types.js' not in markup:
+            fail(f'{label} does not install the Trusted Types policy')
+        if 'purify.min.js' not in markup:
+            fail(f'{label} does not load the sanitiser the policy depends on')
+
     check_robots(out, fail)
     check_security_txt(out, fail)
     check_schedule(out, fail)

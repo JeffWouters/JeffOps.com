@@ -11,6 +11,39 @@
 // when the index cannot be read, the page says so.
 const posts = {};
 
+// ── EVENT WIRING ──────────────────────────────────────
+// Every handler used to be an onclick="" attribute in the markup. A Content
+// Security Policy worth having cannot allow those: permitting inline script is
+// exactly the hole the policy exists to close, and 'unsafe-inline' would leave
+// the header decorative. The markup now carries data- attributes describing
+// what a control does, and this reads them.
+//
+// Delegated from document, so it covers elements the app inserts later — the
+// tag filters, the series filters and the inline newsletter call to action are
+// all built at runtime.
+function wireDelegatedHandlers() {
+  document.addEventListener('click', event => {
+    const el = event.target.closest('[data-page],[data-share],[data-set-tag],'
+                                  + '[data-set-series],[data-noop]');
+    if (!el) return;
+
+    // A dropdown parent whose href is '#'. Without this the browser jumps to
+    // the top of the document every time someone opens the menu.
+    if (el.hasAttribute('data-noop')) { event.preventDefault(); return; }
+
+    if (el.dataset.page) { event.preventDefault(); showPage(el.dataset.page); return; }
+    if (el.dataset.share) { shareTo(el.dataset.share); return; }
+    if (el.dataset.setTag !== undefined) { setTag(el.dataset.setTag, el); return; }
+    if (el.dataset.setSeries !== undefined) { setSeries(el.dataset.setSeries, el); }
+  });
+
+  document.addEventListener('input', event => {
+    if (event.target.dataset && event.target.dataset.filter === 'posts') {
+      filterPosts(event.target.value);
+    }
+  });
+}
+
 // ── PAGE ROUTING ───────────────────────────────────────
 function showPage(name, updateHash = true) {
   const page = document.getElementById('page-' + name) || document.getElementById('page-home');
@@ -229,7 +262,7 @@ async function showPost(id, postObj, updateHash = true) {
   if (paras[midIdx]) {
     const cta = document.createElement('div');
     cta.className = 'inline-nl-cta';
-    cta.innerHTML = '<p><strong>The JeffOps Dispatch</strong> — arguments like this every other Monday, in more depth than fits in a post.</p><button class="inline-nl-btn" onclick="showPage(\'newsletter\')">Subscribe free →</button>';
+    cta.innerHTML = '<p><strong>The JeffOps Dispatch</strong> — arguments like this every other Monday, in more depth than fits in a post.</p><button class="inline-nl-btn" data-page="newsletter">Subscribe free →</button>';
     paras[midIdx].insertAdjacentElement('afterend', cta);
   }
 
@@ -921,6 +954,7 @@ function blogFolder(isoDate, title) {
 // Both copies moved into post-enhance.js, which is also what loads mermaid
 // now — on demand, and only for a page that has a diagram.
 document.addEventListener('DOMContentLoaded', () => {
+  wireDelegatedHandlers();
   navigateFromHash();
   window.addEventListener('hashchange', navigateFromHash);
 });

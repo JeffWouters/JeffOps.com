@@ -78,5 +78,19 @@
     reveal('con-success');
   };
 
+  // Delegated for the same reason the app's are: no inline handlers means the
+  // Content Security Policy can refuse inline script outright.
+  document.addEventListener('click', function (event) {
+    var el = event.target.closest('[data-action]');
+    if (!el) return;
+    if (el.dataset.action === 'submit-enquiry') global.submitEnquiry();
+    if (el.dataset.action === 'submit-consulting') global.submitConsulting();
+  });
+  document.addEventListener('change', function (event) {
+    if (event.target.dataset && event.target.dataset.action === 'topic-change') {
+      global.handleTopicChange();
+    }
+  });
+
   document.addEventListener('DOMContentLoaded', global.handleTopicChange);
 })(window);

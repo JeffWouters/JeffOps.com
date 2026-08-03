@@ -10,8 +10,9 @@ named below, copied from npm, with its licence beside it.
 | `highlight.min.js` | `@highlightjs/cdn-assets` | 11.9.0 | BSD-3-Clause |
 | `github-dark.min.css` | `@highlightjs/cdn-assets` | 11.9.0 | BSD-3-Clause |
 | `marked.min.js` | `marked` | 9.1.6 | MIT |
-| `fonts/inter-latin-*.woff2` | `@fontsource/inter` | latin subset | OFL-1.1 |
-| `fonts/jetbrains-mono-latin-*.woff2` | `@fontsource/jetbrains-mono` | latin subset | OFL-1.1 |
+| `purify.min.js` | `dompurify` | 3.4.12 | MPL-2.0 OR Apache-2.0 |
+| `fonts/inter-latin-wght-normal.woff2` | `@fontsource-variable/inter` | latin, variable | OFL-1.1 |
+| `fonts/jetbrains-mono-latin-wght-normal.woff2` | `@fontsource-variable/jetbrains-mono` | latin, variable | OFL-1.1 |
 
 ## Why these are here rather than on a CDN
 
@@ -45,3 +46,13 @@ Mermaid is not vendored. It is 2.9 MB (875 KB gzipped) — larger than the rest
 of the site put together — and no post currently contains a diagram. It is
 loaded from a CDN on demand, by the page, only once a `mermaid` code block is
 actually found. Today that never happens and nothing is fetched.
+
+## DOMPurify
+
+Not a convenience. Every page carries a Content Security Policy with
+`require-trusted-types-for 'script'`, which makes every innerHTML assignment a
+type error unless the string came from a policy. js/trusted-types.js installs
+that policy, and it sanitises with DOMPurify rather than waving strings
+through. The sink it exists for is `innerHTML = marked.parse(...)`: marked
+dropped its `sanitize` option in v8, so raw HTML in a markdown file would
+otherwise reach the DOM untouched.

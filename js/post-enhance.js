@@ -265,5 +265,12 @@
     };
   };
 
+  // The Copy link button exists on the static pages and in the app, and each
+  // defines its own window.copyLink. One listener, loaded by both.
+  document.addEventListener('click', function (event) {
+    var el = event.target.closest('[data-action="copy-link"]');
+    if (el && typeof global.copyLink === 'function') global.copyLink();
+  });
+
   global.JeffOpsPost = NS;
 })(window);

@@ -152,11 +152,22 @@ REDIRECT_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<!-- Delivered as a meta element because GitHub Pages cannot set response
+     headers. Two consequences worth knowing: frame-ancestors is ignored in
+     meta, so clickjacking is not mitigated here, and there is no way to set
+     HSTS, COOP or X-Frame-Options at all. Those need a proxy in front.
+     style-src keeps 'unsafe-inline' for the 55 style attributes in the
+     markup; a CSS injection cannot execute script, and script-src carries
+     no such escape hatch. cdnjs is allowed for one reason: Mermaid, fetched
+     on demand and only for a page that has a diagram. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; require-trusted-types-for 'script'">
 <title>Moved — {site_title}</title>
 <link rel="canonical" href="{absolute}">
 <meta http-equiv="refresh" content="0; url={target}">
 <meta name="robots" content="noindex, follow">
 <script>window.location.replace("{target}");</script>
+<script src="/vendor/purify.min.js"></script>
+<script src="/js/trusted-types.js"></script>
 </head>
 <body style="font-family:system-ui,sans-serif;background:#0a0c0f;color:#e8edf2;padding:3rem">
 <p>This page has moved to <a style="color:#00d9ff" href="{target}">{target}</a>.</p>
@@ -694,6 +705,35 @@ def write_webp(image_path: Path) -> str | None:
 _IMG_RE = re.compile(r'<img\b[^>]*?\bsrc="([^"]+)"[^>]*>')
 
 
+def size_images(markup: str, page_dir: Path) -> str:
+    """Give every local <img> its real width and height.
+
+    An image with no dimensions occupies nothing until it arrives, so the text
+    below it is laid out twice and jumps when the picture lands. The cover
+    figure has carried width and height for a while; images written in markdown
+    never have, which is where the 0.06 of layout shift on a post page was
+    coming from.
+    """
+    def add(match: re.Match) -> str:
+        tag, src = match.group(0), match.group(1)
+        if 'width=' in tag or src.startswith(('http', 'data:', '//')):
+            return tag
+        path = (page_dir / src.lstrip('/')) if src.startswith('/') else (page_dir / src)
+        if not path.is_file():
+            return tag
+        try:
+            from PIL import Image
+            with Image.open(path) as im:
+                w, h = im.size
+        except Exception:                                 # noqa: BLE001
+            return tag
+        # python-markdown closes img tags XHTML-style, so the trailing slash has
+        # to come off before anything is appended or it lands mid-attribute.
+        return tag[:-1].rstrip().rstrip('/').rstrip() + f' width="{w}" height="{h}">'
+
+    return _IMG_RE.sub(add, markup)
+
+
 def offer_webp(markup: str, available: set[str]) -> str:
     """Wrap <img> in <picture> where a WebP sibling was written.
 
@@ -796,6 +836,15 @@ POST_TEMPLATE = """<!DOCTYPE html>
 <html lang="{lang}">
 <head>
 <meta charset="UTF-8">
+<!-- Delivered as a meta element because GitHub Pages cannot set response
+     headers. Two consequences worth knowing: frame-ancestors is ignored in
+     meta, so clickjacking is not mitigated here, and there is no way to set
+     HSTS, COOP or X-Frame-Options at all. Those need a proxy in front.
+     style-src keeps 'unsafe-inline' for the 55 style attributes in the
+     markup; a CSS injection cannot execute script, and script-src carries
+     no such escape hatch. cdnjs is allowed for one reason: Mermaid, fetched
+     on demand and only for a page that has a diagram. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; require-trusted-types-for 'script'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{title} — {site_title}</title>
 <meta name="description" content="{description}">
@@ -830,6 +879,8 @@ POST_TEMPLATE = """<!DOCTYPE html>
 <script type="application/ld+json">
 {jsonld}
 </script>
+<script src="/vendor/purify.min.js"></script>
+<script src="/js/trusted-types.js"></script>
 </head>
 <body class="static-post">
 <div id="read-progress"></div>
@@ -862,7 +913,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
       <aside class="post-right-aside">
         <div class="post-aside-box">
           <div class="post-aside-title">// Share</div>
-          <button class="share-btn" id="copy-link-btn" onclick="copyLink()">⎘ Copy link</button>
+          <button class="share-btn" id="copy-link-btn" data-action="copy-link">⎘ Copy link</button>
           <a class="share-btn" href="https://x.com/intent/post?url={canonical_enc}&amp;text={title_enc}" target="_blank" rel="noopener">𝕏 Twitter / X</a>
           <a class="share-btn" href="https://www.linkedin.com/sharing/share-offsite/?url={canonical_enc}" target="_blank" rel="noopener">in LinkedIn</a>
           <button class="share-btn" id="copy-md-btn" type="button">⌄ Copy as Markdown</button>
@@ -900,6 +951,15 @@ LIST_TEMPLATE = """<!DOCTYPE html>
 <html lang="{lang}">
 <head>
 <meta charset="UTF-8">
+<!-- Delivered as a meta element because GitHub Pages cannot set response
+     headers. Two consequences worth knowing: frame-ancestors is ignored in
+     meta, so clickjacking is not mitigated here, and there is no way to set
+     HSTS, COOP or X-Frame-Options at all. Those need a proxy in front.
+     style-src keeps 'unsafe-inline' for the 55 style attributes in the
+     markup; a CSS injection cannot execute script, and script-src carries
+     no such escape hatch. cdnjs is allowed for one reason: Mermaid, fetched
+     on demand and only for a page that has a diagram. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; require-trusted-types-for 'script'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Blog — {site_title}</title>
 <meta name="description" content="{description}">
@@ -921,6 +981,8 @@ LIST_TEMPLATE = """<!DOCTYPE html>
 <link rel="preload" href="/vendor/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/vendor/fonts/jetbrains-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/styles.css">
+<script src="/vendor/purify.min.js"></script>
+<script src="/js/trusted-types.js"></script>
 </head>
 <body class="static-post">
 {nav}
@@ -970,8 +1032,10 @@ def code_assets(content: str) -> tuple[str, str]:
 
 
 def build_post_page(post: dict, by_folder: dict, nav: str, footer: str,
-                    by_series: dict | None = None, now: datetime | None = None) -> str:
+                    by_series: dict | None = None, now: datetime | None = None,
+                    out_dir: Path | None = None) -> str:
     content, toc = render_markdown(post['body_markdown'])
+    content = size_images(content, out_dir) if out_dir else content
     content = offer_webp(content, set(post.get('webp_assets', [])))
     reviewed_meta, stale_banner = freshness(post, now or utc_now())
     canonical = canonical_for(post)
@@ -1088,6 +1152,15 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 <html lang="{lang}">
 <head>
 <meta charset="UTF-8">
+<!-- Delivered as a meta element because GitHub Pages cannot set response
+     headers. Two consequences worth knowing: frame-ancestors is ignored in
+     meta, so clickjacking is not mitigated here, and there is no way to set
+     HSTS, COOP or X-Frame-Options at all. Those need a proxy in front.
+     style-src keeps 'unsafe-inline' for the 55 style attributes in the
+     markup; a CSS injection cannot execute script, and script-src carries
+     no such escape hatch. cdnjs is allowed for one reason: Mermaid, fetched
+     on demand and only for a page that has a diagram. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; require-trusted-types-for 'script'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{title} — {site_title}</title>
 <meta name="description" content="{description}">
@@ -1110,6 +1183,8 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 <link rel="preload" href="/vendor/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/vendor/fonts/jetbrains-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/styles.css">
+<script src="/vendor/purify.min.js"></script>
+<script src="/js/trusted-types.js"></script>
 </head>
 <body class="static-post">
 {nav}
@@ -1636,7 +1711,7 @@ def build_edition_pages(out: Path, editions: list[dict], nav: str, footer: str,
                     if write_webp(page_dir / asset.name):
                         edition.setdefault('webp_assets', []).append(asset.name)
 
-        page = build_post_page(edition, {}, nav, footer, by_series, now)
+        page = build_post_page(edition, {}, nav, footer, by_series, now, page_dir)
         (page_dir / 'index.html').write_text(page, encoding='utf-8')
         write_markdown_source(page_dir, edition)
     return published
@@ -1951,7 +2026,7 @@ def main() -> None:
                     if write_webp(page_dir / asset.name):
                         post.setdefault('webp_assets', []).append(asset.name)
 
-        page = build_post_page(post, by_folder, nav, footer, by_series, now)
+        page = build_post_page(post, by_folder, nav, footer, by_series, now, page_dir)
         write_markdown_source(page_dir, post)
         if not post.get('is_published', True):
             when = post['published_at'][:16].replace('T', ' ') + ' UTC'

@@ -2,6 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<!-- Delivered as a meta element because GitHub Pages cannot set response
+     headers. Two consequences worth knowing: frame-ancestors is ignored in
+     meta, so clickjacking is not mitigated here, and there is no way to set
+     HSTS, COOP or X-Frame-Options at all. Those need a proxy in front.
+     style-src keeps 'unsafe-inline' for the 55 style attributes in the
+     markup; a CSS injection cannot execute script, and script-src carries
+     no such escape hatch. cdnjs is allowed for one reason: Mermaid, fetched
+     on demand and only for a page that has a diagram. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; require-trusted-types-for 'script'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JeffOps — Jeff. Tech. Dev. Ops.</title>
 <meta property="og:type" content="website">
@@ -50,6 +59,8 @@
 <link rel="preload" href="/vendor/fonts/jetbrains-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <script src="/vendor/marked.min.js"></script>
     <link rel="stylesheet" href="css/styles.css">
+<script src="vendor/purify.min.js"></script>
+<script src="js/trusted-types.js"></script>
 </head>
 <body>
 <div id="read-progress"></div>
@@ -64,7 +75,7 @@
 
     <!-- Content dropdown: Blog, Newsletter, Videos -->
     <li class="nav-has-sub">
-      <a href="#" id="nav-content" onclick="return false;">Content</a>
+      <a href="#" id="nav-content" data-noop>Content</a>
       <div class="nav-dropdown">
         <a href="#blog"       id="nav-blog">Blog</a>
         <a href="#newsletter" id="nav-newsletter">Newsletter</a>
@@ -74,7 +85,7 @@
 
     <!-- Services dropdown: Speaking, Training -->
     <li class="nav-has-sub">
-      <a href="#" id="nav-services" onclick="return false;">Services</a>
+      <a href="#" id="nav-services" data-noop>Services</a>
       <div class="nav-dropdown">
         <a href="#consulting" id="nav-consulting">Consulting</a>
         <a href="#speaking" id="nav-speaking">Speaking</a>
@@ -98,7 +109,7 @@
         <circle cx="280" cy="280" r="204" fill="none" stroke="#00D9FF" stroke-width="1" stroke-dasharray="4 8"/>
       </svg>
       <div id="connectors"></div>
-      <div class="center-node" onclick="showPage('about')" title="About Jeff">
+      <div class="center-node" data-page="about" title="About Jeff">
         <img class="center-image" src="JeffOps_Speaking.jpg" alt="Jeff Wouters"
              data-portraits="JeffOps_Speaking.jpg|Jeff Wouters speaking at a conference,JeffOps_Staring.jpeg|Jeff Wouters,JeffOps_Finger.jpg|Jeff Wouters">
       </div>
@@ -161,17 +172,17 @@
     <div class="section-header"><span class="section-tag">// writing</span><h2 class="section-title">Blog</h2><div class="section-line"></div></div>
     <div class="blog-layout">
       <aside class="blog-sidebar">
-        <div class="sidebar-section"><div class="sidebar-label">Search</div><input class="search-input" type="text" placeholder="search posts..." oninput="filterPosts(this.value)"></div>
+        <div class="sidebar-section"><div class="sidebar-label">Search</div><input class="search-input" type="text" placeholder="search posts..." data-filter="posts"></div>
         <div class="sidebar-section">
           <div class="sidebar-label">Filter by topic</div>
           <div class="tag-filter" id="topic-filter-buttons">
-            <button class="tag-btn active" onclick="setTag('all',this)">All Posts <span class="tag-count">0</span></button>
+            <button class="tag-btn active" data-set-tag="all">All Posts <span class="tag-count">0</span></button>
           </div>
         </div>
         <div class="sidebar-section">
           <div class="sidebar-label">Series</div>
           <div class="tag-filter" id="series-filter-buttons">
-            <button class="series-btn active" onclick="setSeries('all',this)">All Series <span class="tag-count">0</span></button>
+            <button class="series-btn active" data-set-series="all">All Series <span class="tag-count">0</span></button>
           </div>
         </div>
       </aside>
@@ -187,7 +198,7 @@
 <!-- ═══════════ POST VIEW ═══════════ -->
 <div id="page-post" class="page">
   <div class="post-page-wrap">
-    <div style="padding-top:2rem;"><button class="back-btn" onclick="showPage('blog')">← Back to Blog</button></div>
+    <div style="padding-top:2rem;"><button class="back-btn" data-page="blog">← Back to Blog</button></div>
     <div class="post-page-layout">
       <aside class="post-toc-aside">
         <div class="toc-label">Contents</div>
@@ -207,15 +218,15 @@
       <aside class="post-right-aside">
         <div class="post-aside-box">
           <div class="post-aside-title">// Share</div>
-          <button class="share-btn" id="copy-link-btn" onclick="copyLink()">⎘ Copy link</button>
-          <button class="share-btn" onclick="shareTo('x')">𝕏 Twitter / X</button>
-          <button class="share-btn" onclick="shareTo('linkedin')">in LinkedIn</button>
+          <button class="share-btn" id="copy-link-btn" data-action="copy-link">⎘ Copy link</button>
+          <button class="share-btn" data-share="x">𝕏 Twitter / X</button>
+          <button class="share-btn" data-share="linkedin">in LinkedIn</button>
           <button class="share-btn" id="copy-md-btn" type="button">⌄ Copy as Markdown</button>
         </div>
         <div class="post-aside-box">
           <div class="post-aside-title">// The JeffOps Dispatch</div>
           <p style="font-family:var(--mono);font-size:0.7rem;color:var(--text-dim);line-height:1.6;margin-bottom:0.75rem;">Every other Monday — one topic, in more depth than fits in a post.</p>
-          <button class="share-btn" style="background:var(--cyan-glow);border-color:var(--border);color:var(--cyan);" onclick="showPage('newsletter')">Subscribe free →</button>
+          <button class="share-btn" style="background:var(--cyan-glow);border-color:var(--border);color:var(--cyan);" data-page="newsletter">Subscribe free →</button>
         </div>
         <div class="post-aside-box">
           <div class="post-aside-title">// Progress</div>
@@ -299,7 +310,7 @@
             <div class="form-field"><label class="form-label">Approximate date</label><input class="form-input" type="text" id="eq-date" placeholder="Q1 2025 / March 15"></div>
             <div class="form-field">
               <label class="form-label">Topic area</label>
-              <select class="form-select" id="eq-topic" onchange="handleTopicChange()">
+              <select class="form-select" id="eq-topic" data-action="topic-change">
                 <option value="">— Select —</option>
               </select>
             </div>
@@ -308,7 +319,7 @@
               <input class="form-input" type="text" id="eq-topic-other" placeholder="Describe the topic you have in mind">
             </div>
             <div class="form-field"><label class="form-label">Message (optional)</label><textarea class="form-textarea" id="eq-msg" placeholder="Tell Jeff about the event, audience size, format..."></textarea></div>
-            <button class="form-submit" onclick="submitEnquiry()">Send Enquiry →</button>
+            <button class="form-submit" data-action="submit-enquiry">Send Enquiry →</button>
             <div class="form-success" id="eq-success">✓ Opening your email client to jeff@jeffops.com</div>
           </div>
         </div>
@@ -449,7 +460,7 @@
         <div style="font-size:2rem;">&#x1F3AF;</div>
         <div style="font-size:0.95rem;font-weight:600;">Custom course?</div>
         <div style="font-size:0.82rem;color:var(--text-dim);line-height:1.6;">Need a tailored curriculum? Jeff builds bespoke training for specific tools, stacks, or team maturity levels.</div>
-        <button class="btn-primary" onclick="showPage('consulting')" style="font-size:0.72rem;padding:8px 18px;">Get in touch &rarr;</button>
+        <button class="btn-primary" data-page="consulting" style="font-size:0.72rem;padding:8px 18px;">Get in touch &rarr;</button>
       </div>
     </div>
     <div class="section-header"><span class="section-tag">// delivery</span><h2 class="section-title">How Training is Delivered</h2><div class="section-line"></div></div>
@@ -544,7 +555,7 @@
             </select>
           </div>
           <div class="form-field"><label class="form-label">Message</label><textarea class="form-textarea" id="con-msg" placeholder="What's the challenge?"></textarea></div>
-          <button class="form-submit" onclick="submitConsulting()">Send Message &rarr;</button>
+          <button class="form-submit" data-action="submit-consulting">Send Message &rarr;</button>
           <div class="form-success" id="con-success">&#x2713; Opening email to jeff@jeffops.com</div>
         </div>
       </div>
