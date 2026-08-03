@@ -25,7 +25,7 @@ def strip_frontmatter(text):
 # parser is shared. A key absent from this tuple is silently dropped, which is how
 # every edition came through with no LinkedIn URL and nothing to credit.
 SCALAR_FRONTMATTER_KEYS = ('series', 'slug', 'canonical', 'description', 'title', 'date',
-                          'author', 'draft', 'number', 'linkedin_url')
+                          'author', 'draft', 'number', 'linkedin_url', 'cover', 'cover_alt')
 
 
 

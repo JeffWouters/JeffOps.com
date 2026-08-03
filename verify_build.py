@@ -764,6 +764,24 @@ def main() -> int:
                 fail(f'{url} has fewer than 150 words of body text, which is not '
                      f'a newsletter edition')
 
+            # A cover that does not resolve fails in two places at once: a
+            # broken image on the page, and a dead og:image in every share
+            # card. The second is the one nobody sees, because it only shows
+            # up in someone else's timeline.
+            cover = re.search(r'<figure class="post-cover"><img src="([^"]+)"([^>]*)>', text)
+            if cover:
+                if not (out / cover.group(1).lstrip('/')).is_file():
+                    fail(f'{url} shows a cover image at {cover.group(1)}, '
+                         f'which was never written to the build')
+                if 'alt=' not in cover.group(2):
+                    fail(f'{url} has a cover image with no alt attribute')
+            og = re.search(r'<meta property="og:image" content="([^"]+)"', text)
+            if og:
+                local = og.group(1).replace(SITE_URL, '', 1).lstrip('/')
+                if not (out / local).is_file():
+                    fail(f'{url} advertises og:image {og.group(1)}, which does not '
+                         f'exist in the build, so every share card would be blank')
+
     if (out / 'sitemap.xml').exists():
         sitemap = (out / 'sitemap.xml').read_text(encoding='utf-8')
         for post in posts:

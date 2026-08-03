@@ -505,6 +505,10 @@ def json_ld(post: dict) -> str:
         data['dateModified'] = post['iso']
     if post.get('tags'):
         data['keywords'] = ', '.join(post['tags'])
+    # Google reads this for article rich results, and it is a separate field
+    # from og:image. Setting one and not the other is the usual half-done job.
+    if post.get('cover_url'):
+        data['image'] = SITE['base_url'] + post['cover_url']
     return json.dumps(data, ensure_ascii=False, indent=2)
 
 
@@ -552,14 +556,14 @@ POST_TEMPLATE = """<!DOCTYPE html>
 <meta property="og:url" content="{canonical}">
 <meta property="og:title" content="{title}">
 <meta property="og:description" content="{description}">
-<meta property="og:image" content="{base_url}{og_image}">
+<meta property="og:image" content="{og_image_url}">
 <meta property="og:site_name" content="{site_title}">
 <meta property="article:author" content="{author}">
 {article_meta}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{title}">
 <meta name="twitter:description" content="{description}">
-<meta name="twitter:image" content="{base_url}{og_image}">
+<meta name="twitter:image" content="{og_image_url}">
 <link rel="alternate" type="application/rss+xml" title="{site_title} Blog" href="{base_url}/rss.xml">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -596,6 +600,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
           <div class="post-header-meta"><span id="post-date">{date}</span><span id="post-readtime">{readtime}</span><span>{author}</span></div>
           {tags}
         </div>
+{cover}
 {origin}
         <div class="post-content" id="post-content">
 {content}
@@ -692,6 +697,27 @@ def build_post_page(post: dict, by_folder: dict, nav: str, footer: str) -> str:
         chips = ''.join(f'<span class="tag">{html.escape(t)}</span>' for t in post['tags'])
         tags_html = f'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">{chips}</div>'
 
+    # Every page on this site used to share one og:image, so a shared link to
+    # any article previewed as the same generic card. A page with its own cover
+    # now advertises that instead, and pages without one are unchanged.
+    cover_html = ''
+    og_image_url = SITE['base_url'] + SITE['og_image']
+    if post.get('cover_url'):
+        og_image_url = SITE['base_url'] + post['cover_url']
+        # width and height are set so the browser reserves the right space
+        # before the image loads. Without them the whole article jumps down the
+        # moment it arrives, which is the single most irritating thing a page
+        # can do to someone who has already started reading.
+        dims = ''
+        if post.get('cover_width') and post.get('cover_height'):
+            dims = f' width="{post["cover_width"]}" height="{post["cover_height"]}"'
+        cover_html = (
+            '        <figure class="post-cover">'
+            f'<img src="{html.escape(post["cover_url"], quote=True)}"'
+            f' alt="{html.escape(post.get("cover_alt", ""))}"{dims}>'
+            '</figure>'
+        )
+
     return POST_TEMPLATE.format(
         lang=SITE['language'],
         title=html.escape(post['title']),
@@ -703,6 +729,8 @@ def build_post_page(post: dict, by_folder: dict, nav: str, footer: str) -> str:
         canonical_enc=quote(canonical, safe=''),
         base_url=SITE['base_url'],
         og_image=SITE['og_image'],
+        og_image_url=og_image_url,
+        cover=cover_html,
         article_meta=article_meta,
         jsonld=json_ld(post),
         kicker='Newsletter Edition' if post.get('is_newsletter') else 'Blog Post',
@@ -1164,10 +1192,57 @@ def load_editions() -> list[dict]:
                            or (parse_excerpt(body) if has_body else ''),
         }
         edition['excerpt'] = edition['description']
+        attach_cover(edition, front, source)
         editions.append(edition)
 
     editions.sort(key=lambda e: e.get('date_iso', ''), reverse=True)
     return editions
+
+
+EDITION_IMAGE_DIR = EDITION_DIR / 'images'
+
+
+def attach_cover(edition: dict, front: dict, source: Path) -> None:
+    """Resolve the edition's cover image, if it has one.
+
+    Declaring a cover that is not there is reported rather than ignored: a
+    missing file would otherwise show as a broken image on the page and a dead
+    og:image in every share card, neither of which anyone notices from the
+    build log.
+
+    Dimensions are measured from the file rather than declared in frontmatter.
+    A number typed by hand is a number that goes stale the first time the image
+    is re-exported, and a wrong one reserves the wrong space, which is worse
+    than reserving none.
+    """
+    name = front.get('cover', '').strip()
+    if not name:
+        return
+
+    path = EDITION_IMAGE_DIR / name
+    if not path.is_file():
+        print(f'  ! {source.name} declares cover "{name}", '
+              f'but newsletter/images/{name} does not exist')
+        return
+
+    alt = front.get('cover_alt', '').strip()
+    if not alt:
+        print(f'  ! {source.name} has a cover with no cover_alt. '
+              f'A decorative image needs alt=""; a meaningful one needs a description.')
+
+    # The filename, not a Path. Edition records are serialised into
+    # blog/index.json, and a Path is not JSON-serialisable: putting one here
+    # took the whole build down. Keeping the record to plain strings means that
+    # cannot happen again by accident.
+    edition['cover_name'] = path.name
+    edition['cover_url'] = f'{edition["url"]}{path.name}'
+    edition['cover_alt'] = alt
+    try:
+        from PIL import Image
+        with Image.open(path) as img:
+            edition['cover_width'], edition['cover_height'] = img.size
+    except Exception as exc:                       # Pillow missing, or not an image
+        print(f'  ! could not read the dimensions of {path.name}: {exc}')
 
 
 def edition_origin_note(edition: dict) -> str:
@@ -1200,6 +1275,12 @@ def build_edition_pages(out: Path, editions: list[dict], nav: str, footer: str) 
         page_dir.mkdir(parents=True, exist_ok=True)
         page = build_post_page(edition, {}, nav, footer)
         (page_dir / 'index.html').write_text(page, encoding='utf-8')
+        # The cover sits next to the page it belongs to, the way a post's
+        # assets do, so the URL in the markup and the file on disk cannot
+        # drift apart.
+        if edition.get('cover_name'):
+            shutil.copy2(EDITION_IMAGE_DIR / edition['cover_name'],
+                         page_dir / edition['cover_name'])
     return published
 
 

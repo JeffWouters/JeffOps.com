@@ -307,6 +307,11 @@ footer{border-top:1px solid var(--border-dim);padding:0 1rem;display:flex;align-
 /* The 'first published on LinkedIn' block on a republished edition. Deliberately
    above the article rather than tucked underneath it: attribution the reader has
    to scroll to find is attribution most readers never see. */
+/* The article's cover image, under the header. aspect-ratio plus the width and
+   height on the tag itself mean the space is reserved before the file arrives,
+   so the article does not jump down the page mid-sentence. */
+.post-cover{margin:0 0 2rem;}
+.post-cover img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;border:1px solid var(--border-dim);border-radius:4px;background:var(--bg2);}
 .edition-origin{border:1px solid var(--border);border-left:2px solid var(--cyan);background:var(--bg2);padding:1rem 1.25rem;margin:0 0 2rem;}
 .edition-origin-label{font-family:var(--mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--cyan);display:block;margin-bottom:0.5rem;}
 .edition-origin p{font-size:0.85rem;color:var(--text-mid);line-height:1.65;margin:0 0 0.65rem;}
