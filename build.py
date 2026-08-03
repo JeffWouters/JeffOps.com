@@ -166,8 +166,6 @@ REDIRECT_TEMPLATE = """<!DOCTYPE html>
 <meta http-equiv="refresh" content="0; url={target}">
 <meta name="robots" content="noindex, follow">
 <script>window.location.replace("{target}");</script>
-<script src="/vendor/purify.min.js"></script>
-<script src="/js/trusted-types.js"></script>
 </head>
 <body style="font-family:system-ui,sans-serif;background:#0a0c0f;color:#e8edf2;padding:3rem">
 <p>This page has moved to <a style="color:#00d9ff" href="{target}">{target}</a>.</p>
@@ -680,9 +678,21 @@ def wrap_figures(html: str) -> str:
 WEBP_QUALITY = 86
 WEBP_MIN_BYTES = 20_000
 
+# The article column is 760px wide, so a 1200px cover is nearly twice what a
+# non-retina screen renders. This is the second width offered; the browser picks
+# by its own device pixel ratio, so a retina screen still gets the original and
+# everyone else stops paying for pixels they cannot see.
+NARROW_WIDTH = 760
+CONTENT_SIZES = '(max-width: 800px) 100vw, 760px'
 
-def write_webp(image_path: Path) -> str | None:
-    """Write a sibling .webp. Returns its filename, or None if not worth it."""
+
+def write_webp(image_path: Path, narrow: bool = False) -> str | None:
+    """Write a sibling .webp, and optionally a narrower pair beside it.
+
+    Returns the WebP filename, or None if not worth it. When `narrow` is set and
+    the image is wide enough to be worth halving, `<stem>-760.webp` and
+    `<stem>-760.jpg` are written too, for the srcset the page will offer.
+    """
     if image_path.suffix.lower() not in ('.jpg', '.jpeg'):
         return None
     if image_path.stat().st_size < WEBP_MIN_BYTES:
@@ -692,6 +702,13 @@ def write_webp(image_path: Path) -> str | None:
         from PIL import Image
         with Image.open(image_path) as im:
             im.save(target, 'WEBP', quality=WEBP_QUALITY, method=6)
+            if narrow and im.width > NARROW_WIDTH * 1.2:
+                small = im.copy()
+                small.thumbnail((NARROW_WIDTH, im.height), Image.LANCZOS)
+                small.save(image_path.with_name(f'{image_path.stem}-{NARROW_WIDTH}.webp'),
+                           'WEBP', quality=WEBP_QUALITY, method=6)
+                small.save(image_path.with_name(f'{image_path.stem}-{NARROW_WIDTH}{image_path.suffix}'),
+                           quality=WEBP_QUALITY, optimize=True, progressive=True)
     except Exception as exc:                          # noqa: BLE001
         print(f'  ! {image_path.name}: WebP encode failed ({exc}) — JPEG only')
         return None
@@ -700,6 +717,24 @@ def write_webp(image_path: Path) -> str | None:
         target.unlink()
         return None
     return target.name
+
+
+def srcset_for(page_dir: Path, filename: str, suffix: str) -> str:
+    """`x-760.ext 760w, x.ext 1200w`, skipping widths that were not written."""
+    stem = filename.rsplit('.', 1)[0]
+    parts = []
+    narrow = page_dir / f'{stem}-{NARROW_WIDTH}{suffix}'
+    if narrow.is_file():
+        parts.append(f'{narrow.name} {NARROW_WIDTH}w')
+    full = page_dir / f'{stem}{suffix}'
+    if full.is_file():
+        try:
+            from PIL import Image
+            with Image.open(full) as im:
+                parts.append(f'{full.name} {im.width}w')
+        except Exception:                             # noqa: BLE001
+            pass
+    return ', '.join(parts)
 
 
 _IMG_RE = re.compile(r'<img\b[^>]*?\bsrc="([^"]+)"[^>]*>')
@@ -734,7 +769,7 @@ def size_images(markup: str, page_dir: Path) -> str:
     return _IMG_RE.sub(add, markup)
 
 
-def offer_webp(markup: str, available: set[str]) -> str:
+def offer_webp(markup: str, available: set[str], page_dir: Path | None = None) -> str:
     """Wrap <img> in <picture> where a WebP sibling was written.
 
     Only rewrites images whose src is a bare filename in the page's own folder,
@@ -745,12 +780,22 @@ def offer_webp(markup: str, available: set[str]) -> str:
         return markup
 
     def wrap(match: re.Match) -> str:
-        src = match.group(1)
+        tag, src = match.group(0), match.group(1)
         if '/' in src or src not in available:
-            return match.group(0)
-        webp = src.rsplit('.', 1)[0] + '.webp'
-        return (f'<picture><source srcset="{webp}" type="image/webp">'
-                f'{match.group(0)}</picture>')
+            return tag
+        suffix = '.' + src.rsplit('.', 1)[1]
+        webp = srcset_for(page_dir, src, '.webp') if page_dir else ''
+        jpeg = srcset_for(page_dir, src, suffix) if page_dir else ''
+        if not webp:
+            webp = src.rsplit('.', 1)[0] + '.webp'
+        # sizes tells the browser how wide the image will render before it has
+        # any layout to measure. Without it a srcset is guesswork and the
+        # browser assumes the full viewport, which defeats the point.
+        if jpeg and ' ' in jpeg:
+            tag = tag[:-1].rstrip().rstrip('/').rstrip() + \
+                  f' srcset="{jpeg}" sizes="{CONTENT_SIZES}">'
+        return (f'<picture><source srcset="{webp}" sizes="{CONTENT_SIZES}" '
+                f'type="image/webp">{tag}</picture>')
 
     return _IMG_RE.sub(wrap, markup)
 
@@ -879,8 +924,6 @@ POST_TEMPLATE = """<!DOCTYPE html>
 <script type="application/ld+json">
 {jsonld}
 </script>
-<script src="/vendor/purify.min.js"></script>
-<script src="/js/trusted-types.js"></script>
 </head>
 <body class="static-post">
 <div id="read-progress"></div>
@@ -939,9 +982,16 @@ POST_TEMPLATE = """<!DOCTYPE html>
 </div>
 </div><!-- /site-content -->
 {footer}
+<!-- Deferred, so none of this blocks the first paint. Deferred scripts run
+     in document order, which is the contract, and the order matters twice
+     over: the sanitiser before the Trusted Types policy, and the policy before
+     anything that writes to the DOM. highlight.js does — it replaces the
+     contents of every code block — so it comes after, not before. -->
+<script src="/vendor/purify.min.js" defer></script>
+<script src="/js/trusted-types.js" defer></script>
 {code_script}
-<script src="/js/post-enhance.js"></script>
-<script src="/js/post-page.js"></script>
+<script src="/js/post-enhance.js" defer></script>
+<script src="/js/post-page.js" defer></script>
 </body>
 </html>
 """
@@ -981,8 +1031,6 @@ LIST_TEMPLATE = """<!DOCTYPE html>
 <link rel="preload" href="/vendor/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/vendor/fonts/jetbrains-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/styles.css">
-<script src="/vendor/purify.min.js"></script>
-<script src="/js/trusted-types.js"></script>
 </head>
 <body class="static-post">
 {nav}
@@ -1007,7 +1055,7 @@ LIST_TEMPLATE = """<!DOCTYPE html>
 # the same mistake as sending Mermaid to a page with no diagram — just smaller.
 # Both are decided per page, from what the rendered HTML actually contains.
 HIGHLIGHT_THEME = '<link rel="stylesheet" href="/vendor/github-dark.min.css">'
-HIGHLIGHT_SCRIPT = '<script src="/vendor/highlight.min.js"></script>'
+HIGHLIGHT_SCRIPT = '<script src="/vendor/highlight.min.js" defer></script>'
 
 # Mermaid is 2.9MB — 875KB gzipped, more than everything else on the site put
 # together — and it was being loaded by every post page, every edition and the
@@ -1036,7 +1084,7 @@ def build_post_page(post: dict, by_folder: dict, nav: str, footer: str,
                     out_dir: Path | None = None) -> str:
     content, toc = render_markdown(post['body_markdown'])
     content = size_images(content, out_dir) if out_dir else content
-    content = offer_webp(content, set(post.get('webp_assets', [])))
+    content = offer_webp(content, set(post.get('webp_assets', [])), out_dir)
     reviewed_meta, stale_banner = freshness(post, now or utc_now())
     canonical = canonical_for(post)
     article_meta = ''
@@ -1068,10 +1116,22 @@ def build_post_page(post: dict, by_folder: dict, nav: str, footer: str,
                      f' alt="{html.escape(post.get("cover_alt", ""))}"{dims}>')
         if cover_name in set(post.get('webp_assets', [])):
             # Mirrors cover_url exactly, absolute or relative, so the two never
-            # resolve against different bases.
-            webp = post['cover_url'].rsplit('.', 1)[0] + '.webp'
-            cover_img = (f'<picture><source srcset="{html.escape(webp, quote=True)}"'
-                         f' type="image/webp">{cover_img}</picture>')
+            # resolve against different bases. The narrow variants sit beside
+            # it, so the srcset entries are just filenames swapped in.
+            base = post['cover_url'].rsplit('.', 1)[0]
+            suffix = '.' + post['cover_url'].rsplit('.', 1)[1]
+            narrow_webp = out_dir and (out_dir / f'{cover_name.rsplit(".",1)[0]}-{NARROW_WIDTH}.webp').is_file()
+            narrow_jpeg = out_dir and (out_dir / f'{cover_name.rsplit(".",1)[0]}-{NARROW_WIDTH}{suffix}').is_file()
+            webp_set = (f'{base}-{NARROW_WIDTH}.webp {NARROW_WIDTH}w, '
+                        f'{base}.webp {post.get("cover_width", 1200)}w') if narrow_webp \
+                       else f'{base}.webp'
+            if narrow_jpeg:
+                cover_img = cover_img[:-1].rstrip() + (
+                    f' srcset="{base}-{NARROW_WIDTH}{suffix} {NARROW_WIDTH}w, '
+                    f'{post["cover_url"]} {post.get("cover_width", 1200)}w"'
+                    f' sizes="{CONTENT_SIZES}">')
+            cover_img = (f'<picture><source srcset="{html.escape(webp_set, quote=True)}"'
+                         f' sizes="{CONTENT_SIZES}" type="image/webp">{cover_img}</picture>')
         cover_html = f'        <figure class="post-cover">{cover_img}</figure>'
 
     theme_tag, script_tag = code_assets(content)
@@ -1183,8 +1243,6 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 <link rel="preload" href="/vendor/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/vendor/fonts/jetbrains-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/styles.css">
-<script src="/vendor/purify.min.js"></script>
-<script src="/js/trusted-types.js"></script>
 </head>
 <body class="static-post">
 {nav}
@@ -1209,7 +1267,9 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
      forms they carry had no handlers: the Send button did nothing and threw
      nothing, and what someone typed went nowhere. This is the one script they
      need. -->
-<script src="/js/forms.js"></script>
+<script src="/vendor/purify.min.js" defer></script>
+<script src="/js/trusted-types.js" defer></script>
+<script src="/js/forms.js" defer></script>
 </body>
 </html>
 """
@@ -1708,7 +1768,7 @@ def build_edition_pages(out: Path, editions: list[dict], nav: str, footer: str,
             for asset in sorted(folder.iterdir()):
                 if asset.is_file() and asset.suffix.lower() not in ('.md', '.markdown'):
                     shutil.copy2(asset, page_dir / asset.name)
-                    if write_webp(page_dir / asset.name):
+                    if write_webp(page_dir / asset.name, narrow=True):
                         edition.setdefault('webp_assets', []).append(asset.name)
 
         page = build_post_page(edition, {}, nav, footer, by_series, now, page_dir)
@@ -2023,7 +2083,7 @@ def main() -> None:
             for asset in sorted(source_dir.iterdir()):
                 if asset.is_file() and asset.suffix.lower() not in ('.md', '.markdown'):
                     shutil.copy2(asset, page_dir / asset.name)
-                    if write_webp(page_dir / asset.name):
+                    if write_webp(page_dir / asset.name, narrow=True):
                         post.setdefault('webp_assets', []).append(asset.name)
 
         page = build_post_page(post, by_folder, nav, footer, by_series, now, page_dir)

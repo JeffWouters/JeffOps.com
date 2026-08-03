@@ -57,10 +57,7 @@
      and no post has a diagram, so app.js fetches it only if one appears. -->
 <link rel="preload" href="/vendor/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/vendor/fonts/jetbrains-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<script src="/vendor/marked.min.js"></script>
     <link rel="stylesheet" href="css/styles.css">
-<script src="vendor/purify.min.js"></script>
-<script src="js/trusted-types.js"></script>
 </head>
 <body>
 <div id="read-progress"></div>
@@ -644,9 +641,17 @@
   <span>Built with Markdown, Mermaid &amp; strong opinions · © 2024 Jeff</span>
   <a class="footer-rss" href="/rss.xml">RSS ↗</a>
 </footer>
-  <script src="blog/index.js"></script>
-  <script src="js/post-enhance.js"></script>
-  <script src="js/forms.js"></script>
-  <script src="js/app.js"></script>
+  <!-- Deferred, and at the end of the document, so none of it blocks the
+       first paint. Deferred scripts execute in order, which is the whole
+       contract here: the sanitiser before the Trusted Types policy, the
+       policy before anything that writes to the DOM. Nothing assigns
+       innerHTML during parsing, so the policy is always in place first. -->
+  <script src="vendor/purify.min.js" defer></script>
+  <script src="js/trusted-types.js" defer></script>
+  <script src="vendor/marked.min.js" defer></script>
+  <script src="blog/index.js" defer></script>
+  <script src="js/post-enhance.js" defer></script>
+  <script src="js/forms.js" defer></script>
+  <script src="js/app.js" defer></script>
 </body>
 </html>

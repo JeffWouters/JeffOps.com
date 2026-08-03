@@ -719,12 +719,18 @@ def main() -> int:
         # resolve to a file that was actually written.
         for block in re.findall(r'<picture>.*?</picture>', source, re.S):
             for attr, value in re.findall(r'\b(srcset|src)="([^"]+)"', block):
-                if value.startswith(('http', 'data:', '//')):
-                    continue
-                target = (out / value.lstrip('/')) if value.startswith('/') \
-                    else (page.parent / value)
-                if not target.exists():
-                    fail(f'{label} — <picture> {attr}="{value}" does not resolve to a file')
+                # A srcset is a comma-separated list of candidates, each a URL
+                # and an optional descriptor. Checking the whole string as one
+                # path passes nothing and fails everything.
+                for candidate in (value.split(',') if attr == 'srcset' else [value]):
+                    url = candidate.strip().split()[0] if candidate.strip() else ''
+                    if not url or url.startswith(('http', 'data:', '//')):
+                        continue
+                    target = (out / url.lstrip('/')) if url.startswith('/') \
+                        else (page.parent / url)
+                    if not target.exists():
+                        fail(f'{label} — <picture> {attr} candidate "{url}" '
+                             f'does not resolve to a file')
 
         # 7. Heading ids are the contract behind every deep link and every
         # anchor. A heading without one silently drops out of the table of
@@ -796,10 +802,26 @@ def main() -> int:
             fail(f'{label} carries {len(handlers)} inline event handler(s); '
                  f'they cannot run under this CSP and would need unsafe-inline')
 
-        if '/js/trusted-types.js' not in markup and 'js/trusted-types.js' not in markup:
-            fail(f'{label} does not install the Trusted Types policy')
-        if 'purify.min.js' not in markup:
-            fail(f'{label} does not load the sanitiser the policy depends on')
+        # Only pages that run JavaScript need the policy installed. The redirect
+        # stubs and the blog list carry no script at all, and adding a sanitiser
+        # to a page with nothing to sanitise is bytes for the sake of a green
+        # tick. The policy has to be there whenever anything else is, though,
+        # and it has to come first: deferred scripts run in document order, so
+        # the order in the markup is the guarantee.
+        scripts = re.findall(r'<script[^>]*\bsrc=["\']?([^"\'\s>]+)', markup)
+        if scripts:
+            if not any('trusted-types.js' in s for s in scripts):
+                fail(f'{label} runs scripts but does not install the Trusted Types policy')
+            elif not any('purify' in s for s in scripts):
+                fail(f'{label} installs the policy without the sanitiser it depends on')
+            else:
+                order = [i for i, s in enumerate(scripts)
+                         if 'purify' in s or 'trusted-types.js' in s]
+                first_other = next((i for i, s in enumerate(scripts)
+                                    if 'purify' not in s and 'trusted-types.js' not in s), None)
+                if first_other is not None and first_other < max(order):
+                    fail(f'{label} loads {scripts[first_other]} before the Trusted '
+                         f'Types policy is installed')
 
     check_robots(out, fail)
     check_security_txt(out, fail)
@@ -919,12 +941,15 @@ def main() -> int:
             # file paints nothing, it does not fall back to the <img>.
             for block in re.findall(r'<picture>.*?</picture>', text, re.S):
                 for attr, value in re.findall(r'\b(srcset|src)="([^"]+)"', block):
-                    if value.startswith(('http', 'data:', '//')):
-                        continue
-                    target = (out / value.lstrip('/')) if value.startswith('/') \
-                        else (page.parent / value)
-                    if not target.exists():
-                        fail(f'{url} — <picture> {attr}="{value}" does not resolve')
+                    for candidate in (value.split(',') if attr == 'srcset' else [value]):
+                        target_url = candidate.strip().split()[0] if candidate.strip() else ''
+                        if not target_url or target_url.startswith(('http', 'data:', '//')):
+                            continue
+                        target = (out / target_url.lstrip('/')) if target_url.startswith('/') \
+                            else (page.parent / target_url)
+                        if not target.exists():
+                            fail(f'{url} — <picture> {attr} candidate '
+                                 f'"{target_url}" does not resolve')
             og = re.search(r'<meta property="og:image" content="([^"]+)"', text)
             if og:
                 local = og.group(1).replace(SITE_URL, '', 1).lstrip('/')

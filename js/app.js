@@ -680,11 +680,29 @@ function initOrbital() {
   var centerRect = center ? center.getBoundingClientRect() : { width:130, height:130 };
   var centerRadius = (centerRect.width || 130) / 2;
 
+  // Everything geometric is measured here, before a single style is written.
+  //
+  // This used to interleave: the loop below wrote left/top/transform on all
+  // seven nodes, and then the connector loop called getBoundingClientRect on
+  // each pill — so the browser had to flush layout again on every iteration to
+  // answer a question about a document it had just been told had changed.
+  // Seven forced synchronous reflows on a page whose only job is to draw a
+  // circle. Reading first costs one.
+  var nodes = Array.prototype.slice.call(document.querySelectorAll('.orbit-node'));
+  var measured = nodes.map(function (node) {
+    var pill = node.querySelector('.orbit-pill');
+    return {
+      node: node,
+      ang: parseFloat(node.dataset.angle) * Math.PI / 180,
+      r: (parseFloat(node.dataset.r) || 170) * scale,
+      page: node.dataset.page,
+      pillHalf: ((pill ? pill.getBoundingClientRect().width : 96) || 96) / 2
+    };
+  });
+
   // position orbit nodes based on scaled radii
-  document.querySelectorAll('.orbit-node').forEach(function(node) {
-    var ang = parseFloat(node.dataset.angle) * Math.PI / 180;
-    var r   = (parseFloat(node.dataset.r) || 170) * scale;
-    var pg  = node.dataset.page;
+  measured.forEach(function(m) {
+    var node = m.node, ang = m.ang, r = m.r, pg = m.page;
     node.style.position  = 'absolute';
     node.style.left      = (ocx + r * Math.cos(ang)) + 'px';
     node.style.top       = (ocy + r * Math.sin(ang)) + 'px';
@@ -701,17 +719,11 @@ function initOrbital() {
   var cd = document.getElementById('connectors');
   if (cd) {
     cd.innerHTML = '';
-    document.querySelectorAll('.orbit-node').forEach(function(node) {
-      var ang = parseFloat(node.dataset.angle) * Math.PI / 180;
-      var r   = (parseFloat(node.dataset.r) || 170) * scale;
+    measured.forEach(function(m) {
+      var ang = m.ang, r = m.r, pillHalf = m.pillHalf;
 
       // start point just outside center circle
       var s = centerRadius + 2; // small gap
-
-      // compute pill width to stop connector before pill
-      var pill = node.querySelector('.orbit-pill');
-      var pillRect = pill ? pill.getBoundingClientRect() : { width: 96 };
-      var pillHalf = (pillRect.width || 96) / 2;
 
       // end at the dotted orbit circle (scaled) so lines reach the dotted ring
       var circleR = 170 * scale;
