@@ -39,6 +39,13 @@ import rjsmin
 # a URL in someone's prose is not a comment.
 SKIP = {'blog/index.js', 'blog/speaking.js'}
 
+# vendor/ is third-party code, already minified by whoever published it.
+# Re-minifying saves about 1.5KB and strips the licence banners those files
+# carry — and BSD-3-Clause, which highlight.js uses, asks that the copyright
+# notice be retained in redistributions. Not worth it. Their licences are
+# published alongside them either way.
+SKIP_PREFIXES = ('vendor/',)
+
 # No source map is emitted, because rjsmin cannot produce one and a fabricated
 # map is worse than none: `//# sourceURL` would relabel the minified script with
 # the original's filename, so devtools would show minified code under a name
@@ -116,7 +123,7 @@ def minify_site(out: Path, dry_run: bool = False) -> int:
         if not path.is_file():
             continue
         rel = path.relative_to(out).as_posix()
-        if rel in SKIP:
+        if rel in SKIP or rel.startswith(SKIP_PREFIXES):
             continue
         suffix = path.suffix.lower()
         if suffix not in ('.html', '.css', '.js'):

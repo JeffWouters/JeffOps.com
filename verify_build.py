@@ -752,6 +752,21 @@ def main() -> int:
         if not (out / name).exists():
             fail(f'{name} is missing')
 
+    # Every asset is served from this origin. A third-party script or font
+    # reintroduced by hand costs two DNS lookups and two TLS handshakes before
+    # the page can paint, buys no shared cache (browsers partitioned that by
+    # site in 2020), and in the case of Google Fonts hands every visitor's IP
+    # address to a third party. Mermaid is the one deliberate exception: it is
+    # 875KB gzipped and fetched by post-enhance.js only if a diagram exists, so
+    # it is allowed in a script body but not in a tag the page loads eagerly.
+    for page in sorted(out.rglob('*.html')):
+        markup = page.read_text(encoding='utf-8', errors='ignore')
+        for tag in re.findall(r'<(?:script|link)\b[^>]*>', markup):
+            url = re.search(r'(?:src|href)="(https?://[^"]+)"', tag)
+            if url and 'jeffops.com' not in url.group(1):
+                fail(f'/{page.relative_to(out).as_posix()} loads {url.group(1)} '
+                     f'from another origin')
+
     check_robots(out, fail)
     check_security_txt(out, fail)
     check_schedule(out, fail)

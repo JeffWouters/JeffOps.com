@@ -223,15 +223,7 @@ async function showPost(id, postObj, updateHash = true) {
     if (!el.className.includes('language-mermaid') && window.hljs) hljs.highlightElement(el);
   });
 
-  // Render mermaid
-  document.querySelectorAll('#post-content code.language-mermaid').forEach(el => {
-    const pre = el.parentElement;
-    const div = document.createElement('div');
-    div.className = 'mermaid';
-    div.textContent = el.textContent;
-    pre.replaceWith(div);
-  });
-  if (window.mermaid) mermaid.run();
+  if (window.JeffOpsPost) JeffOpsPost.renderDiagrams(document.getElementById('post-content'));
 
   // Inline newsletter CTA at mid-point
   const paras = document.querySelectorAll('#post-content p');
@@ -926,19 +918,9 @@ function blogFolder(isoDate, title) {
   return 'blog/' + yr + '/' + d + ' - ' + title;
 }
 
-// Guarded because this sits at the top level: when mermaid failed to load, the
-// ReferenceError thrown here stopped execution and silently disabled every
-// feature defined below it.
-if (window.mermaid) mermaid.initialize({
-  startOnLoad: false, theme: 'dark',
-  themeVariables: {
-    primaryColor:'#0f1217', primaryTextColor:'#e8edf2', primaryBorderColor:'#00D9FF',
-    lineColor:'#00D9FF', secondaryColor:'#151920', tertiaryColor:'#1c2028',
-    background:'#0a0c0f', mainBkg:'#0f1217', nodeBorder:'#00D9FF',
-    clusterBkg:'#151920', titleColor:'#e8edf2', edgeLabelBackground:'#0f1217',
-    fontFamily:'JetBrains Mono, monospace',
-  }
-});
+// The mermaid theme used to be configured here and again in post-page.js.
+// Both copies moved into post-enhance.js, which is also what loads mermaid
+// now — on demand, and only for a page that has a diagram.
 document.addEventListener('DOMContentLoaded', () => {
   navigateFromHash();
   window.addEventListener('hashchange', navigateFromHash);

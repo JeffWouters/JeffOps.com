@@ -40,12 +40,17 @@
 <link rel="manifest" href="/site.webmanifest">
 <meta name="msapplication-TileColor" content="#0a0c0f">
 <meta name="theme-color" content="#0a0c0f">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<!-- Everything below is served from this origin. It used to come from
+     fonts.googleapis.com, fonts.gstatic.com and cdnjs.cloudflare.com — three
+     origins to resolve and shake hands with before the page could paint, for
+     no cache benefit, since browsers partitioned their HTTP cache by site in
+     2020. See vendor/README.md. Mermaid is the exception: it is 875KB gzipped
+     and no post has a diagram, so app.js fetches it only if one appears. -->
+<link rel="preload" href="/vendor/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/vendor/fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="/vendor/marked.min.js"></script>
+<script src="/vendor/highlight.min.js"></script>
+<link rel="stylesheet" href="/vendor/github-dark.min.css">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>

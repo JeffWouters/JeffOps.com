@@ -75,6 +75,66 @@
     });
   };
 
+  // ── Mermaid diagrams ──────────────────────────────────────────────────
+  // Mermaid is 2.9MB, 875KB gzipped — larger than the whole of the rest of the
+  // site — and it was being loaded eagerly by every post page, every newsletter
+  // edition and the home page. No post contains a diagram, so every one of
+  // those downloads was for nothing.
+  //
+  // It is not vendored either: committing 2.9MB for something unused costs more
+  // than the request would. This fetches it from a CDN the first time a diagram
+  // is actually on the page, and never otherwise.
+  var MERMAID_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js';
+  var MERMAID_THEME = {
+    startOnLoad: false, theme: 'dark',
+    themeVariables: {
+      primaryColor: '#0f1217', primaryTextColor: '#e8edf2', primaryBorderColor: '#00D9FF',
+      lineColor: '#00D9FF', secondaryColor: '#151920', tertiaryColor: '#1c2028',
+      background: '#0a0c0f', mainBkg: '#0f1217', nodeBorder: '#00D9FF',
+      clusterBkg: '#151920', titleColor: '#e8edf2', edgeLabelBackground: '#0f1217',
+      fontFamily: 'JetBrains Mono, monospace'
+    }
+  };
+  var mermaidPending = null;
+
+  NS.renderDiagrams = function (root) {
+    if (!root) return;
+    var blocks = root.querySelectorAll('code.language-mermaid');
+    if (!blocks.length) return;
+
+    // Swap each code block for the div mermaid expects, before loading it.
+    blocks.forEach(function (el) {
+      var div = document.createElement('div');
+      div.className = 'mermaid';
+      div.textContent = el.textContent;
+      (el.parentElement || el).replaceWith(div);
+    });
+
+    var run = function () {
+      if (!global.mermaid) return;
+      global.mermaid.initialize(MERMAID_THEME);
+      global.mermaid.run();
+    };
+    if (global.mermaid) { run(); return; }
+    if (!mermaidPending) {
+      mermaidPending = new Promise(function (resolve) {
+        var s = document.createElement('script');
+        s.src = MERMAID_SRC;
+        s.onload = resolve;
+        s.onerror = function () {
+          // The diagram source stays visible as text, which is readable and
+          // honest, rather than an empty box where a picture should be.
+          document.querySelectorAll('.mermaid').forEach(function (d) {
+            d.classList.add('mermaid-unrendered');
+          });
+          resolve();
+        };
+        document.head.appendChild(s);
+      });
+    }
+    mermaidPending.then(run);
+  };
+
   // ── Progress ──────────────────────────────────────────────────────────
   // The percentage answers "where am I in the scrollbar". Minutes left answer
   // "can I finish this before my next meeting", which is the question people

@@ -53,7 +53,7 @@ SITE = {
 }
 
 # Files and folders copied verbatim into the output.
-STATIC_ASSETS = ['index.html', 'css', 'js', 'logos', 'speaking_topics.json']
+STATIC_ASSETS = ['index.html', 'css', 'js', 'vendor', 'logos', 'speaking_topics.json']
 
 # Images in the project root are copied by pattern rather than by name. The list
 # above used to carry 'JeffOps_Speaking.jpg' literally, so a second photo added
@@ -780,9 +780,9 @@ POST_TEMPLATE = """<!DOCTYPE html>
 <link rel="manifest" href="/site.webmanifest">
 <meta name="msapplication-TileColor" content="#0a0c0f">
 <meta name="theme-color" content="#0a0c0f">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="preload" href="/vendor/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/vendor/fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+{code_theme}
 <link rel="stylesheet" href="/css/styles.css">
 <script type="application/ld+json">
 {jsonld}
@@ -845,8 +845,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
 </div>
 </div><!-- /site-content -->
 {footer}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+{code_script}
 <script src="/js/post-enhance.js"></script>
 <script src="/js/post-page.js"></script>
 </body>
@@ -876,8 +875,8 @@ LIST_TEMPLATE = """<!DOCTYPE html>
 <link rel="manifest" href="/site.webmanifest">
 <meta name="msapplication-TileColor" content="#0a0c0f">
 <meta name="theme-color" content="#0a0c0f">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="preload" href="/vendor/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/vendor/fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body class="static-post">
@@ -896,6 +895,35 @@ LIST_TEMPLATE = """<!DOCTYPE html>
 </body>
 </html>
 """
+
+
+# Syntax highlighting is 122KB of JavaScript and a stylesheet. Six of the ten
+# pieces on this site contain no code block at all, and sending it to them is
+# the same mistake as sending Mermaid to a page with no diagram — just smaller.
+# Both are decided per page, from what the rendered HTML actually contains.
+HIGHLIGHT_THEME = '<link rel="stylesheet" href="/vendor/github-dark.min.css">'
+HIGHLIGHT_SCRIPT = '<script src="/vendor/highlight.min.js"></script>'
+
+# Mermaid is 2.9MB — 875KB gzipped, more than everything else on the site put
+# together — and it was being loaded by every post page, every edition and the
+# home page, for zero diagrams. It is not vendored: carrying that in the
+# repository for something nothing uses is worse than the request. The loader
+# below fetches it from a CDN only once a diagram is genuinely on the page, so
+# today it is never fetched at all.
+
+
+def code_assets(content: str) -> tuple[str, str]:
+    """(stylesheet, script) tags this page's content actually needs."""
+    has_code = '<code' in content
+    has_diagram = 'language-mermaid' in content
+    theme = HIGHLIGHT_THEME if has_code else ''
+    script = HIGHLIGHT_SCRIPT if has_code else ''
+    # Mermaid is not requested here at all: post-enhance.js loads it, from a
+    # CDN, only once a diagram is on the page. has_diagram is still read so the
+    # theme travels with a diagram-only page.
+    if has_diagram and not theme:
+        theme = HIGHLIGHT_THEME
+    return theme, script
 
 
 def build_post_page(post: dict, by_folder: dict, nav: str, footer: str,
@@ -939,7 +967,10 @@ def build_post_page(post: dict, by_folder: dict, nav: str, footer: str,
                          f' type="image/webp">{cover_img}</picture>')
         cover_html = f'        <figure class="post-cover">{cover_img}</figure>'
 
+    theme_tag, script_tag = code_assets(content)
     return POST_TEMPLATE.format(
+        code_theme=theme_tag,
+        code_script=script_tag,
         lang=SITE['language'],
         title=html.escape(post['title']),
         title_enc=quote(post['title'], safe=''),
@@ -1033,8 +1064,8 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 <link rel="manifest" href="/site.webmanifest">
 <meta name="msapplication-TileColor" content="#0a0c0f">
 <meta name="theme-color" content="#0a0c0f">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="preload" href="/vendor/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/vendor/fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body class="static-post">

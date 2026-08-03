@@ -18,26 +18,8 @@
   }
 
   // ── Mermaid diagrams ────────────────────────────────────────────────
-  if (window.mermaid) {
-    mermaid.initialize({
-      startOnLoad: false, theme: 'dark',
-      themeVariables: {
-        primaryColor: '#0f1217', primaryTextColor: '#e8edf2', primaryBorderColor: '#00D9FF',
-        lineColor: '#00D9FF', secondaryColor: '#151920', tertiaryColor: '#1c2028',
-        background: '#0a0c0f', mainBkg: '#0f1217', nodeBorder: '#00D9FF',
-        clusterBkg: '#151920', titleColor: '#e8edf2', edgeLabelBackground: '#0f1217',
-        fontFamily: 'JetBrains Mono, monospace'
-      }
-    });
-    var diagrams = content.querySelectorAll('code.language-mermaid');
-    diagrams.forEach(function (el) {
-      var div = document.createElement('div');
-      div.className = 'mermaid';
-      div.textContent = el.textContent;
-      (el.parentElement || el).replaceWith(div);
-    });
-    if (diagrams.length) mermaid.run();
-  }
+  // Loaded on demand by the shared renderer, and only when a diagram exists.
+  if (window.JeffOpsPost) window.JeffOpsPost.renderDiagrams(content);
 
   // ── Copy buttons on code blocks ─────────────────────────────────────
   content.querySelectorAll('pre').forEach(function (pre) {
