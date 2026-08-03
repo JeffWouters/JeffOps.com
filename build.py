@@ -324,6 +324,35 @@ def home_json_ld(posts: list[dict]) -> str:
                       ensure_ascii=False, indent=2)
 
 
+def load_events() -> list[str]:
+    path = ROOT / 'events.json'
+    if not path.exists():
+        return []
+    return json.loads(path.read_text(encoding='utf-8')).get('events', [])
+
+
+def inject_events(index_html: str) -> str:
+    """Render the "As seen at" strip from events.json.
+
+    The strip previously listed KubeCon EU, LeadDev London, HashiConf,
+    DockerCon, Platform Eng Con, GOTO Copenhagen and GitHub Universe, none of
+    which Jeff had spoken at. It is the most quotable claim on the site and the
+    easiest for anyone in the audience to check, so it gets a source file and a
+    build-time render like everything else that asserts a fact.
+    """
+    events = load_events()
+    if not events:
+        return index_html
+    items = ''.join(
+        f'<span class="logo-item"><span class="logo-dot"></span>{html.escape(e)}</span>'
+        for e in events)
+    m = re.search(r'<div class="logos-track">.*?\n?\s*</div>', index_html, re.DOTALL)
+    if not m:
+        raise SystemExit('Could not find <div class="logos-track"> in index.html.')
+    return (index_html[:m.start()] + '<div class="logos-track">' + items + '</div>'
+            + index_html[m.end():])
+
+
 def inject_counts(index_html: str, posts: list[dict], talks: list[dict]) -> str:
     """Fill the {posts} and {talks} placeholders in the hero orbit tooltips.
 
@@ -1231,6 +1260,7 @@ def main() -> None:
     for problem in problems:
         print(f'  ! {problem}')
     index_source = inject_stats(index_source, cells)
+    index_source = inject_events(index_source)
     index_source = inject_counts(index_source, live, talks)
     index_source = inject_home_meta(index_source, live)
     print(f'Injected {cells.count("stat-cell")} home page statistic(s), all derived')

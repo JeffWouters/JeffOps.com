@@ -1,0 +1,14 @@
+{
+  "_comment": "Events Jeff has spoken at, shown in the '// As seen at' strip on the home page. Supplied by Jeff on 3 August 2026, replacing a fabricated list. The strip is rendered from this file at build time; do not type event names into index.html, because verify_build rejects any entry that is not here.",
+  "events": [
+    "DuPSUG",
+    "DevOpsDays Amsterdam",
+    "PowerShell Summit",
+    "PSConfEU",
+    "PolarConf",
+    "SuperTech Friday",
+    "TugaIT",
+    "TechDays NL",
+    "BriForum"
+  ]
+}

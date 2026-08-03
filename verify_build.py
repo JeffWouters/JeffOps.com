@@ -418,6 +418,31 @@ def check_home_page(out: Path, fail) -> None:
             fail(f'the home page is missing {what}, on the one URL most likely to '
                  f'rank for the author\'s own name')
 
+    # The "As seen at" strip is the most quotable claim on the site and the
+    # easiest for a reader in the same community to check. It listed seven
+    # conferences Jeff had never spoken at. Every name must now come from
+    # events.json, so an addition is a deliberate edit to a sourced file rather
+    # than a line of markup nobody reviews.
+    events_file = ROOT / 'events.json'
+    strip = re.search(r'<div class="logos-track">(.*?)\n?\s*</div>', markup, re.DOTALL)
+    if events_file.exists():
+        import json as _json
+        declared = set(_json.loads(events_file.read_text(encoding='utf-8')).get('events', []))
+        if not strip:
+            fail('the "As seen at" strip is missing from the home page')
+        else:
+            shown = [re.sub(r'<[^>]+>', '', item).strip()
+                     for item in re.findall(r'<span class="logo-item">(.*?)</span>\s*(?=<span class="logo-item"|$)',
+                                            strip.group(1), re.DOTALL)]
+            shown = [x for x in (re.sub(r'\s+', ' ', s2).strip() for s2 in shown) if x]
+            if not shown:
+                fail('the "As seen at" strip rendered no events')
+            for name in shown:
+                if name not in declared:
+                    fail(f'the "As seen at" strip shows "{name}", which is not in '
+                         f'events.json. Every event named there must be one Jeff '
+                         f'actually spoke at.')
+
     leftover = re.search(r'\{(posts|talks|editions)\}', markup)
     if leftover:
         fail(f'the home page still contains the placeholder {leftover.group(0)}, '
