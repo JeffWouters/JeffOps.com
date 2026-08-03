@@ -32,7 +32,8 @@ except ImportError:      # pragma: no cover
 
 import markdown
 
-from generate_blog_index import (ROOT, collect_posts, estimate_readtime, in_site_tz,
+from generate_blog_index import (ROOT, collect_posts, estimate_readtime, find_markdown_file,
+                                 in_site_tz,
                                  parse_excerpt, parse_frontmatter, parse_title, slugify,
                                  strip_frontmatter, strip_leading_h1, unpublished_posts,
                                  utc_now, write_index_files)
@@ -1138,16 +1139,28 @@ EDITION_PLACEHOLDER = 'TODO(jeff)'
 
 
 def load_editions() -> list[dict]:
+    """One folder per edition: the markdown, and the images it references.
+
+    A folder rather than a loose file, so an edition's pictures live with the
+    words that use them. The alternative was a shared image directory, which
+    works right up until you want to know which of forty files still matters,
+    or you delete an edition and leave its artwork behind forever.
+
+    This is also how blog posts already work, and one convention for both
+    beats two conventions for one thing each.
+    """
     if not EDITION_DIR.is_dir():
         print('  ! newsletter/ not found — archive will be empty')
         return []
 
     editions = []
-    for source in sorted(EDITION_DIR.glob('*.md')):
-        # A leading underscore marks a file in this folder that is not an
-        # edition. Without it, the folder's own README would be published as
-        # edition number blank, dated nothing.
-        if source.name.startswith('_'):
+    for folder in sorted(p for p in EDITION_DIR.iterdir() if p.is_dir()):
+        # A leading underscore marks a folder that is not an edition.
+        if folder.name.startswith('_'):
+            continue
+        source = find_markdown_file(folder)
+        if not source:
+            print(f'  ! newsletter/{folder.name}/ has no markdown file; skipping')
             continue
         raw = source.read_text(encoding='utf-8')
         front = parse_frontmatter(raw)
@@ -1180,7 +1193,8 @@ def load_editions() -> list[dict]:
             'url': f'/newsletter/{slug}/',
             'linkedin_url': linkedin,
             'has_body': has_body,
-            'source': source.name,
+            'source': f'{folder.name}/{source.name}',
+            'folder_name': folder.name,
             'folder': f'newsletter/{slug}',
             'is_newsletter': True,
             'is_published': True,
@@ -1197,9 +1211,6 @@ def load_editions() -> list[dict]:
 
     editions.sort(key=lambda e: e.get('date_iso', ''), reverse=True)
     return editions
-
-
-EDITION_IMAGE_DIR = EDITION_DIR / 'images'
 
 
 def attach_cover(edition: dict, front: dict, source: Path) -> None:
@@ -1219,15 +1230,18 @@ def attach_cover(edition: dict, front: dict, source: Path) -> None:
     if not name:
         return
 
-    path = EDITION_IMAGE_DIR / name
-    if not path.is_file():
-        print(f'  ! {source.name} declares cover "{name}", '
-              f'but newsletter/images/{name} does not exist')
+    # Resolved inside the edition's own folder, next to the markdown that
+    # names it. Anchored to source.parent rather than joined blindly, so a
+    # cover value containing .. cannot reach outside the folder.
+    path = (source.parent / name).resolve()
+    if source.parent.resolve() not in path.parents or not path.is_file():
+        print(f'  ! {edition["source"]} declares cover "{name}", '
+              f'which is not a file in newsletter/{source.parent.name}/')
         return
 
     alt = front.get('cover_alt', '').strip()
     if not alt:
-        print(f'  ! {source.name} has a cover with no cover_alt. '
+        print(f'  ! {edition["source"]} has a cover with no cover_alt. '
               f'A decorative image needs alt=""; a meaningful one needs a description.')
 
     # The filename, not a Path. Edition records are serialised into
@@ -1278,9 +1292,15 @@ def build_edition_pages(out: Path, editions: list[dict], nav: str, footer: str) 
         # The cover sits next to the page it belongs to, the way a post's
         # assets do, so the URL in the markup and the file on disk cannot
         # drift apart.
-        if edition.get('cover_name'):
-            shutil.copy2(EDITION_IMAGE_DIR / edition['cover_name'],
-                         page_dir / edition['cover_name'])
+        # Everything in the edition's folder except the markdown is an asset
+        # it references, copied next to the rendered page exactly as a post's
+        # assets are. That means a relative src in the body resolves too, not
+        # only the declared cover.
+        folder = ROOT / 'newsletter' / edition['folder_name']
+        if folder.is_dir():
+            for asset in sorted(folder.iterdir()):
+                if asset.is_file() and asset.suffix.lower() not in ('.md', '.markdown'):
+                    shutil.copy2(asset, page_dir / asset.name)
     return published
 
 
