@@ -7,6 +7,12 @@
       "source": "Jeff's own count, given directly. Overrides the derived figure, which counts only the talks listed in speaking_talks.json and is a selection rather than a career total. No repository source exists for this.",
       "verified": "2026-08-03"
     },
+    "years_writing": {
+      "value": "20+",
+      "label": "Years writing",
+      "source": "Jeff's own count, given directly. Overrides the derived figure, which spans only the years covered by posts in this repository and so measures the age of the archive rather than the length of the career.",
+      "verified": "2026-08-03"
+    },
     "subscribers": {
       "value": null,
       "label": "Subscribers",
