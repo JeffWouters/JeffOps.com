@@ -3,6 +3,8 @@ number: 3
 title: Use AI to learn, but don't let it be your teacher
 date: 2026-07-20
 slug: use-ai-to-learn
+cover: cover.jpg
+cover_alt: A teacher stands beside a humanoid robot at the front of a classroom, the robot presenting a glowing hologram while children work at desks behind them.
 linkedin_url: https://www.linkedin.com/pulse/use-ai-learn-dont-let-your-teacher-jeff-wouters-pvvae
 description: AI answers questions. Learning requires asking the right ones. How to use it to build understanding instead of quietly skipping past it.
 ---

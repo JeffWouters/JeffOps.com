@@ -3,6 +3,8 @@ number: 1
 title: AI - Understand before you apply (and buy)
 date: 2026-06-22
 slug: understand-before-you-apply
+cover: cover.jpg
+cover_alt: A magnifying glass held over a polished AI-generated market report, revealing the wrong facts, missing context and hidden assumptions underneath it. Captioned: think before you AI. AI predicts, humans decide.
 linkedin_url: https://www.linkedin.com/pulse/ai-understand-before-you-apply-buy-jeff-wouters-d9y1e
 description: AI doesn't think, it predicts. Why that makes it superb at some tasks, a liability at others, and how to tell which is which before you buy.
 ---

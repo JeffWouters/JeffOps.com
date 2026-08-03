@@ -3,6 +3,8 @@ number: 2
 title: Why AI Works So Well for Coding, and Where It Actually Fits
 date: 2026-07-06
 slug: why-ai-works-for-coding
+cover: cover.jpg
+cover_alt: A cartoon cat squeezed into a cardboard box slightly too small for it, looking unimpressed.
 linkedin_url: https://www.linkedin.com/pulse/why-ai-works-so-well-coding-where-actually-fits-jeff-wouters-u8hne
 description: Coding is not the exception to AI's limits. It is the one place those limits hurt least, because code tells you loudly when it is wrong.
 ---

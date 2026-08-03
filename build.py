@@ -323,7 +323,10 @@ def home_json_ld(posts: list[dict]) -> str:
         'name': SITE['author'],
         'url': SITE['base_url'] + '/',
         'email': f"mailto:{SITE['email']}",
-        'jobTitle': 'Platform and enterprise IT engineer',
+        # Taken from the role line on the About page. Search engines read this
+        # field, so it disagreeing with what the page says is the kind of drift
+        # nothing reports.
+        'jobTitle': 'CTO',
         'description': SITE['description'],
         # Confirmed by Jeff, and the same four the About sidebar links to.
         # sameAs is how a search engine ties these profiles to one person, so a
