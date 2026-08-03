@@ -322,14 +322,18 @@ footer{border-top:1px solid var(--border-dim);padding:0 1rem;display:flex;align-
 
 /* SPEAKING */
 .talks-layout{display:grid;grid-template-columns:1fr 340px;gap:3rem;align-items:start;}
-.talk-item{padding:2rem 0;border-bottom:1px solid var(--border-dim);display:grid;grid-template-columns:100px 1fr;gap:2rem;}
+.talk-item{padding:1.15rem 0;border-bottom:1px solid var(--border-dim);display:grid;grid-template-columns:100px 1fr;gap:2rem;}
 .talk-date-col{text-align:right;padding-top:4px;}
 .talk-month{font-family:var(--mono);font-size:0.65rem;text-transform:uppercase;color:var(--text-dim);letter-spacing:0.1em;}
 .talk-day{font-size:2rem;font-weight:800;color:var(--cyan);line-height:1;}
 .talk-year{font-family:var(--mono);font-size:0.65rem;color:var(--text-dim);}
-.talk-event{font-family:var(--mono);font-size:0.7rem;color:var(--cyan);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem;}
+/* Flex, so the status badge stays beside the event name instead of dropping
+   to its own line the moment the name is long. It was inline before, so
+   'Platform Engineering Con' pushed PAST onto a second row while shorter
+   names kept it alongside, and the list read as two different layouts. */
+.talk-event{font-family:var(--mono);font-size:0.7rem;color:var(--cyan);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.35rem;display:flex;align-items:center;gap:10px;}
 .talk-title{font-size:1.1rem;font-weight:600;margin-bottom:0.4rem;}
-.talk-location{font-family:var(--mono);font-size:0.72rem;color:var(--text-dim);margin-bottom:0.75rem;}
+.talk-location{font-family:var(--mono);font-size:0.72rem;color:var(--text-dim);margin-bottom:0.6rem;}
 .talk-links{display:flex;gap:0.75rem;flex-wrap:wrap;}
 .talk-link{position:relative;display:inline-flex;align-items:center;gap:0.4rem;font-family:var(--mono);font-size:0.68rem;color:var(--text-dim);text-decoration:none;padding:6px 12px;border:1px solid var(--border-dim);transition:all 0.15s;cursor:pointer;background:rgba(255,255,255,0.02);border-radius:999px;}
 .talk-link:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(0,217,255,0.06);}
@@ -342,7 +346,7 @@ footer{border-top:1px solid var(--border-dim);padding:0 1rem;display:flex;align-
 .abstract-popup{position:absolute;top:100%;right:0;z-index:10;width:320px;margin-top:0.75rem;padding:1rem;background:rgba(10,15,22,0.96);border:1px solid rgba(0,217,255,0.18);box-shadow:0 30px 80px rgba(0,0,0,0.35);backdrop-filter:blur(18px);border-radius:18px;}
 .abstract-popup-title{font-family:var(--mono);font-size:0.8rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--cyan);margin-bottom:0.55rem;}
 .abstract-popup-text{font-size:0.8rem;line-height:1.55;color:var(--text-mid);}
-.talk-badge{display:inline-block;font-family:var(--mono);font-size:0.6rem;padding:2px 8px;text-transform:uppercase;letter-spacing:0.1em;margin-left:8px;vertical-align:middle;}
+.talk-badge{display:inline-block;font-family:var(--mono);font-size:0.6rem;padding:2px 8px;text-transform:uppercase;letter-spacing:0.1em;vertical-align:middle;white-space:nowrap;flex-shrink:0;}
 .badge-upcoming{background:var(--cyan-glow);color:var(--cyan);border:1px solid var(--border);}
 .badge-past{background:var(--bg3);color:var(--text-dim);border:1px solid var(--border-dim);}
 .booking-card{background:var(--bg2);border:1px solid var(--border);padding:2rem;position:sticky;top:80px;box-shadow:0 0 40px var(--cyan-glow);}
