@@ -545,7 +545,13 @@ function initOrbital() {
   var rect = sys.getBoundingClientRect();
   var oW = rect.width, oH = rect.height, ocx = oW/2, ocy = oH/2;
   var base = 560; // design base size
-  var scale = oW / base;
+  // The ring and pills only filled about three quarters of the square, leaving
+  // dead margin all round. ORBIT_GAIN enlarges the whole assembly inside that
+  // space, so the graphic grows without the container growing and without
+  // pushing the tagline down the page. The dashed circle in index.html carries
+  // the same factor: 170 * 1.2 = 204 in its 560-unit viewBox.
+  var ORBIT_GAIN = 1.2;
+  var scale = (oW / base) * ORBIT_GAIN;
 
   // ensure center measurements
   var center = document.querySelector('.center-node');

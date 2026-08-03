@@ -71,7 +71,8 @@
     <div class="orbital-glow"></div>
     <div class="orbital-system" id="orbital-system">
       <svg class="orbit-rings" viewBox="0 0 560 560" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="280" cy="280" r="170" fill="none" stroke="#00D9FF" stroke-width="1" stroke-dasharray="4 8"/>
+        <!-- r matches ORBIT_GAIN in app.js: 170 * 1.2. Change both together. -->
+        <circle cx="280" cy="280" r="204" fill="none" stroke="#00D9FF" stroke-width="1" stroke-dasharray="4 8"/>
       </svg>
       <div id="connectors"></div>
       <div class="center-node" onclick="showPage('about')" title="About Jeff">
