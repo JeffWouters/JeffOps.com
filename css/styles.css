@@ -337,9 +337,14 @@ footer{border-top:1px solid var(--border-dim);padding:0 1rem;display:flex;align-
    to its own line the moment the name is long. It was inline before, so
    'Platform Engineering Con' pushed PAST onto a second row while shorter
    names kept it alongside, and the list read as two different layouts. */
-.talk-event{font-family:var(--mono);font-size:0.7rem;color:var(--cyan);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.35rem;display:flex;align-items:center;gap:10px;}
+/* Event name, status badge and the links all share one row now. The name and
+   badge are wrapped in their own non-wrapping group so a long event name still
+   cannot push the badge onto a line of its own, which was the earlier bug; the
+   links are free to wrap below when the row runs out of space. */
+.talk-event{font-family:var(--mono);font-size:0.7rem;color:var(--cyan);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.4rem;display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;}
+.talk-event-head{display:flex;align-items:center;gap:10px;min-width:0;}
 .talk-title{font-size:1.1rem;font-weight:600;margin-bottom:0.4rem;}
-.talk-location{font-family:var(--mono);font-size:0.72rem;color:var(--text-dim);margin-bottom:0.6rem;}
+.talk-location{font-family:var(--mono);font-size:0.72rem;color:var(--text-dim);}
 .talk-links{display:flex;gap:0.75rem;flex-wrap:wrap;}
 .talk-link{position:relative;display:inline-flex;align-items:center;gap:0.4rem;font-family:var(--mono);font-size:0.68rem;color:var(--text-dim);text-decoration:none;padding:6px 12px;border:1px solid var(--border-dim);transition:all 0.15s;cursor:pointer;background:rgba(255,255,255,0.02);border-radius:999px;}
 .talk-link:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(0,217,255,0.06);}

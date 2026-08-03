@@ -1,93 +1,143 @@
 [
   {
-    "date": "2025-03-19",
-    "event": "KubeCon EU 2025",
-    "title": "The Developer Platform Maturity Model",
-    "location": "London, United Kingdom",
+    "date": "2025-12-03",
+    "event": "Dutch PowerShell User Group (DuPSUG Virtual)",
+    "title": "PowerShell’s Hidden Treasure Chest: The .NET Data Types You Didn’t Know You Needed",
+    "location": "Online",
     "links": [
       {
         "type": "save-date",
-        "label": "Save the Date",
-        "href": "https://kubecon.io/eu-2025"
+        "label": "Recording",
+        "href": "https://www.youtube.com/watch?v=2GByPBMmx1o"
       }
     ]
   },
   {
-    "date": "2025-01-23",
-    "event": "Platform Engineering Con",
-    "title": "GitOps at Scale: Multi-Cluster Patterns That Work",
-    "location": "Amsterdam, Netherlands",
+    "date": "2024-10-21",
+    "event": "Azure DevOps Podcast",
+    "title": "PowerShell Programming (Episode 320)",
+    "location": "Online",
+    "links": [
+      {
+        "type": "save-date",
+        "label": "Episode",
+        "href": "https://azuredevopspodcast.clear-measure.com/jeff-wouters-powershell-programming-episode-320"
+      }
+    ]
+  },
+  {
+    "date": "2024-07-25",
+    "event": "Super Tech Friday",
+    "title": "DevOps / Azure Roundtable",
+    "location": "Netherlands",
+    "links": [
+      {
+        "type": "save-date",
+        "label": "Event",
+        "href": "https://www.meetup.com/en-AU/super-tech-friday/"
+      }
+    ]
+  },
+  {
+    "date": "2023-11-10",
+    "event": "Super Tech Friday (Azure Hours)",
+    "title": "Azure DevOps & Container Orchestration",
+    "location": "Netherlands",
+    "links": [
+      {
+        "type": "save-date",
+        "label": "Event",
+        "href": "https://www.meetup.com/en-AU/super-tech-friday/"
+      }
+    ]
+  },
+  {
+    "date": "2023-09-15",
+    "event": "Super Tech Friday (DevOps Expert Experience)",
+    "title": "DevOps Expert Session",
+    "location": "Netherlands",
+    "links": [
+      {
+        "type": "save-date",
+        "label": "Archive",
+        "href": "https://www.meetup.com/en-AU/super-tech-friday/"
+      }
+    ]
+  },
+  {
+    "date": "2023-09-01",
+    "event": "AppManagEvent 2023",
+    "title": "The Intune App Factory",
+    "location": "Utrecht, Netherlands",
     "links": [
       {
         "type": "abstract",
         "label": "Abstract",
-        "abstractTitle": "GitOps at Scale",
-        "abstractText": "A hands-on look at deploying GitOps across multiple clusters, including bootstrap strategies, drift management, and rollout recovery patterns."
+        "abstractTitle": "The Intune App Factory",
+        "abstractText": "Automating detection, packaging and publishing apps to Intune using PowerShell and Azure DevOps pipelines."
       }
     ]
   },
   {
-    "date": "2024-11-14",
-    "event": "HashiConf 2024",
-    "title": "Vault in a Zero-Trust Platform: Secrets Management Done Right",
-    "location": "Boston, MA, USA",
+    "date": "2018-06-08",
+    "event": "TugaIT 2018 Conference",
+    "title": "The psychology to building a team that automates, scripts and DevOps",
+    "location": "Lisbon, Portugal",
     "links": [
       {
-        "type": "slides",
-        "label": "Slides",
-        "href": "https://example.com/hashicon-2024-slides"
-      },
-      {
-        "type": "recording",
-        "label": "Recording",
-        "href": "https://example.com/hashicon-2024-recording"
-      },
-      {
-        "type": "code",
-        "label": "Code",
-        "href": "https://github.com/jeffops/vault-zero-trust"
+        "type": "abstract",
+        "label": "Abstract",
+        "abstractTitle": "DevOps Team Psychology",
+        "abstractText": "Focus on behavior, team culture and enabling DevOps transformation."
       }
     ]
   },
   {
-    "date": "2024-10-24",
-    "event": "DockerCon 2024",
-    "title": "Container Security Beyond the Basics",
-    "location": "San Francisco, CA, USA",
+    "date": "2018-06-08",
+    "event": "TugaIT 2018 Conference",
+    "title": "PowerShell Unbound – Tips & Tricks",
+    "location": "Lisbon, Portugal",
     "links": [
       {
-        "type": "slides",
-        "label": "Slides",
-        "href": "https://example.com/dockercon-2024-slides"
-      },
-      {
-        "type": "recording",
-        "label": "Recording",
-        "href": "https://example.com/dockercon-2024-recording"
-      },
-      {
-        "type": "code",
-        "label": "Code",
-        "href": "https://github.com/jeffops/container-security"
+        "type": "abstract",
+        "label": "Abstract",
+        "abstractTitle": "PowerShell Tips & Tricks",
+        "abstractText": "A high-energy session with practical scripting and performance tips."
       }
     ]
   },
   {
-    "date": "2024-09-12",
-    "event": "DevOpsDays Amsterdam",
-    "title": "Measuring Developer Experience: Beyond Surveys",
-    "location": "Amsterdam, Netherlands",
+    "date": "2016-06-22",
+    "event": "PowerShell Conference Europe 2016",
+    "title": "PowerShell Session (Track contribution)",
+    "location": "Berlin, Germany",
     "links": [
       {
-        "type": "slides",
-        "label": "Slides",
-        "href": "https://example.com/devopsdays-2024-slides"
-      },
-      {
-        "type": "code",
-        "label": "Code",
-        "href": "https://github.com/jeffops/devex-metrics"
+        "type": "save-date",
+        "label": "Slides Repo",
+        "href": "https://github.com/psconfeu/2016/tree/master/Jeff%20Wouters"
       }
     ]
+  },
+  {
+    "date": "2015-01-15",
+    "event": "TechDays NL 2015",
+    "title": "Azure / DevOps Talk & Community Interaction",
+    "location": "Netherlands",
+    "links": []
+  },
+  {
+    "date": "2013-06-01",
+    "event": "E2E Virtualization Conference",
+    "title": "PowerShell & Virtualization (Interview + presence)",
+    "location": "London, United Kingdom",
+    "links": []
+  },
+  {
+    "date": "2003-10-01",
+    "event": "HCC IT Fair 2003",
+    "title": "Windows XP Software Distribution & Demo",
+    "location": "Netherlands",
+    "links": []
   }
 ]

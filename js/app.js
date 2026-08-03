@@ -466,10 +466,12 @@ function loadSpeakingTalks() {
     item.innerHTML = `
       <div class="talk-date-col"><div class="talk-month">${month}</div><div class="talk-day">${day}</div><div class="talk-year">${year}</div></div>
       <div>
-        <div class="talk-event">${talk.event} ${badge}</div>
+        <div class="talk-event">
+          <span class="talk-event-head">${talk.event}${badge}</span>
+          <div class="talk-links">${linkButtons}</div>
+        </div>
         <div class="talk-title">${talk.title}</div>
         <div class="talk-location">📍 ${talk.location}</div>
-        <div class="talk-links">${linkButtons}</div>
       </div>
     `;
 
@@ -490,19 +492,10 @@ function loadSpeakingTalks() {
     })
     .catch(() => {
       container.innerHTML = '';
-      const fallbackTalks = [
-        {
-          date: '2025-03-19', event: 'KubeCon EU 2025', status: 'Upcoming', statusLabel: 'Upcoming',
-          title: 'The Developer Platform Maturity Model', location: 'London, United Kingdom',
-          links: [{ type: 'save-date', label: 'Save the Date', href: 'https://kubecon.io/eu-2025' }]
-        },
-        {
-          date: '2025-01-23', event: 'Platform Engineering Con', status: 'Upcoming', statusLabel: 'Upcoming',
-          title: 'GitOps at Scale: Multi-Cluster Patterns That Work', location: 'Amsterdam, Netherlands',
-          links: [{ type: 'abstract', label: 'Abstract', abstractTitle: 'GitOps at Scale', abstractText: 'A hands-on look at deploying GitOps across multiple clusters, including bootstrap strategies, drift management, and rollout recovery patterns.' }]
-        }
-      ];
-      fallbackTalks.forEach(renderTalk);
+      // No invented fallback. This used to hold two talks that were never
+      // given, shown whenever the fetch failed, which is precisely when
+      // nobody would notice they were wrong.
+      container.innerHTML = '<p class="empty-state-title">Talks could not be loaded. <a href="/speaking/" style="color:var(--cyan)">See the full list</a>.</p>';
     });
 }
 

@@ -825,8 +825,8 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 <div class="site-content">
 <div class="page active">
   <div class="post-page-wrap">
-    <div style="max-width:760px;margin:0 auto;padding-top:2rem;"><a class="back-btn" href="/">← Back to JeffOps</a></div>
-    <article style="max-width:760px;margin:0 auto;">
+    <div style="max-width:{measure};margin:0 auto;padding-top:2rem;"><a class="back-btn" href="/">← Back to JeffOps</a></div>
+    <article style="max-width:{measure};margin:0 auto;">
       <div class="post-header">
         <div class="post-header-type">// {kicker}</div>
         <h1>{title}</h1>
@@ -886,6 +886,7 @@ def build_standalone_pages(out: Path, nav: str, footer: str) -> list[str]:
             nav=nav,
             footer=footer,
             content_class='post-content',
+            measure='760px',
             content=content,
         ), encoding='utf-8')
         urls.append(url)
@@ -1006,10 +1007,12 @@ def render_talks(talks: list[dict]) -> str:
             f'<div class="talk-date-col"><div class="talk-month">{month}</div>'
             f'<div class="talk-day">{day}</div><div class="talk-year">{year}</div></div>'
             '<div>'
-            f'<div class="talk-event">{html.escape(str(talk.get("event", "")))} {badge}</div>'
+            '<div class="talk-event">'
+            f'<span class="talk-event-head">{html.escape(str(talk.get("event", "")))}{badge}</span>'
+            f'<div class="talk-links">{links}</div>'
+            '</div>'
             f'<div class="talk-title">{html.escape(str(talk.get("title", "")))}</div>'
             f'<div class="talk-location">📍 {html.escape(str(talk.get("location", "")))}</div>'
-            f'<div class="talk-links">{links}</div>'
             '</div></div>')
     return ''.join(items)
 
@@ -1048,6 +1051,7 @@ def build_promoted_pages(out: Path, index_html: str, nav: str, footer: str,
             nav=plain_nav,
             footer=footer,
             content_class='lifted-content',
+            measure='1200px',
             content=content,
         ), encoding='utf-8')
         urls.append(url)
