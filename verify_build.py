@@ -713,7 +713,20 @@ def main() -> int:
                  f'body. Check the spelling, and leave a blank line and some prose '
                  f'between consecutive callouts.')
 
-        # 6. Heading ids are the contract behind every deep link and every
+        # 6. A <source> in a <picture> has no fallback of its own: if the file
+        # it names is missing, the browser does not quietly use the <img>, it
+        # paints nothing. So every srcset and every src inside a picture has to
+        # resolve to a file that was actually written.
+        for block in re.findall(r'<picture>.*?</picture>', source, re.S):
+            for attr, value in re.findall(r'\b(srcset|src)="([^"]+)"', block):
+                if value.startswith(('http', 'data:', '//')):
+                    continue
+                target = (out / value.lstrip('/')) if value.startswith('/') \
+                    else (page.parent / value)
+                if not target.exists():
+                    fail(f'{label} — <picture> {attr}="{value}" does not resolve to a file')
+
+        # 7. Heading ids are the contract behind every deep link and every
         # anchor. A heading without one silently drops out of the table of
         # contents and cannot be linked to.
         body = re.search(r'<div class="post-content" id="post-content">(.*?)\n\s*</div>',
@@ -835,13 +848,34 @@ def main() -> int:
             # broken image on the page, and a dead og:image in every share
             # card. The second is the one nobody sees, because it only shows
             # up in someone else's timeline.
-            cover = re.search(r'<figure class="post-cover"><img src="([^"]+)"([^>]*)>', text)
+            # The <picture> wrapper is optional here on purpose: a cover only
+            # gains one when the build wrote it a WebP. Matching the <img>
+            # wherever it sits inside the figure means adding or removing that
+            # wrapper cannot quietly switch this check off, which is what
+            # happened the first time — the old pattern required the img to
+            # follow the figure tag directly, and stopped matching anything the
+            # day a <picture> appeared between them.
+            cover = re.search(r'<figure class="post-cover">.*?<img src="([^"]+)"([^>]*)>',
+                              text, re.DOTALL)
             if cover:
                 if not (out / cover.group(1).lstrip('/')).is_file():
                     fail(f'{url} shows a cover image at {cover.group(1)}, '
                          f'which was never written to the build')
                 if 'alt=' not in cover.group(2):
                     fail(f'{url} has a cover image with no alt attribute')
+            elif 'post-cover' in text:
+                fail(f'{url} has a cover figure with no <img> inside it')
+
+            # Same rule as on the post pages: a <source> that names a missing
+            # file paints nothing, it does not fall back to the <img>.
+            for block in re.findall(r'<picture>.*?</picture>', text, re.S):
+                for attr, value in re.findall(r'\b(srcset|src)="([^"]+)"', block):
+                    if value.startswith(('http', 'data:', '//')):
+                        continue
+                    target = (out / value.lstrip('/')) if value.startswith('/') \
+                        else (page.parent / value)
+                    if not target.exists():
+                        fail(f'{url} — <picture> {attr}="{value}" does not resolve')
             og = re.search(r'<meta property="og:image" content="([^"]+)"', text)
             if og:
                 local = og.group(1).replace(SITE_URL, '', 1).lstrip('/')

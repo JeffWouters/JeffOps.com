@@ -348,12 +348,26 @@ async function showPost(id, postObj, updateHash = true) {
 function resolvePostAssets(root, post) {
   if (!root || !post || !post.url) return;
   const base = post.url.endsWith('/') ? post.url : post.url + '/';
+  const webp = new Set(post.webp_assets || []);
+
   root.querySelectorAll('img[src], source[srcset], a[href]').forEach(el => {
     const attr = el.tagName === 'SOURCE' ? 'srcset' : (el.tagName === 'A' ? 'href' : 'src');
     const value = el.getAttribute(attr);
     // Absolute, root-relative, protocol-relative, data: and #fragment stay put.
     if (!value || /^([a-z]+:|\/\/|\/|#)/i.test(value)) return;
     el.setAttribute(attr, base + value);
+
+    // The build writes a WebP beside some images and records which, so the SPA
+    // can offer the same <picture> the static page does. It offers one only for
+    // an image on that list — a <source> pointing at a file that is not there
+    // does not fall back to the <img>, it just fails to paint.
+    if (el.tagName !== 'IMG' || !webp.has(value)) return;
+    const picture = document.createElement('picture');
+    const source = document.createElement('source');
+    source.type = 'image/webp';
+    source.srcset = base + value.replace(/\.[^.]+$/, '.webp');
+    el.replaceWith(picture);
+    picture.append(source, el);
   });
 }
 
