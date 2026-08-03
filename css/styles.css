@@ -422,7 +422,11 @@ footer{border-top:1px solid var(--border-dim);padding:0 1rem;display:flex;align-
 .course-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--cyan);transform:scaleX(0);transform-origin:left;transition:transform 0.3s;}
 .course-card:hover::after{transform:scaleX(1);}
 .course-card:hover{background:var(--bg3);}
-.course-icon{font-size:2rem;margin-bottom:1rem;}
+.course-icon{font-size:2rem;margin-bottom:1rem;height:40px;display:flex;align-items:center;}
+/* Product marks are letterboxed rather than cropped: a logo is a fixed
+   shape and squashing or trimming one is the sort of thing the owner of
+   the trademark is entitled to object to. */
+.course-icon img{width:auto;height:100%;max-width:56px;object-fit:contain;display:block;}
 .course-title{font-size:1.1rem;font-weight:700;margin-bottom:0.5rem;}
 .course-level{font-family:var(--mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--cyan);margin-bottom:0.75rem;}
 .course-desc{font-size:0.88rem;color:var(--text-mid);line-height:1.7;margin-bottom:1rem;}

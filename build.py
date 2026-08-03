@@ -51,7 +51,7 @@ SITE = {
 }
 
 # Files and folders copied verbatim into the output.
-STATIC_ASSETS = ['index.html', 'css', 'js', 'speaking_topics.json',
+STATIC_ASSETS = ['index.html', 'css', 'js', 'logos', 'speaking_topics.json',
                  'newsletter_editions.json']
 
 # Images in the project root are copied by pattern rather than by name. The list
