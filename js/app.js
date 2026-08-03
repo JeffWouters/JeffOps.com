@@ -206,6 +206,7 @@ async function showPost(id, postObj, updateHash = true) {
 
   // Render markdown
   document.getElementById('post-content').innerHTML = marked.parse(post.markdown);
+  resolvePostAssets(document.getElementById('post-content'), post);
   if (window.JeffOpsPost) JeffOpsPost.renderCallouts(document.getElementById('post-content'));
 
   // Add copy buttons
@@ -332,6 +333,28 @@ async function showPost(id, postObj, updateHash = true) {
     JeffOpsPost.initProgress();
     JeffOpsPost.initCopyMarkdown(() => (window._currentPostRecord || {}).markdown || '');
   }
+}
+
+// ── POST ASSETS ───────────────────────────────────────
+// A post writes ![alt](featured-image.jpg), relative to its own folder. On the
+// static page that is correct: the page lives at /posts/2025/slug/ and the
+// build copies the image in beside it. In the SPA the document URL is / , so
+// the browser asked for /featured-image.jpg and got a 404 — every image in
+// every post was broken in this view and nothing reported it, because a
+// missing image throws no error a page-level handler can see.
+//
+// The record already carries the post's real URL. Rewriting relative sources
+// against it points both views at the same file.
+function resolvePostAssets(root, post) {
+  if (!root || !post || !post.url) return;
+  const base = post.url.endsWith('/') ? post.url : post.url + '/';
+  root.querySelectorAll('img[src], source[srcset], a[href]').forEach(el => {
+    const attr = el.tagName === 'SOURCE' ? 'srcset' : (el.tagName === 'A' ? 'href' : 'src');
+    const value = el.getAttribute(attr);
+    // Absolute, root-relative, protocol-relative, data: and #fragment stay put.
+    if (!value || /^([a-z]+:|\/\/|\/|#)/i.test(value)) return;
+    el.setAttribute(attr, base + value);
+  });
 }
 
 // ── FRESHNESS ─────────────────────────────────────────

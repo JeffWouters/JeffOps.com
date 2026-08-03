@@ -94,10 +94,20 @@ def copy_blog(out: Path, posts: list[dict]) -> None:
     for name in BLOG_INDEX_FILES:
         if (src / name).exists():
             shutil.copy2(src / name, dst / name)
+    # Markdown only. The images a post references are already published beside
+    # its rendered page, and the single-page app resolves relative sources
+    # against the post's URL rather than its source folder, so copying the
+    # binaries here published a second copy of every featured image that
+    # nothing ever requested — 194KB for the reMarkable post alone.
     for post in posts:
         folder = ROOT / post['folder']
-        if folder.is_dir():
-            shutil.copytree(folder, out / post['folder'], dirs_exist_ok=True)
+        if not folder.is_dir():
+            continue
+        target = out / post['folder']
+        target.mkdir(parents=True, exist_ok=True)
+        for item in sorted(folder.iterdir()):
+            if item.is_file() and item.suffix.lower() in ('.md', '.markdown'):
+                shutil.copy2(item, target / item.name)
 
 
 def _local(post: dict) -> str:

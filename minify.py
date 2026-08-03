@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Minify a built site in place.
+"""Shrink a built site in place: minify its text, recompress its images.
 
 Runs as a separate pipeline step *after* verify_build, never before. Two of the
 verifier's guards read things minification destroys: several checks match markup
@@ -28,6 +28,8 @@ import sys
 from pathlib import Path
 
 import minify_html
+import mozjpeg_lossless_optimization
+import oxipng
 import rcssmin
 import rjsmin
 
@@ -58,6 +60,52 @@ def human(n: int) -> str:
 
 def gz(data: bytes) -> int:
     return len(gzip.compress(data, 9))
+
+
+def optimise_images(out: Path, dry_run: bool = False) -> tuple[int, int, int]:
+    """Recompress JPEG and PNG without touching a single pixel.
+
+    Both passes are mathematically lossless. mozjpeg rewrites a JPEG's Huffman
+    tables and makes it progressive; oxipng re-deflates a PNG and drops the
+    chunks a browser ignores. Decoding either gives back the same image, so
+    there is nothing to eyeball and nothing to regret — which is the whole
+    reason this runs unattended in CI.
+
+    Anything beyond this — WebP, AVIF, smaller dimensions — changes the pixels
+    or the format and belongs in a decision, not in a build step.
+    """
+    before = after = touched = 0
+    for path in sorted(out.rglob('*')):
+        if not path.is_file():
+            continue
+        suffix = path.suffix.lower()
+        if suffix not in ('.png', '.jpg', '.jpeg'):
+            continue
+        original = path.read_bytes()
+        # Trust the bytes, not the extension. JeffOps_Speaking.jpg was a PNG.
+        kind = 'png' if original[:8] == b'\x89PNG\r\n\x1a\n' else (
+            'jpeg' if original[:2] == b'\xff\xd8' else None)
+        try:
+            if kind == 'jpeg':
+                result = mozjpeg_lossless_optimization.optimize(original)
+            elif kind == 'png':
+                result = oxipng.optimize_from_memory(
+                    original, level=4, strip=oxipng.StripChunks.safe())
+            else:
+                print(f'  ! {path.relative_to(out)}: not a PNG or JPEG — left alone')
+                continue
+        except Exception as exc:                      # noqa: BLE001
+            print(f'  ! {path.relative_to(out)}: {type(exc).__name__}: {exc} — left alone')
+            continue
+
+        if len(result) >= len(original):
+            continue
+        before += len(original)
+        after += len(result)
+        touched += 1
+        if not dry_run:
+            path.write_bytes(result)
+    return touched, before, after
 
 
 def minify_site(out: Path, dry_run: bool = False) -> int:
@@ -112,11 +160,17 @@ def minify_site(out: Path, dry_run: bool = False) -> int:
 
         path.write_bytes(result)
 
-    print(f'Minified {touched} file(s)')
+    print(f'Minified {touched} text file(s)')
     print(f'  raw   {human(before_raw)} → {human(after_raw)}  '
           f'(−{human(before_raw - after_raw)})')
     print(f'  gzip  {human(before_gz)} → {human(after_gz)}  '
           f'(−{human(before_gz - after_gz)}), which is what a visitor pays')
+
+    img_n, img_before, img_after = optimise_images(out, dry_run)
+    print(f'Recompressed {img_n} image(s), losslessly')
+    print(f'  {human(img_before)} → {human(img_after)}  '
+          f'(−{human(img_before - img_after)}). Images are served as-is, so '
+          f'this is what a visitor pays too.')
     return 0
 
 

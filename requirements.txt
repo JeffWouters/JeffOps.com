@@ -8,3 +8,9 @@ tzdata==2025.2
 rcssmin==1.2.2
 rjsmin==1.2.5
 minify-html==0.18.1
+
+# Lossless image recompression, same step. mozjpeg rewrites Huffman tables and
+# makes a JPEG progressive; oxipng re-deflates a PNG and drops chunks browsers
+# ignore. Neither changes a pixel, which is why they can run unattended.
+mozjpeg-lossless-optimization==1.3.2
+pyoxipng==9.1.1
