@@ -4,7 +4,7 @@ slug: cutting-kubernetes-costs-without-cutting-reliability
 # Held back: this post carries a TODO(jeff) marker asking for one first-person
 # receipt. Resolve the marker and delete the draft line, and it publishes.
 draft: true
-date: 2026-08-02
+date: 2026-05-04
 description: Most Kubernetes overspend is the gap between what you requested and what you used. Closing it safely is a reliability exercise, and the saving only reaches the invoice if it removes nodes.
 ---
 

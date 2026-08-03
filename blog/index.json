@@ -1,8 +1,8 @@
 [
   {
-    "folder": "blog/2026/20260802 - Azure Deployment Environments and Dev Box are in maintenance mode",
+    "folder": "blog/2026/20260716 - Azure Deployment Environments and Dev Box are in maintenance mode",
     "title": "Azure Deployment Environments and Dev Box are in maintenance mode",
-    "date": "Aug 02, 2026",
+    "date": "Jul 16, 2026",
     "readtime": "5 min read",
     "tags": [
       "platform-engineering",
@@ -18,21 +18,21 @@
     "slug": "azure-platform-engineering-maintenance-mode",
     "year": "2026",
     "url": "/posts/2026/azure-platform-engineering-maintenance-mode/",
-    "iso": "2026-08-02T00:00:00",
+    "iso": "2026-07-16T00:00:00",
     "description": "The two Azure services most commonly recommended as the foundation of an internal developer platform are both in maintenance mode with no further features planned. Here is what Microsoft actually said, and what is left standing.",
     "canonical": "",
-    "published_at": "2026-08-01T22:00:00+00:00",
+    "published_at": "2026-07-15T22:00:00+00:00",
     "is_draft": false,
     "is_scheduled": false,
     "is_published": true,
     "related": [
-      "blog/2026/20260802 - Your internal developer platform has an expiry date"
+      "blog/2026/20260626 - Your internal developer platform has an expiry date"
     ]
   },
   {
-    "folder": "blog/2026/20260802 - Your internal developer platform has an expiry date",
+    "folder": "blog/2026/20260626 - Your internal developer platform has an expiry date",
     "title": "Your internal developer platform has an expiry date",
-    "date": "Aug 02, 2026",
+    "date": "Jun 26, 2026",
     "readtime": "22 min read",
     "tags": [
       "platform-engineering",
@@ -48,15 +48,15 @@
     "slug": "internal-developer-platform-expiry-date",
     "year": "2026",
     "url": "/posts/2026/internal-developer-platform-expiry-date/",
-    "iso": "2026-08-02T00:00:00",
+    "iso": "2026-06-26T00:00:00",
     "description": "The best documented internal platform in the public sector hit every operational target and was shut down anyway. A platform is not an asset you build, it is a bet that a gap is worth closing, and the gap closes without telling you.",
     "canonical": "",
-    "published_at": "2026-08-01T22:00:00+00:00",
+    "published_at": "2026-06-25T22:00:00+00:00",
     "is_draft": false,
     "is_scheduled": false,
     "is_published": true,
     "related": [
-      "blog/2026/20260802 - Azure Deployment Environments and Dev Box are in maintenance mode"
+      "blog/2026/20260716 - Azure Deployment Environments and Dev Box are in maintenance mode"
     ]
   },
   {

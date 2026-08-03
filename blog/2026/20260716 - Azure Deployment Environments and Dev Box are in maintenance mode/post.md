@@ -1,7 +1,7 @@
 ---
 tags: [platform-engineering, azure, idp, enterprise, ops]
 slug: azure-platform-engineering-maintenance-mode
-date: 2026-08-02
+date: 2026-07-16
 description: The two Azure services most commonly recommended as the foundation of an internal developer platform are both in maintenance mode with no further features planned. Here is what Microsoft actually said, and what is left standing.
 ---
 

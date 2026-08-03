@@ -4,7 +4,7 @@ slug: ai-observability-four-problems
 # Held back: this post carries a TODO(jeff) marker asking for one first-person
 # receipt. Resolve the marker and delete the draft line, and it publishes.
 draft: true
-date: 2026-08-02
+date: 2026-04-24
 description: Monitoring tells you the AI ran. It cannot tell you it was right. Four layers, four different denominators, and a privacy flag that protects your users by blinding your quality monitoring.
 ---
 

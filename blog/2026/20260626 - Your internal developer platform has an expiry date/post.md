@@ -1,7 +1,7 @@
 ---
 tags: [platform-engineering, idp, enterprise, adoption, ops]
 slug: internal-developer-platform-expiry-date
-date: 2026-08-02
+date: 2026-06-26
 description: The best documented internal platform in the public sector hit every operational target and was shut down anyway. A platform is not an asset you build, it is a bet that a gap is worth closing, and the gap closes without telling you.
 ---
 

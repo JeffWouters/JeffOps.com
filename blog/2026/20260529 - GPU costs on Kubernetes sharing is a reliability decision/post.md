@@ -4,7 +4,7 @@ slug: gpu-costs-kubernetes-sharing
 # Held back: this post carries a TODO(jeff) marker asking for one first-person
 # receipt. Resolve the marker and delete the draft line, and it publishes.
 draft: true
-date: 2026-08-02
+date: 2026-05-29
 description: GPU spend is idle time, not utilisation. Every way of sharing a card trades isolation for density, the metrics meant to guide that choice are misleading, and for LLM serving the defaults quietly work against you.
 ---
 
