@@ -42,7 +42,7 @@ from generate_blog_index import (ROOT, collect_posts, estimate_readtime, find_ma
 SITE = {
     'base_url': 'https://jeffops.com',
     'title': 'JeffOps',
-    'tagline': 'Tech. Ops. Dev.',
+    'tagline': 'Jeff. Tech. Dev. Ops.',
     'description': 'Practical AI-tomation, platform engineering and enterprise '
                    'ops from Jeff Wouters. Written from inside a 25,000-user '
                    'environment, not from a vendor deck.',
@@ -1468,7 +1468,7 @@ def build_og_card(path: Path) -> None:
 
     draw.rectangle([0, 0, W, 8], fill='#00D9FF')
     draw.text((80, 200), 'JeffOps.com', font=font(86), fill='#e8edf2')
-    draw.text((80, 310), 'Tech. Ops. Dev.', font=font(44), fill='#00D9FF')
+    draw.text((80, 310), SITE['tagline'], font=font(44), fill='#00D9FF')
     draw.text((80, 400), 'Practical AI-tomation, platform engineering', font=font(30, False), fill='#9baab8')
     draw.text((80, 444), 'and enterprise ops — from inside the environment.', font=font(30, False), fill='#9baab8')
     draw.text((80, 530), 'Jeff Wouters', font=font(28), fill='#6b7a8d')
