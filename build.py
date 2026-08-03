@@ -32,9 +32,10 @@ except ImportError:      # pragma: no cover
 
 import markdown
 
-from generate_blog_index import (ROOT, collect_posts, parse_frontmatter, parse_title,
-                                 strip_leading_h1, unpublished_posts, utc_now,
-                                 write_index_files)
+from generate_blog_index import (ROOT, collect_posts, estimate_readtime, in_site_tz,
+                                 parse_excerpt, parse_frontmatter, parse_title, slugify,
+                                 strip_frontmatter, strip_leading_h1, unpublished_posts,
+                                 utc_now, write_index_files)
 
 # ── Site configuration ────────────────────────────────────────────────
 SITE = {
@@ -51,8 +52,7 @@ SITE = {
 }
 
 # Files and folders copied verbatim into the output.
-STATIC_ASSETS = ['index.html', 'css', 'js', 'logos', 'speaking_topics.json',
-                 'newsletter_editions.json']
+STATIC_ASSETS = ['index.html', 'css', 'js', 'logos', 'speaking_topics.json']
 
 # Images in the project root are copied by pattern rather than by name. The list
 # above used to carry 'JeffOps_Speaking.jpg' literally, so a second photo added
@@ -583,7 +583,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
 <div class="site-content">
 <div id="page-post" class="page active">
   <div class="post-page-wrap">
-    <div style="padding-top:2rem;"><a class="back-btn" href="/#blog">← Back to Blog</a></div>
+    <div style="padding-top:2rem;"><a class="back-btn" href="{back_url}">← {back_label}</a></div>
     <div class="post-page-layout">
       <aside class="post-toc-aside">
         <div class="toc-label">Contents</div>
@@ -591,11 +591,12 @@ POST_TEMPLATE = """<!DOCTYPE html>
       </aside>
       <article>
         <div class="post-header">
-          <div class="post-header-type">// Blog Post</div>
+          <div class="post-header-type">// {kicker}</div>
           <h1 id="post-title">{title}</h1>
           <div class="post-header-meta"><span id="post-date">{date}</span><span id="post-readtime">{readtime}</span><span>{author}</span></div>
           {tags}
         </div>
+{origin}
         <div class="post-content" id="post-content">
 {content}
         </div>
@@ -704,6 +705,10 @@ def build_post_page(post: dict, by_folder: dict, nav: str, footer: str) -> str:
         og_image=SITE['og_image'],
         article_meta=article_meta,
         jsonld=json_ld(post),
+        kicker='Newsletter Edition' if post.get('is_newsletter') else 'Blog Post',
+        origin=edition_origin_note(post) if post.get('is_newsletter') else '',
+        back_url='/#newsletter' if post.get('is_newsletter') else '/#blog',
+        back_label='Back to the archive' if post.get('is_newsletter') else 'Back to Blog',
         nav=nav,
         footer=footer,
         toc=toc_html(toc),
@@ -1085,40 +1090,151 @@ def build_sitemap(posts: list[dict], extra_urls: list[str] | None = None) -> str
 
 
 # ── Newsletter archive ────────────────────────────────────────────────
+#
+# Editions are written and published on LinkedIn first, then republished here.
+# One markdown file per edition in newsletter/, frontmatter carrying the number,
+# title, date, slug and the LinkedIn URL of the original.
+#
+# The body is the part that has to be carried across by hand, so an edition with
+# no body is not a broken page — it is one that has not been brought over yet.
+# It keeps its place in the archive and its entry keeps pointing at LinkedIn
+# until a body exists. That means a half-migrated archive is a normal state
+# rather than a failure, nothing empty can reach the site, and publishing an
+# edition here is exactly one action: paste the text in.
+#
+# newsletter_editions.json is gone. It listed the same editions a second time,
+# and a second copy of a fact is the copy that rots.
+
+EDITION_DIR = ROOT / 'newsletter'
+EDITION_PLACEHOLDER = 'TODO(jeff)'
+
+
 def load_editions() -> list[dict]:
-    path = ROOT / 'newsletter_editions.json'
-    if not path.exists():
-        print('  ! newsletter_editions.json not found — archive will be empty')
+    if not EDITION_DIR.is_dir():
+        print('  ! newsletter/ not found — archive will be empty')
         return []
-    editions = json.loads(path.read_text(encoding='utf-8'))
-    editions.sort(key=lambda e: e.get('date', ''), reverse=True)
+
+    editions = []
+    for source in sorted(EDITION_DIR.glob('*.md')):
+        # A leading underscore marks a file in this folder that is not an
+        # edition. Without it, the folder's own README would be published as
+        # edition number blank, dated nothing.
+        if source.name.startswith('_'):
+            continue
+        raw = source.read_text(encoding='utf-8')
+        front = parse_frontmatter(raw)
+        body = strip_frontmatter(raw).strip()
+
+        # A body that is only the placeholder counts as no body at all. Checked
+        # by marker rather than by length so that a stub someone half-edited
+        # still cannot be mistaken for a finished edition.
+        has_body = bool(body) and EDITION_PLACEHOLDER not in body
+
+        title = front.get('title') or parse_title(raw, source.stem)
+        date_iso = str(front.get('date', ''))[:10]
+        try:
+            shown = datetime.fromisoformat(date_iso).strftime('%b %d, %Y')
+        except ValueError:
+            shown = date_iso
+
+        slug = front.get('slug') or slugify(title)
+        linkedin = front.get('linkedin_url', '').strip()
+        if not linkedin:
+            print(f'  ! {source.name} has no linkedin_url; the original cannot be credited')
+
+        edition = {
+            'number': front.get('number', ''),
+            'title': title,
+            'date': shown,
+            'date_iso': date_iso,
+            'iso': f'{date_iso}T09:00:00' if date_iso else '',
+            'slug': slug,
+            'url': f'/newsletter/{slug}/',
+            'linkedin_url': linkedin,
+            'has_body': has_body,
+            'source': source.name,
+            'folder': f'newsletter/{slug}',
+            'is_newsletter': True,
+            'is_published': True,
+            'tags': front.get('tags') or ['Newsletter'],
+            'readtime': estimate_readtime(body) if has_body else '',
+            'body_markdown': strip_leading_h1(body).strip() if has_body else '',
+            'markdown': body if has_body else '',
+            'description': front.get('description', '').strip()
+                           or (parse_excerpt(body) if has_body else ''),
+        }
+        edition['excerpt'] = edition['description']
+        editions.append(edition)
+
+    editions.sort(key=lambda e: e.get('date_iso', ''), reverse=True)
     return editions
+
+
+def edition_origin_note(edition: dict) -> str:
+    """The 'this was published on LinkedIn first' block.
+
+    Required on every republished edition, not decoration. The reader should be
+    able to see where a piece first appeared and get to it in one click, and a
+    search engine comparing two near-identical documents should find an explicit
+    statement of which came first rather than having to guess.
+    """
+    if not edition.get('linkedin_url'):
+        return ''
+    return (
+        '<div class="edition-origin">'
+        '<span class="edition-origin-label">// originally published on LinkedIn</span>'
+        f'<p>This edition of The JeffOps Dispatch was first published on LinkedIn on '
+        f'{html.escape(edition["date"])}. This is a copy, kept here so it stays '
+        f'readable without an account.</p>'
+        f'<a class="edition-origin-link" href="{html.escape(edition["linkedin_url"], quote=True)}" '
+        f'target="_blank" rel="noopener">Read the original on LinkedIn →</a>'
+        '</div>'
+    )
+
+
+def build_edition_pages(out: Path, editions: list[dict], nav: str, footer: str) -> list[dict]:
+    """Render every edition that has a body. Returns the ones rendered."""
+    published = [e for e in editions if e['has_body']]
+    for edition in published:
+        page_dir = out / edition['url'].strip('/')
+        page_dir.mkdir(parents=True, exist_ok=True)
+        page = build_post_page(edition, {}, nav, footer)
+        (page_dir / 'index.html').write_text(page, encoding='utf-8')
+    return published
 
 
 def render_editions(editions: list[dict]) -> str:
     """Build the archive list markup.
 
     Rendered here rather than fetched by the browser for the same reason posts
-    are: these are outbound links to published work, and a link that only exists
-    after JavaScript runs is a link most crawlers never see.
+    are: these are links to published work, and a link that only exists after
+    JavaScript runs is a link most crawlers never see.
+
+    An edition that has been copied across links to its page on this site. One
+    that has not still links to LinkedIn, and opens in a new tab because it is
+    leaving the site. The two cases are visibly different: an off-site entry is
+    marked, so the archive never pretends to hold something it does not.
     """
     if not editions:
-        return '      <!-- No editions in newsletter_editions.json. -->'
+        return '      <!-- No editions found in newsletter/. -->'
 
     rows = []
     for edition in editions:
-        try:
-            published = datetime.fromisoformat(edition['date'])
-            shown = published.strftime('%b %d, %Y')
-            iso = edition['date']
-        except (KeyError, ValueError):
-            shown, iso = edition.get('date', ''), ''
+        iso = edition.get('date_iso', '')
+        shown = edition.get('date', '')
         number = f'#{int(edition["number"]):03d}' if str(edition.get('number', '')).isdigit() else ''
+        on_site = edition.get('has_body')
+        href = edition['url'] if on_site else edition.get('linkedin_url', '')
+        if not href:
+            continue
+        target = '' if on_site else ' target="_blank" rel="noopener"'
+        badge = ('' if on_site else
+                 '<span class="issue-offsite">on LinkedIn</span>')
         rows.append(
             f'      <a class="issue-item" style="text-decoration:none;color:inherit;" '
-            f'href="{html.escape(edition["url"], quote=True)}" target="_blank" rel="noopener">'
+            f'href="{html.escape(href, quote=True)}"{target}>'
             f'<div class="issue-num">{number}</div>'
-            f'<div><div class="issue-title">{html.escape(edition["title"])}</div>'
+            f'<div><div class="issue-title">{html.escape(edition["title"])}{badge}</div>'
             f'<time class="issue-date" datetime="{iso}">{shown}</time></div>'
             f'<div class="issue-arrow">→</div></a>'
         )
@@ -1197,10 +1313,21 @@ def main() -> None:
     live = collect_posts(now=now)
     pending = unpublished_posts(now=now)
 
+    # Editions that have been copied across are part of the site's writing, so
+    # they join the blog index, the feed and the sitemap. Ones that have not are
+    # still only on LinkedIn and appear nowhere but the archive list, pointing
+    # there. One list, filtered once, so no consumer can disagree about which
+    # editions exist here.
+    editions = load_editions()
+    on_site_editions = [e for e in editions if e['has_body']]
+    writing = sorted(live + on_site_editions,
+                     key=lambda item: item.get('iso', ''), reverse=True)
+
     # The client-side index is always written from the live set, even in preview.
     # It is a committed file, so letting a scheduled post into it would put the
     # full text of an unpublished piece into the repository's own output.
-    posts = write_index_files(live)
+    write_index_files(writing)
+    posts = live
     live_urls = {p['url'] for p in posts}
     if args.preview:
         extra = [p for p in collect_posts(include_unpublished=True, now=now)
@@ -1211,9 +1338,11 @@ def main() -> None:
         report_schedule(pending)
 
     # A duplicate URL means two posts would overwrite each other — fail loudly
-    # rather than silently publishing one of them.
+    # rather than silently publishing one of them. Editions are checked in the
+    # same pass: two editions sharing a slug, or an edition colliding with a
+    # post, is the same failure and must not be discovered in production.
     seen: dict[str, str] = {}
-    for post in posts:
+    for post in posts + on_site_editions:
         if post['url'] in seen:
             raise SystemExit(f'Duplicate URL {post["url"]}: '
                              f'"{seen[post["url"]]}" and "{post["folder"]}". '
@@ -1289,8 +1418,16 @@ def main() -> None:
 
     copy_blog(out, live)
 
+    rendered = build_edition_pages(out, editions, nav, footer)
+    for edition in rendered:
+        print(f'  → {edition["url"]}')
+    waiting = [e for e in editions if not e['has_body']]
+    if waiting:
+        print(f'{len(waiting)} edition(s) not copied across yet, still linking to LinkedIn:')
+        for edition in waiting:
+            print(f'  · #{edition["number"]} {edition["title"]}  ({edition["source"]})')
+
     index_source = (ROOT / 'index.html').read_text(encoding='utf-8')
-    editions = load_editions()
 
     talks_file = ROOT / 'speaking_talks.json'
     talks = json.loads(talks_file.read_text(encoding='utf-8')) if talks_file.exists() else []
@@ -1337,13 +1474,13 @@ def main() -> None:
 
     (out / 'posts').mkdir(parents=True, exist_ok=True)
     (out / 'posts' / 'index.html').write_text(build_list_page(live, nav, footer), encoding='utf-8')
-    feed = build_rss(live)
+    feed = build_rss(writing)
     (out / 'rss.xml').write_text(feed, encoding='utf-8')
     # Hugo published the feed at /index.xml for years. Anyone still subscribed
     # points there, and a feed reader that meets a redirect may simply drop the
     # subscription, so the same bytes are served at the old path too.
     (out / 'index.xml').write_text(feed, encoding='utf-8')
-    (out / 'sitemap.xml').write_text(build_sitemap(live, page_urls), encoding='utf-8')
+    (out / 'sitemap.xml').write_text(build_sitemap(writing, page_urls), encoding='utf-8')
     (out / 'robots.txt').write_text(build_robots(), encoding='utf-8')
     (out / 'CNAME').write_text('jeffops.com\n', encoding='utf-8')
 

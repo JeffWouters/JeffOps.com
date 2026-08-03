@@ -396,6 +396,10 @@ RETIRED_CLAIMS = ('128+', '12K', '40+ ', 'Teams Led')
 
 STATS_MAX_AGE_DAYS = 183
 
+# Kept as a literal rather than imported from build.py so that a typo in the
+# builder's own configuration cannot pass its own check.
+SITE_URL = 'https://jeffops.com'
+
 
 def check_home_page(out: Path, fail) -> None:
     """The home page must say nothing it cannot support.
@@ -667,19 +671,55 @@ def main() -> int:
             hrefs = re.findall(r'<a class="issue-item"[^>]*href="([^"]+)"', archive.group(1))
             if not hrefs:
                 fail('the newsletter archive rendered no editions')
-            bad = [h for h in hrefs if not h.startswith('https://www.linkedin.com/pulse/')]
-            if bad:
-                fail(f'archive entries do not link to LinkedIn editions: {bad[0]}')
+            # Two destinations are legitimate now that editions are republished
+            # here: an on-site copy, or the LinkedIn original for an edition not
+            # carried across yet. Anything else is a broken row.
+            for href in hrefs:
+                if href.startswith('https://www.linkedin.com/pulse/'):
+                    continue
+                if href.startswith('/newsletter/') and href.endswith('/'):
+                    if not (out / href.strip('/') / 'index.html').exists():
+                        fail(f'archive links to {href}, which was never rendered')
+                    continue
+                fail(f'archive entry points somewhere unexpected: {href}')
+
             if 'Generated at build time' in archive.group(1):
                 fail('the newsletter archive still contains its build-time placeholder')
 
-        editions_file = ROOT / 'newsletter_editions.json'
-        if editions_file.exists():
-            import json as _json
-            listed = len(_json.loads(editions_file.read_text(encoding='utf-8')))
-            rendered = len(re.findall(r'<a class="issue-item"', markup))
-            if listed != rendered:
-                fail(f'{listed} editions in newsletter_editions.json but {rendered} rendered')
+    # 6b. Every republished edition must credit the original. Copying Jeff's own
+    # writing onto his own site is fine; publishing it with no statement of where
+    # it first appeared, and no way to reach it, is not. That is exactly the
+    # detail that goes missing when a page is generated rather than written, so
+    # it is checked rather than trusted.
+    #
+    # newsletter_editions.json used to be cross-checked here against the rendered
+    # row count. The file is gone: editions are markdown files now, and a count of
+    # a second list could only ever disagree with the first.
+    edition_dir = out / 'newsletter'
+    if edition_dir.is_dir():
+        for page in sorted(edition_dir.glob('*/index.html')):
+            url = f'/newsletter/{page.parent.name}/'
+            text = page.read_text(encoding='utf-8')
+            if 'edition-origin' not in text:
+                fail(f'{url} does not say where the edition was first published')
+            origin = re.search(r'class="edition-origin-link" href="([^"]+)"', text)
+            if not origin:
+                fail(f'{url} has no link to the original on LinkedIn')
+            elif not origin.group(1).startswith('https://www.linkedin.com/pulse/'):
+                fail(f'{url} credits a non-LinkedIn original: {origin.group(1)}')
+            canonical = re.search(r'<link rel="canonical" href="([^"]+)"', text)
+            if not canonical:
+                fail(f'{url} has no canonical URL')
+            elif canonical.group(1) != SITE_URL + url:
+                fail(f'{url} is canonical to {canonical.group(1)}, not to itself')
+            if re.search(r'TODO\(jeff\)', text):
+                fail(f'{url} still carries the edition placeholder, so it was '
+                     f'rendered from a stub rather than from the real text')
+            body = re.search(r'<div class="post-content" id="post-content">(.*?)</div>\s*<div id="related-section"',
+                             text, re.DOTALL)
+            if body and len(re.sub(r'<[^>]+>', '', body.group(1)).split()) < 150:
+                fail(f'{url} has fewer than 150 words of body text, which is not '
+                     f'a newsletter edition')
 
     if (out / 'sitemap.xml').exists():
         sitemap = (out / 'sitemap.xml').read_text(encoding='utf-8')

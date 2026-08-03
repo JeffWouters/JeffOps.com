@@ -21,8 +21,11 @@ def strip_frontmatter(text):
     return text[match.end():] if match else text
 
 
+# 'number' and 'linkedin_url' are only meaningful on newsletter editions, but the
+# parser is shared. A key absent from this tuple is silently dropped, which is how
+# every edition came through with no LinkedIn URL and nothing to credit.
 SCALAR_FRONTMATTER_KEYS = ('series', 'slug', 'canonical', 'description', 'title', 'date',
-                          'author', 'draft')
+                          'author', 'draft', 'number', 'linkedin_url')
 
 
 
