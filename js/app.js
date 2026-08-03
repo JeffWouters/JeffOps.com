@@ -534,7 +534,11 @@ function submitEnquiry() {
 // ── TYPEWRITER ────────────────────────────────────────
 
 // ── ORBITAL HOME ─────────────────────────────────────────────────────────────
-(function initOrbital() {
+// Runs on load and again on resize. It used to run once, which was fine while
+// the orbit was a fixed 1120px square. Now that its size follows the viewport,
+// a window resize changes the container underneath these positions, and without
+// recomputing them the pills stay where they were and drift off the ring.
+function initOrbital() {
   // Compute sizes dynamically so the orbital system can scale via CSS.
   var sys = document.getElementById('orbital-system');
   if (!sys) return;
@@ -557,7 +561,12 @@ function submitEnquiry() {
     node.style.left      = (ocx + r * Math.cos(ang)) + 'px';
     node.style.top       = (ocy + r * Math.sin(ang)) + 'px';
     node.style.transform = 'translate(-50%,-50%)';
-    if (pg) node.addEventListener('click', function(){ showPage(pg); });
+    // Bound once. Without the guard, every resize would stack another click
+    // handler on the same node, and a page change would fire repeatedly.
+    if (pg && !node.dataset.bound) {
+      node.dataset.bound = '1';
+      node.addEventListener('click', function(){ showPage(pg); });
+    }
   });
 
   // connectors: draw from just outside the center circle to just before the orbit pill
@@ -590,7 +599,17 @@ function submitEnquiry() {
       cd.appendChild(ln);
     });
   }
-})();
+}
+
+initOrbital();
+
+// Debounced: a drag-resize fires continuously, and this rebuilds every
+// connector each time.
+var orbitResizeTimer;
+window.addEventListener('resize', function () {
+  clearTimeout(orbitResizeTimer);
+  orbitResizeTimer = setTimeout(initOrbital, 120);
+});
 
 const phrases = ['Platform Engineer.','DevOps Practitioner.','Blogger & Educator.','Conference Speaker.','Cloud-Native Advocate.'];
 let pi = 0, ci = 0, deleting = false;
