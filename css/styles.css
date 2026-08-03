@@ -25,8 +25,13 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,15,0.94);backdrop-fi
 /* The logo replaces the old ">JeffOps.com" text wordmark. color drives the
    whole logo through currentColor: the gradients were flattened so the mark
    and the wordmark are one colour, the site cyan, everywhere it appears. */
-.nav-logo{color:var(--cyan);text-decoration:none;display:flex;align-items:center;}
-.nav-logo .brand-logo{height:34px;width:auto;display:block;transition:color 0.2s;}
+/* The logo runs closer to the header edges than anything else in the bar. The
+   negative margins pull it back through nav's own 1rem padding on the left and
+   let it grow past the vertical centring, without moving the links or the CTA:
+   nav is a flex row, so only this item's own box shifts. 52px in a 60px bar
+   leaves 4px above and below. */
+.nav-logo{color:var(--cyan);text-decoration:none;display:flex;align-items:center;margin-left:-0.55rem;}
+.nav-logo .brand-logo{height:52px;width:auto;display:block;transition:color 0.2s;}
 .nav-logo:hover .brand-logo{opacity:0.8;}
 
 /* The trailing space in content:'> ' never rendered: .nav-logo is a flex
@@ -605,7 +610,7 @@ a.nl-btn{display:inline-flex;align-items:center;text-decoration:none;}
 }
 @media (max-width: 620px) {
   .nav-cta{display:none;}
-  .nav-logo .brand-logo{height:28px;}
+  .nav-logo .brand-logo{height:42px;}
 }
 
 /* Inline SVG figures.
