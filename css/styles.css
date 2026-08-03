@@ -22,12 +22,18 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 
 /* NAV */
 nav{position:sticky;top:0;z-index:100;background:rgba(10,12,15,0.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--border-dim);padding:0 1rem;display:flex;align-items:center;justify-content:space-between;height:var(--nav-h);flex-shrink:0;}
-.nav-logo{font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--cyan);text-decoration:none;display:flex;align-items:center;}
-.nav-logo span{color:var(--text-dim);font-weight:400;}
+/* The logo replaces the old ">JeffOps.com" text wordmark. color drives the
+   inlined wordmark through currentColor; the mark keeps its own gradients.
+   --text rather than --cyan so the teal mark carries the colour and the
+   two do not compete. */
+.nav-logo{color:var(--text);text-decoration:none;display:flex;align-items:center;}
+.nav-logo .brand-logo{height:34px;width:auto;display:block;transition:color 0.2s;}
+.nav-logo:hover .brand-logo{color:var(--cyan);}
+
 /* The trailing space in content:'> ' never rendered: .nav-logo is a flex
    container, so the pseudo-element is a flex item and its trailing whitespace
    collapses. The gap has to come from a margin, not from the string. */
-.nav-logo::before{content:'>';color:var(--cyan);opacity:0.5;margin-right:0.3em;}
+
 
 /* ── TOP-LEVEL NAV ── */
 .nav-links{display:flex;gap:0;list-style:none;align-items:stretch;}
@@ -78,7 +84,8 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,15,0.94);backdrop-fi
 /* LAYOUT */
 .site-content{flex:1;}
 footer{border-top:1px solid var(--border-dim);padding:0 1rem;display:flex;align-items:center;justify-content:space-between;height:var(--footer-h);font-family:var(--mono);font-size:0.72rem;color:var(--text-dim);flex-shrink:0;background:var(--bg);}
-.footer-logo{color:var(--cyan);}
+.footer-logo{color:var(--cyan);display:inline-flex;align-items:center;gap:7px;}
+.footer-mark{height:14px;width:auto;display:block;}
 .footer-rss{color:var(--cyan);text-decoration:none;border:1px solid var(--border);padding:3px 10px;font-size:0.68rem;transition:all 0.2s;}
 .footer-rss:hover{background:var(--cyan);color:var(--bg);}
 
@@ -594,7 +601,7 @@ a.nl-btn{display:inline-flex;align-items:center;text-decoration:none;}
 }
 @media (max-width: 620px) {
   .nav-cta{display:none;}
-  .nav-logo{font-size:0.95rem;}
+  .nav-logo .brand-logo{height:28px;}
 }
 
 /* Inline SVG figures.

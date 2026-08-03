@@ -1473,10 +1473,24 @@ def build_og_card(path: Path) -> None:
         return ImageFont.load_default()
 
     draw.rectangle([0, 0, W, 8], fill='#00D9FF')
+
+    # The logo mark, pre-rasterised and committed rather than converted from SVG
+    # at build time. Pillow cannot read SVG, and adding cairosvg would put a
+    # native-library dependency into CI to redraw the same 260px image on every
+    # run. The wordmark is deliberately not used here: it is dark navy, which
+    # sits at 2:1 against this background, and the card already says JeffOps.com
+    # in type. The mark is gradient teal and reads cleanly.
+    mark_path = ROOT / 'og-mark.png'
+    if mark_path.exists():
+        mark = Image.open(mark_path).convert('RGBA')
+        img.paste(mark, (W - mark.width - 80, 80), mark)
+    else:
+        print('  ! og-mark.png not found; the share card will have no logo')
+
     draw.text((80, 200), 'JeffOps.com', font=font(86), fill='#e8edf2')
     draw.text((80, 310), SITE['tagline'], font=font(44), fill='#00D9FF')
     draw.text((80, 400), 'Practical AI-tomation, platform engineering', font=font(30, False), fill='#9baab8')
-    draw.text((80, 444), 'and enterprise ops — from inside the environment.', font=font(30, False), fill='#9baab8')
+    draw.text((80, 444), 'and enterprise ops, from inside the environment.', font=font(30, False), fill='#9baab8')
     draw.text((80, 530), 'Jeff Wouters', font=font(28), fill='#6b7a8d')
     img.save(path, 'PNG')
     print(f'  → {path.name}')
