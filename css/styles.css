@@ -22,7 +22,10 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 nav{position:sticky;top:0;z-index:100;background:rgba(10,12,15,0.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--border-dim);padding:0 1rem;display:flex;align-items:center;justify-content:space-between;height:var(--nav-h);flex-shrink:0;}
 .nav-logo{font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--cyan);text-decoration:none;display:flex;align-items:center;}
 .nav-logo span{color:var(--text-dim);font-weight:400;}
-.nav-logo::before{content:'> ';color:var(--cyan);opacity:0.5;}
+/* The trailing space in content:'> ' never rendered: .nav-logo is a flex
+   container, so the pseudo-element is a flex item and its trailing whitespace
+   collapses. The gap has to come from a margin, not from the string. */
+.nav-logo::before{content:'>';color:var(--cyan);opacity:0.5;margin-right:0.3em;}
 
 /* ── TOP-LEVEL NAV ── */
 .nav-links{display:flex;gap:0;list-style:none;align-items:stretch;}
