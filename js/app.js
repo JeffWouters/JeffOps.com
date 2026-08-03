@@ -150,40 +150,41 @@ async function populateBlogList() {
 }
 
 // ── SHOW POST ─────────────────────────────────────────
+// The index used to carry every post's full text, so opening one cost nothing
+// extra — and everyone who never opened one paid 58KB for the privilege. The
+// text now arrives when it is needed, from the index.md the build publishes
+// beside each rendered page.
 async function loadPostMarkdown(post) {
-  if (post.markdown || !post.folder) return;
-  // Prefer embedded markdown when blog index data exists; avoid file:// fetches
-  if (window._blogEntriesByFolder && window._blogEntriesByFolder[post.folder] && window._blogEntriesByFolder[post.folder].markdown) {
-    post.markdown = window._blogEntriesByFolder[post.folder].markdown;
-    return;
-  }
-
-  // If there's a generated blog index available but this entry has no markdown, skip fetching
-  if (window._blogIndexData) {
-    console.warn('No embedded markdown available for', post.folder);
-    return;
-  }
-
+  if (post.markdown) return;
+  const source = post.url ? post.url + 'index.md'
+    : post.folder ? encodeURI(post.folder.replace(/\/+$/, '') + '/post.md')
+    : null;
+  if (!source) return;
   try {
-    const path = post.folder.replace(/\/+$|$/, '') + '/post.md';
-    const r = await fetch(encodeURI(path));
-    if (!r.ok) {
-      console.warn('Markdown not found for', post.folder);
-      return;
-    }
-    post.markdown = await r.text();
+    const r = await fetch(source);
+    if (!r.ok) { console.warn('Markdown not found at', source); return; }
+    post.markdown = stripSourceHeader(await r.text());
   } catch (e) {
-    console.warn('Failed to load markdown for', post.folder, e);
+    console.warn('Failed to load markdown from', source, e);
   }
+}
+
+// index.md opens with a two-line attribution comment and the title as an H1.
+// Both are wanted in the file — it is what Copy as Markdown hands over — and
+// neither belongs in the rendered body, where the page template already prints
+// the title. This is the client-side twin of strip_leading_h1 in
+// generate_blog_index.py; if one changes, change the other.
+function stripSourceHeader(text) {
+  return text
+    .replace(/^\s*<!--[\s\S]*?-->\s*/, '')
+    .replace(/^\s*#\s+.*\n/, '')
+    .trimStart();
 }
 
 async function showPost(id, postObj, updateHash = true) {
   const post = postObj || posts[id];
   if (!post) return;
-  if (!post.markdown && post.folder && window._blogEntriesByFolder?.[post.folder]?.markdown) {
-    post.markdown = window._blogEntriesByFolder[post.folder].markdown;
-  }
-  if (!post.markdown && post.folder) await loadPostMarkdown(post);
+  if (!post.markdown) await loadPostMarkdown(post);
   if (!post.markdown) return;
   window._currentPost = post.folder || id || 'post';
   // The share buttons need the record, not just the folder string: it is what
@@ -218,10 +219,7 @@ async function showPost(id, postObj, updateHash = true) {
     pre.appendChild(btn);
   });
 
-  // Syntax highlight
-  document.querySelectorAll('#post-content pre code').forEach(el => {
-    if (!el.className.includes('language-mermaid') && window.hljs) hljs.highlightElement(el);
-  });
+  if (window.JeffOpsPost) JeffOpsPost.highlight(document.getElementById('post-content'));
 
   if (window.JeffOpsPost) JeffOpsPost.renderDiagrams(document.getElementById('post-content'));
 
@@ -315,7 +313,14 @@ async function showPost(id, postObj, updateHash = true) {
   if (window.JeffOpsPost) {
     JeffOpsPost.addHeadingAnchors(document.getElementById('post-content'), currentShare().url);
     JeffOpsPost.initProgress();
-    JeffOpsPost.initCopyMarkdown(() => (window._currentPostRecord || {}).markdown || '');
+    // The record's markdown has had the title and attribution stripped for
+    // rendering. Copy as Markdown should hand over the published source, the
+    // same file the static page copies, so it is fetched rather than reused.
+    JeffOpsPost.initCopyMarkdown(() => {
+      const rec = window._currentPostRecord || {};
+      if (!rec.url) return rec.markdown || '';
+      return fetch(rec.url + 'index.md').then(r => (r.ok ? r.text() : rec.markdown || ''));
+    });
   }
 }
 
@@ -864,17 +869,11 @@ async function showPostFromFolder(folderPath, updateHash = true) {
     window._blogEntriesByFolder = Object.fromEntries(window._blogIndexData.map(item => [item.folder, item]));
   }
 
+  // The index no longer carries the text, so the record goes to showPost as it
+  // is and showPost fetches the body from the post's own index.md.
   if (window._blogEntriesByFolder?.[folderPath]) {
-    const entry = window._blogEntriesByFolder[folderPath];
-    if (entry.markdown) {
-      showPost(null, entry, updateHash);
-      return;
-    }
-    // If embedded index exists but markdown missing, don't attempt file:// fetch
-    if (window._blogIndexData) {
-      console.warn('Embedded index present but no markdown for', folderPath);
-      return;
-    }
+    showPost(null, window._blogEntriesByFolder[folderPath], updateHash);
+    return;
   }
 
   // If the payload is a known post ID, use the ID route
@@ -931,30 +930,14 @@ document.addEventListener('DOMContentLoaded', () => {
 // and for anything that does not run JavaScript. This only swaps it, and only
 // once the replacement has actually loaded, so a slow connection does not show
 // the first image and then jump to the second.
-function pickPortrait() {
-  const targets = document.querySelectorAll('img[data-portraits]');
-  if (!targets.length) return;
+// The portrait rotation used to happen here, per visit: the page shipped one
+// photo in the markup, then this picked one of three at random and swapped it.
+// Two thirds of visits therefore downloaded two portraits — 35 to 55KB for a
+// photograph the visitor never saw — and watched the first one change under
+// them once the second arrived.
+//
+// The build chooses instead, rotating the photo each time it runs. The daily
+// scheduled build means the picture still changes; it changes per day rather
+// than per reload, and it costs one image instead of two. data-portraits stays
+// in the markup as the record of what the rotation draws from.
 
-  const options = targets[0].dataset.portraits.split(',').map(pair => {
-    const [src, alt] = pair.split('|');
-    return { src: src.trim(), alt: (alt || '').trim() };
-  }).filter(o => o.src);
-  if (options.length < 2) return;
-
-  // Chosen once and applied to every target. The hero and the About avatar are
-  // both in this document, so choosing per element would put two different
-  // photos of the same person on one page.
-  const choice = options[Math.floor(Math.random() * options.length)];
-
-  const apply = () => targets.forEach(img => {
-    img.src = choice.src;
-    if (choice.alt) img.alt = choice.alt;
-  });
-
-  if (choice.src === targets[0].getAttribute('src')) { apply(); return; }
-  const preload = new Image();
-  preload.onload = apply;
-  preload.src = choice.src;
-}
-
-pickPortrait();

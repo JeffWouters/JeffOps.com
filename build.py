@@ -281,6 +281,49 @@ def build_stat_cells(posts, talks, editions, fail=print) -> tuple[str, int]:
     return markup, declared
 
 
+def rotate_portrait(index_html: str, now: datetime, out: Path) -> str:
+    """Pick which of the portraits this build ships.
+
+    The app used to do this in the browser, per visit: the markup carried one
+    photograph and JavaScript swapped in one of three at random, so two thirds
+    of visits downloaded a second portrait — 35 to 55KB never shown — and the
+    picture visibly changed once it arrived.
+
+    Choosing here costs nothing and shows one image. The rotation survives:
+    the build runs daily, and the day number selects the photograph, so the
+    site still changes its face — once a day rather than once a reload.
+    """
+    match = re.search(r'data-portraits="([^"]+)"', index_html)
+    if not match:
+        return index_html
+    options = [p.split('|', 1) for p in match.group(1).split(',') if p.strip()]
+    options = [(s.strip(), (a[0] if a else '').strip()) for s, *a in options]
+    if len(options) < 2:
+        return index_html
+    src, alt = options[now.toordinal() % len(options)]
+
+    # Now that one photograph is chosen for the whole build rather than swapped
+    # in the browser, it can be offered as WebP the same way covers are. A
+    # <source> would have lost that race against a JS-assigned src.
+    webp = write_webp(out / src) if (out / src).exists() else None
+
+    def swap(m: re.Match) -> str:
+        tag = m.group(0)
+        tag = re.sub(r'\ssrc="[^"]*"', f' src="{html.escape(src, quote=True)}"', tag)
+        if alt:
+            tag = re.sub(r'\salt="[^"]*"', f' alt="{html.escape(alt, quote=True)}"', tag)
+        if webp:
+            return (f'<picture><source srcset="{html.escape(webp, quote=True)}" '
+                    f'type="image/webp">{tag}</picture>')
+        return tag
+
+    updated = re.sub(r'<img\b[^>]*\bdata-portraits="[^"]*"[^>]*>', swap, index_html)
+    size = (out / src).stat().st_size if (out / src).exists() else 0
+    print(f'Portrait for this build: {src} ({size} bytes'
+          + (f', WebP {(out / webp).stat().st_size}' if webp else '') + ')')
+    return updated
+
+
 def inject_stats(index_html: str, cells: str) -> str:
     """Replace the hero stat cells with the generated ones."""
     m = re.search(r'<div class="stats-bar">.*?\n\s*</div>', index_html, re.DOTALL)
@@ -780,8 +823,8 @@ POST_TEMPLATE = """<!DOCTYPE html>
 <link rel="manifest" href="/site.webmanifest">
 <meta name="msapplication-TileColor" content="#0a0c0f">
 <meta name="theme-color" content="#0a0c0f">
-<link rel="preload" href="/vendor/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/vendor/fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/vendor/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/vendor/fonts/jetbrains-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 {code_theme}
 <link rel="stylesheet" href="/css/styles.css">
 <script type="application/ld+json">
@@ -875,8 +918,8 @@ LIST_TEMPLATE = """<!DOCTYPE html>
 <link rel="manifest" href="/site.webmanifest">
 <meta name="msapplication-TileColor" content="#0a0c0f">
 <meta name="theme-color" content="#0a0c0f">
-<link rel="preload" href="/vendor/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/vendor/fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/vendor/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/vendor/fonts/jetbrains-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body class="static-post">
@@ -1064,8 +1107,8 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 <link rel="manifest" href="/site.webmanifest">
 <meta name="msapplication-TileColor" content="#0a0c0f">
 <meta name="theme-color" content="#0a0c0f">
-<link rel="preload" href="/vendor/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/vendor/fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/vendor/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/vendor/fonts/jetbrains-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body class="static-post">
@@ -1959,6 +2002,7 @@ def main() -> None:
     index_source = inject_events(index_source)
     index_source = inject_counts(index_source, live, talks)
     index_source = inject_home_meta(index_source, live)
+    index_source = rotate_portrait(index_source, now, out)
     total = cells.count('stat-cell')
     print(f'Injected {total} home page statistic(s): {total - declared} derived, '
           f'{declared} declared in stats.json')

@@ -408,7 +408,12 @@ def collect_posts(include_unpublished=False, now=None):
 
 
 # Fields the browser-side index does not need. Dropping them keeps index.js small.
-_INDEX_ONLY_DROP = ('body_markdown',)
+# 'markdown' was 88% of this file — the complete text of every piece, 65KB
+# gzipped, downloaded by anyone who opened the home page. The list needs
+# titles, dates and excerpts; the full text is needed only when a post is
+# opened inside the app, which now fetches it from the index.md the build
+# already publishes beside each rendered page. 65KB became 6.8KB.
+_INDEX_ONLY_DROP = ('body_markdown', 'markdown')
 
 
 def write_index_files(posts):

@@ -75,6 +75,52 @@
     });
   };
 
+  // ── Syntax highlighting ───────────────────────────────────────────────
+  // 122KB of script plus a stylesheet. The static pages carry it in their
+  // markup, because the build knows at render time whether the page has a code
+  // block. The app cannot know until it has rendered a post, so it asks here,
+  // and a visitor who never opens a post with code never pays for it.
+  var HLJS_SRC = '/vendor/highlight.min.js';
+  var HLJS_CSS = '/vendor/github-dark.min.css';
+  var hljsPending = null;
+
+  function loadOnce(make) {
+    return new Promise(function (resolve) {
+      var el = make();
+      el.onload = resolve;
+      el.onerror = resolve;   // unhighlighted code is still readable code
+      document.head.appendChild(el);
+    });
+  }
+
+  NS.highlight = function (root) {
+    if (!root) return;
+    var blocks = [].slice.call(root.querySelectorAll('pre code'))
+      .filter(function (el) { return !el.className.includes('language-mermaid'); });
+    if (!blocks.length) return;
+
+    var run = function () {
+      if (!global.hljs) return;
+      blocks.forEach(function (el) {
+        if (!el.dataset.highlighted) global.hljs.highlightElement(el);
+      });
+    };
+    if (global.hljs) { run(); return; }
+    if (!hljsPending) {
+      hljsPending = Promise.all([
+        loadOnce(function () {
+          var l = document.createElement('link');
+          l.rel = 'stylesheet'; l.href = HLJS_CSS; return l;
+        }),
+        loadOnce(function () {
+          var s = document.createElement('script');
+          s.src = HLJS_SRC; return s;
+        })
+      ]);
+    }
+    hljsPending.then(run);
+  };
+
   // ── Mermaid diagrams ──────────────────────────────────────────────────
   // Mermaid is 2.9MB, 875KB gzipped — larger than the whole of the rest of the
   // site — and it was being loaded eagerly by every post page, every newsletter

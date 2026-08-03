@@ -6,19 +6,17 @@
    across two origins the browser had never spoken to. See vendor/README.md.
 
    font-display:swap so the text is readable in a fallback face immediately and
-   reflows once, rather than being invisible while a font loads. */
-@font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;
-  src:url('/vendor/fonts/inter-latin-400-normal.woff2') format('woff2');}
-@font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;
-  src:url('/vendor/fonts/inter-latin-600-normal.woff2') format('woff2');}
-@font-face{font-family:'Inter';font-style:normal;font-weight:700;font-display:swap;
-  src:url('/vendor/fonts/inter-latin-700-normal.woff2') format('woff2');}
-@font-face{font-family:'Inter';font-style:normal;font-weight:800;font-display:swap;
-  src:url('/vendor/fonts/inter-latin-800-normal.woff2') format('woff2');}
-@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:400;font-display:swap;
-  src:url('/vendor/fonts/jetbrains-mono-latin-400-normal.woff2') format('woff2');}
-@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:700;font-display:swap;
-  src:url('/vendor/fonts/jetbrains-mono-latin-700-normal.woff2') format('woff2');}
+   reflows once, rather than being invisible while a font loads.
+
+   Variable, not six static cuts. The site uses Inter at 400, 600, 700 and 800
+   and JetBrains Mono at 400 and 700 — six files, 140KB, every one of them
+   downloaded on every page, where they were 85-95% of the weight of a page
+   like /about/. One variable file per family covers the whole range in 89KB
+   and two requests. */
+@font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;
+  src:url('/vendor/fonts/inter-latin-wght-normal.woff2') format('woff2-variations');}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:100 800;font-display:swap;
+  src:url('/vendor/fonts/jetbrains-mono-latin-wght-normal.woff2') format('woff2-variations');}
 
 :root {
   --cyan:#00D9FF; --cyan-glow:rgba(0,217,255,0.10);
