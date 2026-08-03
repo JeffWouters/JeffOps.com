@@ -22,7 +22,12 @@
   --cyan:#00D9FF; --cyan-glow:rgba(0,217,255,0.10);
   --cyan-glow-strong:rgba(0,217,255,0.22); --bg:#0a0c0f; --bg2:#0f1217;
   --bg3:#151920; --border:rgba(0,217,255,0.15);
-  --border-dim:rgba(255,255,255,0.06); --text:#e8edf2; --text-dim:#6b7a8d;
+  --border-dim:rgba(255,255,255,0.06); --text:#e8edf2;
+  /* #6b7a8d measured between 3.81 and 4.47 against the five backgrounds
+     it actually sits on — under the 4.5 WCAG AA wants for body text, on
+     every one of them. This is the same hue and saturation, lifted until
+     the worst case is 4.94. One variable; it was 37 failing pairs. */
+  --text-dim:#808d9e;
   --text-mid:#9baab8; --mono:'JetBrains Mono',monospace;
   --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
   /* Headings used to be set in Syne. They are Inter now, at the site's

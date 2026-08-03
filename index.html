@@ -95,7 +95,10 @@
   </ul>
   <a class="nav-cta" href="#consulting">Work with Jeff</a>
 </nav>
-<div class="site-content">
+<!-- The document's main landmark. Screen readers offer a jump-to-main
+     command, and without one the only way past the navigation is to tab
+     through it on every single page. One per document. -->
+<main class="site-content" id="main">
 <!-- ═══════════ HOME ═══════════ -->
 <div id="page-home" class="page active">
   <div class="orbital-hero">
@@ -183,11 +186,14 @@
           </div>
         </div>
       </aside>
-      <main>
+      <!-- A div. The document already has its main landmark on .site-content,
+           and a second one nested inside the first is invalid and leaves a
+           screen reader with no unambiguous target to jump to. -->
+      <div class="blog-main">
         <div class="post-list" id="post-list">
           <div class="post-item"><div><div class="post-title">Loading posts…</div></div></div>
         </div>
-      </main>
+      </div>
     </div>
   </div>
 </div>
@@ -591,7 +597,7 @@
   </div>
 </div>
 
-</div><!-- /site-content -->
+</main>
 
 <footer>
   <!-- The mark alone, as <img>: it is gradient-only so it needs no colour

@@ -165,10 +165,15 @@ REDIRECT_TEMPLATE = """<!DOCTYPE html>
 <link rel="canonical" href="{absolute}">
 <meta http-equiv="refresh" content="0; url={target}">
 <meta name="robots" content="noindex, follow">
-<script>window.location.replace("{target}");</script>
 </head>
 <body style="font-family:system-ui,sans-serif;background:#0a0c0f;color:#e8edf2;padding:3rem">
+<!-- The meta refresh above does the redirect. An inline script used to do it
+     as well, and the Content Security Policy blocks inline script — so it had
+     stopped running the moment that policy shipped, silently, while the meta
+     refresh carried on working and hid it. -->
+<main>
 <p>This page has moved to <a style="color:#00d9ff" href="{target}">{target}</a>.</p>
+</main>
 </body>
 </html>
 """
@@ -928,7 +933,10 @@ POST_TEMPLATE = """<!DOCTYPE html>
 <body class="static-post">
 <div id="read-progress"></div>
 {nav}
-<div class="site-content">
+<!-- The document's main landmark. Screen readers offer a jump-to-main
+     command, and without one the only way past the navigation is to tab
+     through it on every single page. One per document. -->
+<main class="site-content" id="main">
 <div id="page-post" class="page active">
   <div class="post-page-wrap">
     <div style="padding-top:2rem;"><a class="back-btn" href="{back_url}">← {back_label}</a></div>
@@ -980,7 +988,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
     </div>
   </div>
 </div>
-</div><!-- /site-content -->
+</main>
 {footer}
 <!-- Deferred, so none of this blocks the first paint. Deferred scripts run
      in document order, which is the contract, and the order matters twice
@@ -1034,7 +1042,10 @@ LIST_TEMPLATE = """<!DOCTYPE html>
 </head>
 <body class="static-post">
 {nav}
-<div class="site-content">
+<!-- The document's main landmark. Screen readers offer a jump-to-main
+     command, and without one the only way past the navigation is to tab
+     through it on every single page. One per document. -->
+<main class="site-content" id="main">
 <div class="page active">
   <div class="section">
     <div class="section-header"><span class="section-tag">// writing</span><h1 class="section-title">Blog</h1><div class="section-line"></div></div>
@@ -1043,7 +1054,7 @@ LIST_TEMPLATE = """<!DOCTYPE html>
     </div>
   </div>
 </div>
-</div><!-- /site-content -->
+</main>
 {footer}
 </body>
 </html>
@@ -1246,7 +1257,10 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 </head>
 <body class="static-post">
 {nav}
-<div class="site-content">
+<!-- The document's main landmark. Screen readers offer a jump-to-main
+     command, and without one the only way past the navigation is to tab
+     through it on every single page. One per document. -->
+<main class="site-content" id="main">
 <div class="page active">
   <div class="post-page-wrap">
     <div style="max-width:{measure};margin:0 auto;padding-top:2rem;"><a class="back-btn" href="/">← Back to JeffOps</a></div>
@@ -1261,7 +1275,7 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
     </article>
   </div>
 </div>
-</div><!-- /site-content -->
+</main>
 {footer}
 <!-- These pages are lifted out of the app and load none of it, so the enquiry
      forms they carry had no handlers: the Send button did nothing and threw

@@ -412,6 +412,49 @@ ROBOTS_MUST_BE_ALLOWED = ('Googlebot', 'bingbot', 'ChatGPT-User', 'OAI-SearchBot
                           'Claude-Web', 'PerplexityBot', 'YouBot')
 
 
+# WCAG AA wants 4.5:1 for body text. These are the backgrounds text actually
+# sits on, measured in the browser rather than assumed: the page background, the
+# card background, the panel behind a badge, and the cyan wash a tag count sits
+# in. A palette change is the one edit that can break contrast everywhere at
+# once and look like nothing on screen, so the tokens are checked directly.
+CONTRAST_BACKGROUNDS = {
+    'the page': (10, 12, 15),
+    'a card': (15, 18, 23),
+    'a panel': (21, 25, 32),
+    'the cyan wash': (9, 33, 39),
+}
+CONTRAST_MIN = 4.5
+
+
+def _relative_luminance(rgb: tuple[int, int, int]) -> float:
+    def channel(value: int) -> float:
+        v = value / 255
+        return v / 12.92 if v <= 0.03928 else ((v + 0.055) / 1.055) ** 2.4
+    r, g, b = (channel(c) for c in rgb)
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def contrast_ratio(a: tuple[int, int, int], b: tuple[int, int, int]) -> float:
+    high, low = sorted((_relative_luminance(a), _relative_luminance(b)), reverse=True)
+    return (high + 0.05) / (low + 0.05)
+
+
+def check_contrast(fail) -> None:
+    css = (ROOT / 'css' / 'styles.css').read_text(encoding='utf-8')
+    for token in ('--text', '--text-mid', '--text-dim'):
+        match = re.search(re.escape(token) + r':\s*#([0-9a-fA-F]{6})', css)
+        if not match:
+            fail(f'{token} is not defined in styles.css')
+            continue
+        value = match.group(1)
+        rgb = tuple(int(value[i:i + 2], 16) for i in (0, 2, 4))
+        for name, background in CONTRAST_BACKGROUNDS.items():
+            ratio = contrast_ratio(rgb, background)
+            if ratio < CONTRAST_MIN:
+                fail(f'{token} (#{value}) is {ratio:.2f}:1 against {name} '
+                     f'{background}; WCAG AA wants {CONTRAST_MIN}:1 for body text')
+
+
 def check_robots(out: Path, fail) -> None:
     from urllib.robotparser import RobotFileParser
 
@@ -802,6 +845,25 @@ def main() -> int:
             fail(f'{label} carries {len(handlers)} inline event handler(s); '
                  f'they cannot run under this CSP and would need unsafe-inline')
 
+        # An inline <script> is blocked outright and fails silently — the page
+        # renders, nothing throws, and the script simply never runs. That is
+        # exactly how the redirect stubs kept working off their meta refresh
+        # while their inline location.replace had been dead since the policy
+        # shipped. JSON-LD is exempt: it is data, and browsers do not execute it.
+        for attrs, body in re.findall(r'<script([^>]*)>(.*?)</script>', markup, re.S):
+            if 'src=' in attrs or 'application/ld+json' in attrs:
+                continue
+            if body.strip():
+                fail(f'{label} has an inline <script>, which this CSP blocks; '
+                     f'it would never run')
+
+        # Exactly one main landmark. None means a screen reader has no way past
+        # the navigation but to tab through it; more than one means there is no
+        # unambiguous target, which is the same problem wearing a rosette.
+        mains = len(re.findall(r'<main[\s>]', markup))
+        if mains != 1:
+            fail(f'{label} has {mains} <main> landmark(s); it needs exactly one')
+
         # Only pages that run JavaScript need the policy installed. The redirect
         # stubs and the blog list carry no script at all, and adding a sanitiser
         # to a page with nothing to sanitise is bytes for the sake of a green
@@ -823,6 +885,7 @@ def main() -> int:
                     fail(f'{label} loads {scripts[first_other]} before the Trusted '
                          f'Types policy is installed')
 
+    check_contrast(fail)
     check_robots(out, fail)
     check_security_txt(out, fail)
     check_schedule(out, fail)
