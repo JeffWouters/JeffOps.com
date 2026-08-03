@@ -443,6 +443,16 @@ def check_home_page(out: Path, fail) -> None:
                          f'events.json. Every event named there must be one Jeff '
                          f'actually spoke at.')
 
+    for src in set(re.findall(r'<img[^>]+src="([^"]+)"', markup)) | set(
+            re.findall(r'data-portraits="([^"]*)"', markup)):
+        for candidate in re.split(r'[,]', src):
+            name = candidate.split('|')[0].strip()
+            if not name or name.startswith(('http', 'data:', '/')):
+                continue
+            if not (out / name).exists():
+                fail(f'the home page references the image "{name}" and the build did '
+                     f'not produce it, so it renders broken')
+
     leftover = re.search(r'\{(posts|talks|editions)\}', markup)
     if leftover:
         fail(f'the home page still contains the placeholder {leftover.group(0)}, '

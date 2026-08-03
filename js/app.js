@@ -225,7 +225,7 @@ async function showPost(id, postObj, updateHash = true) {
 
   // Syntax highlight
   document.querySelectorAll('#post-content pre code').forEach(el => {
-    if (!el.className.includes('language-mermaid')) hljs.highlightElement(el);
+    if (!el.className.includes('language-mermaid') && window.hljs) hljs.highlightElement(el);
   });
 
   // Render mermaid
@@ -236,7 +236,7 @@ async function showPost(id, postObj, updateHash = true) {
     div.textContent = el.textContent;
     pre.replaceWith(div);
   });
-  mermaid.run();
+  if (window.mermaid) mermaid.run();
 
   // Inline newsletter CTA at mid-point
   const paras = document.querySelectorAll('#post-content p');
@@ -841,7 +841,10 @@ function blogFolder(isoDate, title) {
   return 'blog/' + yr + '/' + d + ' - ' + title;
 }
 
-mermaid.initialize({
+// Guarded because this sits at the top level: when mermaid failed to load, the
+// ReferenceError thrown here stopped execution and silently disabled every
+// feature defined below it.
+if (window.mermaid) mermaid.initialize({
   startOnLoad: false, theme: 'dark',
   themeVariables: {
     primaryColor:'#0f1217', primaryTextColor:'#e8edf2', primaryBorderColor:'#00D9FF',
@@ -856,3 +859,27 @@ document.addEventListener('DOMContentLoaded', () => {
   navigateFromHash();
   window.addEventListener('hashchange', navigateFromHash);
 });
+
+// Home page portrait: one of two, chosen per visit.
+// The default src stays in the HTML so the picture is there with scripting off
+// and for anything that does not run JavaScript. This only swaps it, and only
+// once the replacement has actually loaded, so a slow connection does not show
+// the first image and then jump to the second.
+function pickPortrait() {
+  const img = document.querySelector('.center-image[data-portraits]');
+  if (!img) return;
+  const options = img.dataset.portraits.split(',').map(pair => {
+    const [src, alt] = pair.split('|');
+    return { src: src.trim(), alt: (alt || '').trim() };
+  }).filter(o => o.src);
+  if (options.length < 2) return;
+
+  const choice = options[Math.floor(Math.random() * options.length)];
+  if (choice.src === img.getAttribute('src')) return;
+
+  const preload = new Image();
+  preload.onload = () => { img.src = choice.src; if (choice.alt) img.alt = choice.alt; };
+  preload.src = choice.src;
+}
+
+pickPortrait();

@@ -52,7 +52,13 @@ SITE = {
 
 # Files and folders copied verbatim into the output.
 STATIC_ASSETS = ['index.html', 'css', 'js', 'speaking_topics.json',
-                 'newsletter_editions.json', 'JeffOps_Speaking.jpg']
+                 'newsletter_editions.json']
+
+# Images in the project root are copied by pattern rather than by name. The list
+# above used to carry 'JeffOps_Speaking.jpg' literally, so a second photo added
+# next to it was simply never copied, and the page referencing it would have
+# shown a broken image with nothing anywhere reporting a problem.
+ROOT_ASSET_PATTERNS = ('*.jpg', '*.jpeg', '*.png', '*.webp', '*.svg', '*.gif')
 
 MD_EXTENSIONS = ['fenced_code', 'tables', 'attr_list', 'sane_lists', 'toc', 'footnotes']
 MD_CONFIG = {'toc': {'permalink': False, 'toc_depth': '2-3'}}
@@ -1203,6 +1209,11 @@ def main() -> None:
             shutil.copytree(src, out / name, dirs_exist_ok=True)
         else:
             shutil.copy2(src, out / name)
+
+    for pattern in ROOT_ASSET_PATTERNS:
+        for item in sorted(ROOT.glob(pattern)):
+            if item.is_file():
+                shutil.copy2(item, out / item.name)
 
     # static/ is flattened into the site root, the way Hugo served it, so every
     # icon URL the old site published resolves unchanged.
