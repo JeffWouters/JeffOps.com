@@ -67,7 +67,7 @@ MD_CONFIG = {'toc': {'permalink': False, 'toc_depth': '2-3'}}
 
 
 # ── Publication ───────────────────────────────────────────────────────
-BLOG_INDEX_FILES = ('index.json', 'index.js', 'topics.json', 'series.json', 'speaking.js')
+BLOG_INDEX_FILES = ('index.json', 'index.js', 'topics.json', 'series.json')
 
 # Marks a page rendered by a preview build. verify_build refuses to ship a build
 # containing it, so a preview can never be mistaken for the real thing.
@@ -1056,6 +1056,11 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 </div>
 </div><!-- /site-content -->
 {footer}
+<!-- These pages are lifted out of the app and load none of it, so the enquiry
+     forms they carry had no handlers: the Send button did nothing and threw
+     nothing, and what someone typed went nowhere. This is the one script they
+     need. -->
+<script src="/js/forms.js"></script>
 </body>
 </html>
 """
@@ -1234,6 +1239,32 @@ def render_talks(talks: list[dict]) -> str:
     return ''.join(items)
 
 
+def render_topic_options(content: str) -> str:
+    """Fill the speaking enquiry dropdown at build time.
+
+    A promoted page loads no JavaScript, so the topic list — fetched by the app
+    on the single-page view — never arrived here. The static /speaking/ page,
+    which is what a crawler and a visitor without scripting see, offered a
+    dropdown containing only '— Select —'. Rendering the options from
+    speaking_topics.json fixes that and keeps one list rather than two: the app
+    now leaves options already in the page alone.
+    """
+    source = ROOT / 'speaking_topics.json'
+    if not source.exists() or 'id="eq-topic"' not in content:
+        return content
+    try:
+        topics = json.loads(source.read_text(encoding='utf-8'))
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f'  ! speaking_topics.json unreadable ({exc}); dropdown left empty')
+        return content
+    options = ''.join(
+        f'<option value="{html.escape(str(t["value"]), quote=True)}">'
+        f'{html.escape(str(t["label"]))}</option>'
+        for t in topics if t.get('value') and t.get('label'))
+    return content.replace('<option value="">— Select —</option>',
+                           f'<option value="">— Select —</option>{options}', 1)
+
+
 def build_promoted_pages(out: Path, index_html: str, nav: str, footer: str,
                          talks: list[dict] | None = None) -> list[str]:
     # The app hides every .page that is not active, so a lifted section would
@@ -1251,6 +1282,7 @@ def build_promoted_pages(out: Path, index_html: str, nav: str, footer: str,
         if section_id == 'speaking' and talks:
             content = content.replace('<div id="talks-list"></div>',
                                       f'<div id="talks-list">{render_talks(talks)}</div>', 1)
+        content = render_topic_options(content)
         content = _absolutise(content)
         url = f'/{section_id}/'
         page_dir = out / section_id

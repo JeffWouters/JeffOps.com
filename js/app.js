@@ -1,33 +1,15 @@
-const posts = {
-  'k8s-cost': {
-    title:'Cutting Kubernetes Costs by 60% Without Sacrificing Reliability',
-    date:'Nov 18, 2024', readtime:'12 min read',
-    tags:['kubernetes','finops'], related:['gitops','platform'],
-    folder:'blog/2024/20241118 - Cutting Kubernetes Costs by 60% Without Sacrificing Reliability',
-    excerpt:'A deep dive into VPA, HPA, spot instances, and right-sizing — with real numbers from a production migration.'
-  },
-  'gitops': {
-    title:'GitOps in Production: Lessons from 2 Years of ArgoCD',
-    date:'Nov 5, 2024', readtime:'9 min read',
-    tags:['devops','platform'], related:['k8s-cost','platform'],
-    folder:'blog/2024/20241105 - GitOps in Production Lessons from 2 Years of ArgoCD',
-    excerpt:'What they don\'t tell you in the docs — drift detection, multi-cluster strategies, and escape hatches.'
-  },
-  'observability': {
-    title:'Observability is Not Monitoring: A Practical Guide to OpenTelemetry',
-    date:'Oct 29, 2024', readtime:'14 min read',
-    tags:['observability'], related:['k8s-cost','gitops'],
-    folder:'blog/2024/20241029 - Observability is Not Monitoring A Practical Guide to OpenTelemetry',
-    excerpt:'The mental model shift that changes how you debug distributed systems — and how to get started with OTel in an afternoon.'
-  },
-  'platform': {
-    title:'Building an Internal Developer Platform: Where to Start',
-    date:'Oct 14, 2024', readtime:'16 min read',
-    tags:['platform','kubernetes'], related:['gitops','observability'],
-    folder:'blog/2024/20241014 - Building an Internal Developer Platform Where to Start',
-    excerpt:'Platform engineering is not "Kubernetes + a portal." Here\'s the maturity model and what to tackle first.'
-  }
-};
+// Four posts used to be hardcoded here — 'Cutting Kubernetes Costs by 60%…',
+// 'GitOps in Production: Lessons from 2 Years of ArgoCD' and two more, dated
+// late 2024, pointing at blog/2024/ folders that do not exist. They were
+// demo content: none of them was ever written, and the 60% in that first
+// title is a figure from nowhere.
+//
+// They were not merely dead. loadBlogIndex fell back to them when the real
+// index failed to load, so a visitor on a bad connection would have been shown
+// four articles Jeff never wrote, with his name on them. Same failure as the
+// five invented talks on the speaking page, and it gets the same treatment:
+// when the index cannot be read, the page says so.
+const posts = {};
 
 // ── PAGE ROUTING ───────────────────────────────────────
 function showPage(name, updateHash = true) {
@@ -121,7 +103,17 @@ async function populateBlogList() {
   if (!list) return;
   list.innerHTML = '';
 
-  const entries = postsIndex || Object.entries(posts).map(([id, post]) => ({ id, ...post }));
+  const entries = postsIndex || [];
+  if (!entries.length) {
+    // Say what happened. A blank list reads as "Jeff has not written
+    // anything", which is a worse lie than an error message.
+    list.innerHTML = '<div class="empty-state">'
+      + '<div class="empty-state-icon">⚠</div>'
+      + '<div class="empty-state-title">The writing could not be loaded</div>'
+      + '<p>The index did not arrive. Reloading usually fixes it; the posts '
+      + 'themselves are still at their own URLs under /posts/.</p></div>';
+    return;
+  }
   entries.forEach(post => {
     const item = document.createElement('div');
     item.className = 'post-item';
@@ -483,19 +475,7 @@ function shareTo(network) {
 }
 
 function copyLink() {
-  const url = currentShare().url;
-  const btn = document.getElementById('copy-link-btn');
-  const done = function (ok) {
-    if (!btn) return;
-    btn.textContent = ok ? '✓ Copied!' : '✗ Copy failed';
-    setTimeout(function () { btn.textContent = '⎘ Copy link'; }, 2000);
-  };
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(url).then(function () { done(true); },
-                                           function () { done(false); });
-  } else {
-    done(false);
-  }
+  if (window.JeffOpsPost) JeffOpsPost.copyLink(() => currentShare().url);
 }
 
 // ── BLOG FILTERING ────────────────────────────────────
@@ -548,18 +528,17 @@ function setSeries(series, btn) {
 function loadSpeakingTopics() {
   const select = document.getElementById('eq-topic');
   if (!select) return;
+  // Options already rendered into the page by the build are left alone. The
+  // static /speaking/ page carries them so the form is usable with no
+  // scripting at all, and re-adding them here would double every entry.
+  if (select.options.length > 1) { handleTopicChange(); return; }
   select.innerHTML = '<option value="">— Select —</option>';
-  if (window._speakingTopics && Array.isArray(window._speakingTopics)) {
-    window._speakingTopics.forEach(topic => {
-      const option = document.createElement('option');
-      option.value = topic.value || topic;
-      option.textContent = topic.label || topic;
-      select.appendChild(option);
-    });
-    handleTopicChange();
-    return;
-  }
 
+  // speaking_topics.json is the only list. There used to be three: this fetch,
+  // a window._speakingTopics defined in blog/speaking.js, and a hardcoded array
+  // in the catch below. The first two disagreed — blog/speaking.js won, and it
+  // used 'kubernetes' where the JSON used 'kubernetes-cloud-native' — so the
+  // value that reached an enquiry email depended on which file had loaded.
   fetch('speaking_topics.json')
     .then(res => res.ok ? res.json() : Promise.reject())
     .then(topics => {
@@ -571,20 +550,13 @@ function loadSpeakingTopics() {
       });
     })
     .catch(() => {
-      const fallback = [
-        'Platform Engineering & IDPs',
-        'Kubernetes & Cloud Native',
-        'DevOps Culture & DORA',
-        'Observability & Reliability',
-        'Developer Experience',
-        'Other'
-      ];
-      fallback.forEach(label => {
-        const option = document.createElement('option');
-        option.value = label === 'Other' ? 'other' : label;
-        option.textContent = label;
-        select.appendChild(option);
-      });
+      // No invented list. 'Other' plus the free-text field still lets someone
+      // send the enquiry, and it does not put words in Jeff's mouth about what
+      // he speaks on.
+      const option = document.createElement('option');
+      option.value = 'other';
+      option.textContent = 'Other — please describe';
+      select.appendChild(option);
     })
     .finally(() => handleTopicChange());
 }
@@ -649,30 +621,7 @@ function loadSpeakingTalks() {
     });
 }
 
-function handleTopicChange() {
-  const select = document.getElementById('eq-topic');
-  const otherField = document.getElementById('eq-topic-other-field');
-  if (!select || !otherField) return;
-  otherField.style.display = select.value === 'other' ? 'block' : 'none';
-}
 
-function submitEnquiry() {
-  const name = document.getElementById('eq-name').value.trim();
-  const email = document.getElementById('eq-email').value.trim();
-  if (!name || !email.includes('@')) { return; }
-  const event = document.getElementById('eq-event').value;
-  const date = document.getElementById('eq-date').value;
-  const topicSelect = document.getElementById('eq-topic');
-  let topic = topicSelect?.selectedOptions?.[0]?.textContent || '';
-  if (topicSelect?.value === 'other') {
-    topic = document.getElementById('eq-topic-other').value.trim();
-  }
-  if (!topic) { return; }
-  const msg = document.getElementById('eq-msg').value;
-  const body = encodeURIComponent('Name: ' + name + '\nEmail: ' + email + '\nEvent: ' + event + '\nDate: ' + date + '\nTopic: ' + topic + '\n\n' + msg);
-  window.location.href = 'mailto:jeff@jeffops.com?subject=Speaking Enquiry from ' + encodeURIComponent(name) + '&body=' + body;
-  document.getElementById('eq-success').style.display = 'block';
-}
 
 // ── TYPEWRITER ────────────────────────────────────────
 
@@ -768,18 +717,6 @@ window.addEventListener('resize', function () {
 // ── INIT ──────────────────────────────────────────────
 
 // ── CONSULTING ENQUIRY ────────────────────────────────────────────────────────
-function submitConsulting() {
-  var name = document.getElementById('con-name').value.trim();
-  var email = document.getElementById('con-email').value.trim();
-  if (!name || !email.includes('@')) return;
-  var role = document.getElementById('con-role').value;
-  var svc  = document.getElementById('con-service').value;
-  var msg  = document.getElementById('con-msg').value;
-  var body = encodeURIComponent('Name: '+name+'\nEmail: '+email+'\nRole: '+role+'\nService: '+svc+'\n\n'+msg);
-  window.location.href = 'mailto:jeff@jeffops.com?subject=Consulting Enquiry from '+encodeURIComponent(name)+'&body='+body;
-  var s = document.getElementById('con-success');
-  if (s) s.style.display = 'block';
-}
 // ── SPEAKING ENQUIRY ──────────────────────────────────────────────────────────
 
 
@@ -796,30 +733,24 @@ async function loadBlogIndex() {
     return idx;
   }
 
-  // Fetch blog/index.json if it exists (generated at build time)
-  // Falls back to the in-memory posts{} object
+  // blog/index.js is a <script> tag, so it is normally already in memory above.
+  // This is the path for when that file did not load: the same data, fetched.
   try {
     const r = await fetch('blog/index.json');
     if (r.ok) {
       const idx = await r.json();
       window._blogEntries = idx;
       window._blogEntriesByFolder = Object.fromEntries(idx.map(item => [item.folder, item]));
-      return idx; // [{ folder, title, date, readtime, tags, series, series_label, related, excerpt }]
+      return idx;
     }
-  } catch(e) { /* fallback */ }
-  const idx = Object.entries(posts).map(([id, post]) => ({
-    id,
-    folder: post.folder,
-    title: post.title,
-    date: post.date,
-    readtime: post.readtime,
-    tags: post.tags || [],
-    excerpt: post.excerpt || '',
-    related: post.related || []
-  }));
-  window._blogEntries = idx;
-  window._blogEntriesByFolder = Object.fromEntries(idx.map(item => [item.folder, item]));
-  return idx;
+  } catch (e) { /* fall through to the empty case below */ }
+
+  // Nothing invented in place of the real list. An empty index makes
+  // populateBlogList say the writing could not be loaded, which is true and
+  // recoverable, rather than showing articles that do not exist.
+  window._blogEntries = [];
+  window._blogEntriesByFolder = {};
+  return [];
 }
 
 async function loadTopicFilters() {

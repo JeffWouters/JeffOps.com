@@ -110,16 +110,13 @@
 
   // ── Share ───────────────────────────────────────────────────────────
   // The canonical link is in the document, so there is no state to guess at.
+  // The copying itself is shared with the app; only the source of the URL
+  // differs between the two views.
   window.copyLink = function () {
-    var link = document.querySelector('link[rel="canonical"]');
-    var url = link ? link.href : window.location.href;
-    var btn = document.getElementById('copy-link-btn');
-    if (!navigator.clipboard) return;
-    navigator.clipboard.writeText(url).then(function () {
-      if (!btn) return;
-      var original = btn.textContent;
-      btn.textContent = '✓ Copied';
-      setTimeout(function () { btn.textContent = original; }, 2000);
+    if (!shared) return;
+    shared.copyLink(function () {
+      var link = document.querySelector('link[rel="canonical"]');
+      return link ? link.href : window.location.href;
     });
   };
 })();

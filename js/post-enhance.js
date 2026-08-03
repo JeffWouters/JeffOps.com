@@ -119,6 +119,23 @@
     return update;
   };
 
+  // ── Copy link ─────────────────────────────────────────────────────────
+  // One implementation, two callers. app.js and post-page.js each had their
+  // own, differing only in where the URL came from — so getUrl is the argument.
+  NS.copyLink = function (getUrl) {
+    var btn = document.getElementById('copy-link-btn');
+    var label = btn ? btn.textContent : '';
+    var done = function (ok) {
+      if (!btn) return;
+      btn.textContent = ok ? '✓ Copied!' : '✗ Copy failed';
+      setTimeout(function () { btn.textContent = label; }, 2000);
+    };
+    var url = typeof getUrl === 'function' ? getUrl() : getUrl;
+    if (!url || !navigator.clipboard || !global.isSecureContext) { done(false); return; }
+    navigator.clipboard.writeText(url).then(function () { done(true); },
+                                           function () { done(false); });
+  };
+
   // ── Copy as Markdown ──────────────────────────────────────────────────
   // For readers who want to hand the piece to a model rather than read it in a
   // browser. getMarkdown returns a string or a promise for one.

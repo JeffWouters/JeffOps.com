@@ -157,9 +157,6 @@ def slugify(text):
     return re.sub(r'[^a-z0-9]+', '-', text.lower()).strip('-') if text else ''
 
 
-def normalize_tag(tag):
-    return slugify(tag)
-
 
 def derive_tags(text, known_tags):
     if not known_tags:
@@ -213,18 +210,6 @@ def parse_excerpt(text):
     excerpt = excerpt[:220].rstrip()
     return excerpt
 
-
-def parse_date(folder_name, year_dir):
-    m = re.match(r'^(\d{4})(\d{2})(\d{2})', folder_name)
-    if m:
-        try:
-            dt = datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)))
-            return {'formatted': dt.strftime('%b %d, %Y'), 'iso': dt.isoformat()}
-        except ValueError:
-            pass
-    if year_dir.isdigit() and len(year_dir) == 4:
-        return {'formatted': year_dir, 'iso': year_dir + '-12-31T23:59:59'}
-    return {'formatted': '', 'iso': ''}
 
 
 def reviewed_iso(frontmatter, published_iso):
