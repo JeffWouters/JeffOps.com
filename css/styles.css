@@ -354,7 +354,11 @@ footer{border-top:1px solid var(--border-dim);padding:0 1rem;display:flex;align-
 .stack-item::before{content:'//';color:var(--cyan);font-size:0.7rem;}
 .about-aside{position:sticky;top:80px;}
 .avatar-box{background:var(--bg2);border:1px solid var(--border);padding:2rem;text-align:center;margin-bottom:1.5rem;box-shadow:0 0 40px var(--cyan-glow);}
-.avatar-circle{width:100px;height:100px;border-radius:50%;background:var(--cyan-glow);border:2px solid var(--cyan);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:800;color:var(--cyan);margin:0 auto 1rem;font-family:var(--mono);}
+.avatar-circle{width:100px;height:100px;border-radius:50%;background:var(--cyan-glow);border:2px solid var(--cyan);display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:800;color:var(--cyan);margin:0 auto 1rem;font-family:var(--mono);overflow:hidden;}
+/* Same treatment as the hero portrait, at a tenth of the size: fill the
+   circle and crop rather than letterbox, so the three photos sit
+   identically despite one being square and two being landscape. */
+.avatar-image{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%;}
 .avatar-name{font-size:1.2rem;font-weight:700;}
 .avatar-handle{font-family:var(--mono);font-size:0.75rem;color:var(--cyan);margin:4px 0 1rem;}
 .social-links{display:flex;flex-direction:column;gap:6px;}

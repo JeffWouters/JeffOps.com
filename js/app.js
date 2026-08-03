@@ -866,19 +866,28 @@ document.addEventListener('DOMContentLoaded', () => {
 // once the replacement has actually loaded, so a slow connection does not show
 // the first image and then jump to the second.
 function pickPortrait() {
-  const img = document.querySelector('.center-image[data-portraits]');
-  if (!img) return;
-  const options = img.dataset.portraits.split(',').map(pair => {
+  const targets = document.querySelectorAll('img[data-portraits]');
+  if (!targets.length) return;
+
+  const options = targets[0].dataset.portraits.split(',').map(pair => {
     const [src, alt] = pair.split('|');
     return { src: src.trim(), alt: (alt || '').trim() };
   }).filter(o => o.src);
   if (options.length < 2) return;
 
+  // Chosen once and applied to every target. The hero and the About avatar are
+  // both in this document, so choosing per element would put two different
+  // photos of the same person on one page.
   const choice = options[Math.floor(Math.random() * options.length)];
-  if (choice.src === img.getAttribute('src')) return;
 
+  const apply = () => targets.forEach(img => {
+    img.src = choice.src;
+    if (choice.alt) img.alt = choice.alt;
+  });
+
+  if (choice.src === targets[0].getAttribute('src')) { apply(); return; }
   const preload = new Image();
-  preload.onload = () => { img.src = choice.src; if (choice.alt) img.alt = choice.alt; };
+  preload.onload = apply;
   preload.src = choice.src;
 }
 
