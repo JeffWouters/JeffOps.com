@@ -1,9 +1,6 @@
 ---
 tags: [kubernetes, gpu, ai, aks, cost, finops, llm, ops]
 slug: gpu-costs-kubernetes-sharing
-# Held back: this post carries a TODO(jeff) marker asking for one first-person
-# receipt. Resolve the marker and delete the draft line, and it publishes.
-draft: true
 date: 2026-05-29
 description: GPU spend is idle time, not utilisation. Every way of sharing a card trades isolation for density, the metrics meant to guide that choice are misleading, and for LLM serving the defaults quietly work against you.
 ---
@@ -18,12 +15,7 @@ That is the shape of accelerator spend. Not expensive work, expensive waiting. A
 
 I wrote separately about [Kubernetes cost in general](/posts/2026/cutting-kubernetes-costs-without-cutting-reliability/), where the argument is that overspend is the gap between requests and usage. Accelerators are that argument with the volume turned up and most of the usual tooling unavailable.
 
-<!-- TODO(jeff): no first-person receipt in this one either.
-     If you have run GPU workloads in anger, one concrete example, a job that
-     sat idle, a sharing configuration that bit you, a utilisation number that
-     turned out to be meaningless, would anchor the whole piece.
-     If not, label it as a researched guide in the opening.
-     The build will refuse to publish while this comment is present. -->
+The same note as the companion piece. I have not run GPU workloads in anger, so read this as a researched guide and not as a war story. That caveat carries more weight here than it does for ordinary compute, because published GPU utilisation figures are unusually unreliable, and a good part of this article is about why.
 
 ## How bad is idle, actually
 

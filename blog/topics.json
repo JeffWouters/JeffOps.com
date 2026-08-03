@@ -1,7 +1,37 @@
 [
   {
+    "key": "ops",
+    "label": "OPS",
+    "count": 5
+  },
+  {
+    "key": "ai",
+    "label": "AI",
+    "count": 2
+  },
+  {
+    "key": "aks",
+    "label": "AKS",
+    "count": 2
+  },
+  {
+    "key": "azure",
+    "label": "Azure",
+    "count": 2
+  },
+  {
+    "key": "cost",
+    "label": "Cost",
+    "count": 2
+  },
+  {
     "key": "enterprise",
     "label": "Enterprise",
+    "count": 2
+  },
+  {
+    "key": "finops",
+    "label": "Finops",
     "count": 2
   },
   {
@@ -10,8 +40,8 @@
     "count": 2
   },
   {
-    "key": "ops",
-    "label": "OPS",
+    "key": "kubernetes",
+    "label": "Kubernetes",
     "count": 2
   },
   {
@@ -25,13 +55,13 @@
     "count": 1
   },
   {
-    "key": "architecture",
-    "label": "Architecture",
+    "key": "agents",
+    "label": "Agents",
     "count": 1
   },
   {
-    "key": "azure",
-    "label": "Azure",
+    "key": "architecture",
+    "label": "Architecture",
     "count": 1
   },
   {
@@ -45,13 +75,63 @@
     "count": 1
   },
   {
+    "key": "gpu",
+    "label": "GPU",
+    "count": 1
+  },
+  {
+    "key": "hardware",
+    "label": "Hardware",
+    "count": 1
+  },
+  {
+    "key": "llm",
+    "label": "LLM",
+    "count": 1
+  },
+  {
+    "key": "linux",
+    "label": "Linux",
+    "count": 1
+  },
+  {
     "key": "netarchtest",
     "label": "Netarchtest",
     "count": 1
   },
   {
+    "key": "observability",
+    "label": "Observability",
+    "count": 1
+  },
+  {
+    "key": "opentelemetry",
+    "label": "Opentelemetry",
+    "count": 1
+  },
+  {
+    "key": "reliability",
+    "label": "Reliability",
+    "count": 1
+  },
+  {
+    "key": "remarkable",
+    "label": "Remarkable",
+    "count": 1
+  },
+  {
+    "key": "ssh",
+    "label": "SSH",
+    "count": 1
+  },
+  {
     "key": "testing",
     "label": "Testing",
+    "count": 1
+  },
+  {
+    "key": "toys",
+    "label": "Toys",
     "count": 1
   }
 ]

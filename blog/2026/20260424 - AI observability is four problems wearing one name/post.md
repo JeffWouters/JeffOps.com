@@ -1,9 +1,6 @@
 ---
 tags: [observability, ai, opentelemetry, azure, ops, agents]
 slug: ai-observability-four-problems
-# Held back: this post carries a TODO(jeff) marker asking for one first-person
-# receipt. Resolve the marker and delete the draft line, and it publishes.
-draft: true
 date: 2026-04-24
 description: Monitoring tells you the AI ran. It cannot tell you it was right. Four layers, four different denominators, and a privacy flag that protects your users by blinding your quality monitoring.
 ---
@@ -146,10 +143,7 @@ So when the final answer is wrong, where do you look? Each step looks clean on i
 
 ## What that actually looks like in a trace
 
-<!-- TODO(jeff): replace this section with a real incident from your own environment.
-     What is here is a worked illustration, not something I observed. It needs:
-     a real symptom, roughly how long it took to find, and what the fix was.
-     The build will refuse to publish while this comment is present. -->
+**A worked example, and worth being explicit that it is one.** The trace below is constructed to show the shape of the failure, not transcribed from an incident I sat through. The attribute names, the span structure and the failure mode are real and come from the specification. The run is not.
 
 Take a document triage agent that returns the wrong routing decision on a small fraction of cases. Nothing errors. Users notice because the wrong team receives the work.
 

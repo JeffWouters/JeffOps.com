@@ -2,7 +2,6 @@
 tags: [remarkable, hardware, linux, ssh, toys]
 slug: branding-your-remarkable-paper-pro
 date: 2025-01-22
-draft: true
 description: Enabling developer mode on a reMarkable Paper Pro, getting SSH working over WiFi, remounting the root filesystem so you can actually change anything, and putting it all back afterwards.
 ---
 
