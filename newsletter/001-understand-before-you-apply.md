@@ -21,6 +21,13 @@ It does this:
 
 Example (simplified):
 
+| Word         | Probability |
+|--------------|-------------|
+| "increase"   | 40%         |
+| "optimize"   | 30%         |
+| "improve"    | 20%         |
+| "reduce"     | 10%         |
+
 However, instead of always picking the one with the highest probability, it often samples from the list. That means sometimes it goes left, sometimes right. And you can’t predict, and therefore depend on, when it does which. Therefore, results given by AI will never be inherently consistent. It’s simply not in its nature.
 
 When you think about AI, think less about it as a ‘thinking brain’ and more about it as a very advanced pattern prediction engine training on enormous amounts of data.
