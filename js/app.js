@@ -72,11 +72,10 @@ function showPage(name, updateHash = true) {
 
   window.scrollTo(0, 0);
   document.getElementById('read-progress').style.display = 'none';
-  setTimeout(() => {
-    document.querySelectorAll('.page.active .animate').forEach(el => {
-      el.style.animation = 'none'; el.offsetHeight; el.style.animation = '';
-    });
-  }, 10);
+  // A restart-the-entrance-animation dance used to run here on every page
+  // change, re-triggering the fadeUp keyframes on '.animate' elements. Nothing
+  // in the markup has carried that class for a long time, so the loop found
+  // nothing; the CSS behind it has gone too.
 }
 
 function buildHash(route, payload) {
@@ -724,21 +723,10 @@ window.addEventListener('resize', function () {
   orbitResizeTimer = setTimeout(initOrbital, 120);
 });
 
-const phrases = ['Platform Engineer.','DevOps Practitioner.','Blogger & Educator.','Conference Speaker.','Cloud-Native Advocate.'];
-let pi = 0, ci = 0, deleting = false;
-function type() {
-  const el = document.getElementById('typed-text');
-  if (!el) return;
-  const phrase = phrases[pi];
-  if (!deleting) {
-    el.textContent = phrase.slice(0, ++ci);
-    if (ci === phrase.length) { deleting = true; setTimeout(type, 1800); return; }
-  } else {
-    el.textContent = phrase.slice(0, --ci);
-    if (ci === 0) { deleting = false; pi = (pi + 1) % phrases.length; }
-  }
-  setTimeout(type, deleting ? 45 : 80);
-}
+// A typewriter effect cycling five job titles used to live here. It wrote into
+// #typed-text, an element the old hero carried and the orbital home does not,
+// so it returned on its first line and had done for months. The .cursor block
+// that blinked beside it has gone from the stylesheet too.
 
 // ── INIT ──────────────────────────────────────────────
 
@@ -984,7 +972,6 @@ if (window.mermaid) mermaid.initialize({
   }
 });
 document.addEventListener('DOMContentLoaded', () => {
-  type();
   navigateFromHash();
   window.addEventListener('hashchange', navigateFromHash);
 });
