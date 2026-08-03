@@ -424,7 +424,7 @@ footer{border-top:1px solid var(--border-dim);padding:0 1rem;display:flex;align-
    measured width. */
 .orbital-system{
   --orbit-max:1120px;
-  --orbit-min:560px;
+  --orbit-min:672px;
   --orbit-fit:calc((100vh - 446px) * 1.27);
   position:relative;
   width:min(96vw, var(--orbit-max), max(var(--orbit-min), var(--orbit-fit)));
@@ -448,7 +448,7 @@ footer{border-top:1px solid var(--border-dim);padding:0 1rem;display:flex;align-
 .orbit-node:hover .orbit-label{color:var(--cyan);}
 .orbit-tooltip{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--border);font-family:var(--mono);font-size:0.68rem;color:var(--text-mid);padding:6px 12px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.2s;z-index:20;}
 .orbit-node:hover .orbit-tooltip{opacity:1;}
-.orbital-tagline{text-align:center;max-width:1240px;width:min(100%,1240px);margin-top:calc(-0.107 * min(96vw, 1120px, max(560px, calc((100vh - 446px) * 1.27))));}
+.orbital-tagline{text-align:center;max-width:1240px;width:min(100%,1240px);margin-top:calc(-0.107 * min(96vw, 1120px, max(672px, calc((100vh - 446px) * 1.27))));}
 .orbital-tagline h1{font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;letter-spacing:-0.02em;margin-bottom:0.75rem;line-height:1.25;}
 .orbital-tagline h1 em{font-style:normal;color:var(--cyan);}
 .orbital-tagline p{font-size:0.95rem;color:var(--text-mid);line-height:1.7;margin-bottom:1.5rem;}
