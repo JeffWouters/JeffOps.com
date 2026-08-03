@@ -21,7 +21,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 #read-progress{position:fixed;top:var(--nav-h);left:0;height:2px;width:0%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);z-index:200;transition:width 0.1s linear;display:none;}
 
 /* NAV */
-nav{position:sticky;top:0;z-index:100;background:rgba(10,12,15,0.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--border-dim);padding:0 1rem;display:flex;align-items:center;justify-content:space-between;height:var(--nav-h);flex-shrink:0;}
+nav{position:sticky;top:0;z-index:100;background:rgba(10,12,15,0.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 1rem;display:flex;align-items:center;justify-content:space-between;height:var(--nav-h);flex-shrink:0;}
 /* The logo replaces the old ">JeffOps.com" text wordmark. color drives the
    whole logo through currentColor: the gradients were flattened so the mark
    and the wordmark are one colour, the site cyan, everywhere it appears. */
@@ -87,7 +87,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,15,0.94);backdrop-fi
 
 /* LAYOUT */
 .site-content{flex:1;}
-footer{border-top:1px solid var(--border-dim);padding:0 1rem;display:flex;align-items:center;justify-content:space-between;height:var(--footer-h);font-family:var(--mono);font-size:0.72rem;color:var(--text-dim);flex-shrink:0;background:var(--bg);}
+footer{border-top:1px solid var(--border);padding:0 1rem;display:flex;align-items:center;justify-content:space-between;height:var(--footer-h);font-family:var(--mono);font-size:0.72rem;color:var(--text-dim);flex-shrink:0;background:var(--bg);}
 .footer-logo{color:var(--cyan);display:inline-flex;align-items:center;gap:7px;}
 .footer-mark{height:14px;width:auto;display:block;color:var(--cyan);}
 .footer-rss{color:var(--cyan);text-decoration:none;border:1px solid var(--border);padding:3px 10px;font-size:0.68rem;transition:all 0.2s;}
@@ -333,7 +333,10 @@ footer{border-top:1px solid var(--border-dim);padding:0 1rem;display:flex;align-
 
 /* SPEAKING */
 .talks-layout{display:grid;grid-template-columns:1fr 340px;gap:3rem;align-items:start;}
-.talk-item{padding:1.15rem 0;border-bottom:1px solid var(--border-dim);display:grid;grid-template-columns:100px 1fr;gap:2rem;}
+/* Dividers here match the booking card's border rather than the generic
+   --border-dim white. Same rule for the nav's bottom edge and the footer's
+   top edge, so every full-width line on the page is the one faint cyan. */
+.talk-item{padding:0.7rem 0;border-bottom:1px solid var(--border);display:grid;grid-template-columns:100px 1fr;gap:2rem;}
 .talk-date-col{text-align:right;padding-top:4px;}
 .talk-month{font-family:var(--mono);font-size:0.65rem;text-transform:uppercase;color:var(--text-dim);letter-spacing:0.1em;}
 .talk-day{font-size:2rem;font-weight:800;color:var(--cyan);line-height:1;}
