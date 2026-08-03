@@ -498,6 +498,18 @@ def _absolutise(fragment: str) -> str:
     return fragment
 
 
+def current_year(index_html: str, now: datetime) -> str:
+    """Move the footer's copyright year forward to the year of the build.
+
+    The footer read '© 2024' well into 2026 for the obvious reason: a literal
+    year in a source file is a fact that has to be remembered, and nobody
+    remembers it. The build knows the date, so it sets it. index.html keeps a
+    real year rather than a placeholder so the file still renders correctly if
+    it is opened on its own.
+    """
+    return re.sub(r'(©\s*)\d{4}', lambda m: m.group(1) + str(now.year), index_html)
+
+
 def extract_shell(index_html: str) -> tuple[str, str]:
     """Pull the nav and footer out of index.html so the design lives in one place."""
     nav = re.search(r'<nav>.*?</nav>', index_html, re.DOTALL)
@@ -2040,7 +2052,8 @@ def main() -> None:
         seen[post['url']] = post['folder']
 
     by_folder = {post['folder']: post for post in posts}
-    nav, footer = extract_shell((ROOT / 'index.html').read_text(encoding='utf-8'))
+    nav, footer = extract_shell(
+        current_year((ROOT / 'index.html').read_text(encoding='utf-8'), now))
 
     if out.exists():
         try:
@@ -2129,7 +2142,8 @@ def main() -> None:
         for edition in waiting:
             print(f'  · #{edition["number"]} {edition["title"]}  ({edition["source"]})')
 
-    index_source = (ROOT / 'index.html').read_text(encoding='utf-8')
+    index_source = current_year(
+        (ROOT / 'index.html').read_text(encoding='utf-8'), now)
 
     talks_file = ROOT / 'speaking_talks.json'
     talks = json.loads(talks_file.read_text(encoding='utf-8')) if talks_file.exists() else []

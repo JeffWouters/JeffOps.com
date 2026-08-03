@@ -146,7 +146,7 @@ footer{border-top:1px solid var(--border);padding:0 1rem;display:flex;align-item
 
 /* LOGOS BAR */
 .logos-bar{border-top:1px solid var(--border-dim);border-bottom:1px solid var(--border-dim);padding:1.5rem 1rem;}
-.logos-label{font-family:var(--mono);font-size:0.62rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.15em;text-align:center;margin-bottom:1.25rem;}
+.logos-label{font-family:var(--mono);font-size:0.62rem;color:var(--cyan);text-transform:uppercase;letter-spacing:0.15em;text-align:center;margin-bottom:1.25rem;}
 .logos-track{display:flex;gap:3rem;align-items:center;justify-content:center;flex-wrap:wrap;}
 .logo-item{font-family:var(--mono);font-size:0.78rem;color:var(--text-dim);opacity:0.55;text-transform:uppercase;letter-spacing:0.12em;white-space:nowrap;transition:opacity 0.2s;display:flex;align-items:center;gap:6px;}
 .logo-item:hover{opacity:1;color:var(--text);}

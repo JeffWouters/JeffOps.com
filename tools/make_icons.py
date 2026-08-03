@@ -11,14 +11,24 @@ accident.
 Two decisions worth knowing about, because neither is reversible by tweaking a
 number afterwards.
 
-The mark sits on a solid #0a0c0f square rather than on transparency, which is
-what the old icons used. Cyan on transparency means cyan on whatever the
-browser puts behind it, and #00D9FF against a light tab strip measures about
-1.7:1 — the mark was there and effectively unreadable for anyone not in dark
-mode. On the brand's own background it reads everywhere, and it matches the
-theme_color the manifest already declares. The Apple touch icon has to be
-opaque in any case; iOS composites it onto white and applies its own corner
-mask, so a transparent one shows up as a cyan smear on a white tile.
+Which icons are transparent and which are not is a per-icon call, not a global
+one, because the platforms disagree about what they do with an alpha channel.
+
+The browser tab icons (favicon.ico and the two PNGs) and the Windows tile are
+transparent. That is Jeff's call and it is the right one for the tile — the
+tile spec expects a transparent logo over the TileColor that browserconfig.xml
+already declares, so a black square there was fighting the platform. The known
+cost on the tab icons: #00D9FF on a light tab strip measures about 1.7:1, so
+in a light-mode browser the mark is present but low-contrast. On every dark
+theme, and on the Windows tile, it reads correctly.
+
+apple-touch-icon and the two android-chrome icons stay opaque, because
+transparency there does not degrade, it breaks. iOS composites the touch icon
+onto white and applies its own corner mask, so a transparent one lands as a
+cyan smear on a white tile. The android-chrome pair are the manifest icons; a
+launcher or an installed PWA puts them on its own surface, which is why the
+manifest declares background_color #0a0c0f — baking that same colour into the
+icon is what keeps the two agreeing.
 
 safari-pinned-tab.svg is a silhouette in solid black. Safari ignores the
 colours in that file entirely and paints the shape with whatever the page's
@@ -43,16 +53,17 @@ CYAN = '#00D9FF'
 BACKDROP = (10, 12, 15)          # --bg
 RENDER_WIDTH = 2048              # rasterise once, large, then downsample
 
-# name -> (size, padding as a fraction of the square)
+# name -> (size, padding as a fraction of the square, opaque backdrop?)
 # The small sizes get less padding: at 16px, four pixels of margin is a
 # quarter of the icon and the mark stops being identifiable.
+# See the module docstring for why the last column is not the same everywhere.
 ICONS = {
-    'favicon-16x16.png': (16, 0.02),
-    'favicon-32x32.png': (32, 0.04),
-    'apple-touch-icon.png': (180, 0.10),
-    'android-chrome-192x192.png': (192, 0.08),
-    'android-chrome-512x512.png': (512, 0.08),
-    'mstile-150x150.png': (270, 0.16),   # Windows crops tiles; keep well inside
+    'favicon-16x16.png': (16, 0.02, False),
+    'favicon-32x32.png': (32, 0.04, False),
+    'apple-touch-icon.png': (180, 0.10, True),
+    'android-chrome-192x192.png': (192, 0.08, True),
+    'android-chrome-512x512.png': (512, 0.08, True),
+    'mstile-150x150.png': (270, 0.16, False),  # Windows crops tiles; keep well inside
 }
 ICO_SIZES = (16, 32, 48)
 
@@ -79,9 +90,14 @@ async def rasterise(width: int) -> Path:
     return target
 
 
-def square(mark: Image.Image, size: int, pad: float) -> Image.Image:
-    """Centre the mark on a filled square, scaled to fit inside the padding."""
-    canvas = Image.new('RGBA', (size, size), BACKDROP + (255,))
+def square(mark: Image.Image, size: int, pad: float, opaque: bool = True) -> Image.Image:
+    """Centre the mark on a square, scaled to fit inside the padding.
+
+    opaque=False leaves the square fully transparent, so the mark sits on
+    whatever the platform paints behind it.
+    """
+    canvas = Image.new('RGBA', (size, size),
+                       BACKDROP + (255,) if opaque else (0, 0, 0, 0))
     inner = max(1, round(size * (1 - 2 * pad)))
     scaled = mark.copy()
     scaled.thumbnail((inner, inner), Image.LANCZOS)
@@ -151,12 +167,14 @@ async def main() -> int:
     mark = mark.crop(mark.getbbox())          # trim the SVG's own margin
     print(f'Rendered {SOURCE.name} at {mark.width}x{mark.height}')
 
-    for name, (size, pad) in ICONS.items():
-        square(mark, size, pad).save(OUT / name, optimize=True)
-        print(f'  {name:<30}{size}x{size}  {(OUT / name).stat().st_size:>7} bytes')
+    for name, (size, pad, opaque) in ICONS.items():
+        square(mark, size, pad, opaque).save(OUT / name, optimize=True)
+        print(f'  {name:<30}{size}x{size}  {"opaque" if opaque else "transparent":<12}'
+              f'{(OUT / name).stat().st_size:>7} bytes')
 
     write_ico(OUT / 'favicon.ico',
-              [square(mark, s, 0.02 if s <= 32 else 0.06) for s in ICO_SIZES])
+              [square(mark, s, 0.02 if s <= 32 else 0.06, opaque=False)
+               for s in ICO_SIZES])
     print(f'  {"favicon.ico":<30}{"/".join(str(s) for s in ICO_SIZES)}'
           f'      {(OUT / "favicon.ico").stat().st_size:>7} bytes')
 
