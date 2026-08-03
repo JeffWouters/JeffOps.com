@@ -302,8 +302,13 @@ def home_json_ld(posts: list[dict]) -> str:
         'email': f"mailto:{SITE['email']}",
         'jobTitle': 'Platform and enterprise IT engineer',
         'description': SITE['description'],
+        # Confirmed by Jeff, and the same four the About sidebar links to.
+        # sameAs is how a search engine ties these profiles to one person, so a
+        # wrong entry here is worse than a missing one.
         'sameAs': ['https://github.com/jeffwouters',
-                   'https://www.linkedin.com/in/jeffwouters/'],
+                   'https://www.linkedin.com/in/jeffwouters/',
+                   'https://x.com/jeffwouters',
+                   'https://www.youtube.com/@JeffOps'],
     }
     website = {
         '@type': 'WebSite',
