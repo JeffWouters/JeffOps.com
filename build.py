@@ -403,8 +403,11 @@ def inject_counts(index_html: str, posts: list[dict], talks: list[dict]) -> str:
 def inject_home_meta(index_html: str, posts: list[dict]) -> str:
     if 'rel="canonical"' in index_html:
         return index_html
-    description = re.search(r'<meta property="og:description" content="([^"]*)"', index_html)
-    description = description.group(1) if description else html.escape(SITE['description'])
+    # One description, from SITE. This used to read the literal out of
+    # index.html and defer to it, which meant the site had two descriptions of
+    # itself and the stale one was the copy that reached a link preview.
+    description = html.escape(SITE['description'])
+    index_html = index_html.replace('{description}', description)
     head = (f'<link rel="canonical" href="{SITE["base_url"]}/">\n'
             f'<meta name="description" content="{description}">\n'
             f'<script type="application/ld+json">\n{home_json_ld(posts)}\n</script>\n')

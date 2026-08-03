@@ -7,12 +7,17 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://jeffops.com/">
 <meta property="og:title" content="JeffOps — Jeff. Tech. Dev. Ops.">
-<meta property="og:description" content="Deep dives into DevOps, platform engineering, and the tools that actually matter. No fluff. No hype.">
+<!-- og:description and twitter:description below are filled in by build.py from
+     SITE['description'], the same string the RSS channel, the generated page
+     titles and every promoted page already use. The literal that used to sit
+     here was a second description of the site, and it was the one LinkedIn read.
+     If {description} survives into the output, verify_build fails the build. -->
+<meta property="og:description" content="{description}">
 <meta property="og:image" content="https://jeffops.com/og-card.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@jeffops">
 <meta name="twitter:title" content="JeffOps — Jeff. Tech. Dev. Ops.">
-<meta name="twitter:description" content="Deep dives into DevOps, platform engineering, and the tools that actually matter.">
+<meta name="twitter:description" content="{description}">
 <meta name="twitter:image" content="https://jeffops.com/og-card.png">
 <link rel="alternate" type="application/rss+xml" title="JeffOps Blog" href="https://jeffops.com/rss.xml">
 <link rel="icon" href="/favicon.ico" sizes="any">

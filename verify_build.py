@@ -499,10 +499,32 @@ def check_home_page(out: Path, fail) -> None:
                 fail(f'the home page references the image "{name}" and the build did '
                      f'not produce it, so it renders broken')
 
-    leftover = re.search(r'\{(posts|talks|editions)\}', markup)
+    leftover = re.search(r'\{(posts|talks|editions|description)\}', markup)
     if leftover:
         fail(f'the home page still contains the placeholder {leftover.group(0)}, '
              f'so a count was never substituted')
+
+    # One description, in three places. They are filled from a single source, so
+    # any disagreement means an injection missed one and a link preview is
+    # quoting something nobody has read in a year. That is exactly how the home
+    # page came to advertise itself to LinkedIn with a line left over from the
+    # previous site.
+    descriptions = {
+        'meta description': re.search(r'<meta name="description" content="([^"]*)"', markup),
+        'og:description': re.search(r'<meta property="og:description" content="([^"]*)"', markup),
+        'twitter:description': re.search(r'<meta name="twitter:description" content="([^"]*)"', markup),
+    }
+    found = {}
+    for label, match in descriptions.items():
+        if not match:
+            fail(f'the home page has no {label}')
+        elif not match.group(1).strip():
+            fail(f'the home page {label} is empty')
+        else:
+            found[label] = match.group(1)
+    if len(set(found.values())) > 1:
+        for label, value in found.items():
+            fail(f'home page descriptions disagree: {label} = "{value[:70]}..."')
 
     stats = re.search(r'<div class="stats-bar">(.*?)\n?\s*</div>(?!\s*<div class="stat-cell")',
                       markup, re.DOTALL)
