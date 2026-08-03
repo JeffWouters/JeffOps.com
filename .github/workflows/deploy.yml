@@ -61,7 +61,14 @@ jobs:
           # and the build still goes green. v4 of this action started excluding
           # dotfiles by default; v5 added this input to turn that back off. It
           # covers .nojekyll too. .git and .github are excluded regardless.
-          include-hidden-files: true
+          #
+          # Quoted deliberately. The action compares this input against the
+          # string 'true', and an unquoted YAML boolean is one of the few
+          # things that can reach a composite action as something other than
+          # the string you expected. After the first deploy /security.txt was
+          # live and /.well-known/security.txt was not, which is exactly what
+          # this exclusion looks like when it is still being applied.
+          include-hidden-files: 'true'
 
   deploy:
     needs: build
