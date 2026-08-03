@@ -575,7 +575,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
 <meta name="msapplication-TileColor" content="#0a0c0f">
 <meta name="theme-color" content="#0a0c0f">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <link rel="stylesheet" href="/css/styles.css">
 <script type="application/ld+json">
@@ -664,7 +664,7 @@ LIST_TEMPLATE = """<!DOCTYPE html>
 <meta name="msapplication-TileColor" content="#0a0c0f">
 <meta name="theme-color" content="#0a0c0f">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body class="static-post">
@@ -811,7 +811,7 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 <meta name="msapplication-TileColor" content="#0a0c0f">
 <meta name="theme-color" content="#0a0c0f">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body class="static-post">

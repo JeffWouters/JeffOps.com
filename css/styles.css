@@ -3,11 +3,13 @@
   --cyan-glow-strong:rgba(0,217,255,0.22); --bg:#0a0c0f; --bg2:#0f1217;
   --bg3:#151920; --bg4:#1c2028; --border:rgba(0,217,255,0.15);
   --border-dim:rgba(255,255,255,0.06); --text:#e8edf2; --text-dim:#6b7a8d;
-  --text-mid:#9baab8; --mono:'JetBrains Mono',monospace; --display:'Syne',sans-serif;
-  /* Syne is a display face. It sets headings; it does not set body copy.
-     Among other things its figures are old-style, which makes every
-     statistic in a post sit at x-height and read as decoration. */
+  --text-mid:#9baab8; --mono:'JetBrains Mono',monospace;
   --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  /* Headings used to be set in Syne. They are Inter now, at the site's
+     request. --display is kept rather than deleted: twenty-odd rules point at
+     it, and a single variable is still the place to change heading type if it
+     ever diverges from body copy again. */
+  --display:var(--sans);
   --nav-h:60px; --footer-h:52px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -228,10 +230,10 @@ footer{border-top:1px solid var(--border-dim);padding:0 1rem;display:flex;align-
 .post-header-meta{font-family:var(--mono);font-size:0.72rem;color:var(--text-dim);display:flex;gap:1.5rem;}
 
 /* Markdown */
-/* Inter carries a much larger x-height than Syne, so it reads bigger at the
-   same nominal size and needs slightly less leading. The measure is capped
-   because the article column is wide enough for roughly 95 characters a
-   line, and comfortable reading is 65 to 75. */
+/* Inter carries a large x-height, so it reads bigger at the same nominal size
+   and needs slightly less leading. The measure is capped because the article
+   column is wide enough for roughly 95 characters a line, and comfortable
+   reading is 65 to 75. */
 .post-content{line-height:1.72;font-size:1.03rem;letter-spacing:-0.003em;color:var(--text-mid);}
 .post-content h1,.post-content h2,.post-content h3{font-family:var(--display);font-weight:700;color:var(--text);margin:2.5rem 0 1rem;letter-spacing:-0.01em;}
 .post-content h2{font-size:1.5rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border-dim);}
@@ -573,9 +575,8 @@ a.nl-btn{display:inline-flex;align-items:center;text-decoration:none;}
   .figure-scroll svg{min-width:640px;}
 }
 
-/* Headings keep Syne now that the body font no longer supplies it by
-   inheritance. Small card and list titles are deliberately left on Inter:
-   they are link text and labels, not display type. */
+/* Headings are set explicitly rather than by inheritance, so --display stays
+   the one place heading type is decided. */
 h1,h2,h3,.section-title,.post-header h1{font-family:var(--display);}
 
 /* Post images. Source photos are far wider than the 640px measure, so they are
