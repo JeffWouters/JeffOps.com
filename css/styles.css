@@ -246,6 +246,14 @@ footer{border-top:1px solid var(--border);padding:0 1rem;display:flex;align-item
    It sits inside the heading, so it inherits the line box rather than needing
    absolute positioning that would break when a heading wraps. */
 .post-content h2,.post-content h3{position:relative;}
+/* The nav is sticky and 60px tall, so a heading scrolled to the very top of the
+   viewport lands underneath it — you click an anchor and arrive at the first
+   paragraph with no idea which section you are in. scroll-margin-top reserves
+   that space plus the progress bar that sits directly under the nav. It belongs
+   here rather than in the three scrollIntoView call sites because it also fixes
+   the paths that no script touches: a #fragment typed into the address bar, a
+   link followed in from elsewhere, and the browser's own back/forward restore. */
+.post-content h2,.post-content h3{scroll-margin-top:calc(var(--nav-h) + 1rem);}
 .heading-anchor{margin-left:0.5rem;font-family:var(--mono);font-weight:400;
   font-size:0.75em;color:var(--cyan);text-decoration:none;opacity:0;
   transition:opacity 0.15s,color 0.15s;vertical-align:middle;}
