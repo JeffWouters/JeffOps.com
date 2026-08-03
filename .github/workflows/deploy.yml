@@ -79,3 +79,19 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v5
+
+  # Nothing above this point looks at the deployed site. verify_build inspects
+  # the artifact, not the origin, so a deploy that drops or rewrites a file
+  # passes every check and ships green. That is not hypothetical: dotfiles were
+  # stripped from the artifact and /.well-known/security.txt was missing from
+  # production for two deploys, with three successful runs saying otherwise.
+  #
+  # This job is the only thing in the pipeline that asks the live site what it
+  # is actually serving.
+  smoke:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check the live site serves what was built
+        run: bash tools/smoke_test.sh https://jeffops.com
