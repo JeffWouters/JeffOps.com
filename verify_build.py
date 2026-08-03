@@ -701,6 +701,29 @@ def main() -> int:
             note = re.sub(r'\s+', ' ', todo.group(1)).strip()
             fail(f'{label} — unresolved author TODO: "{note}…"')
 
+        # 5. A callout marker still visible in the prose means the blockquote it
+        # opened was never converted — either the type is misspelt, or two
+        # callouts were written back to back, which the markdown parser merges
+        # into one blockquote so only the first marker sits at the start. Either
+        # way the reader sees a literal "[!WARNING]", so it fails the build
+        # rather than shipping.
+        marker = re.search(r'\[!([A-Za-z]+)\]', text)
+        if marker:
+            fail(f'{label} — unrendered callout marker "[!{marker.group(1)}]" in the '
+                 f'body. Check the spelling, and leave a blank line and some prose '
+                 f'between consecutive callouts.')
+
+        # 6. Heading ids are the contract behind every deep link and every
+        # anchor. A heading without one silently drops out of the table of
+        # contents and cannot be linked to.
+        body = re.search(r'<div class="post-content" id="post-content">(.*?)\n\s*</div>',
+                         source, re.S)
+        if body:
+            headless = [h for h in re.findall(r'<(h2|h3)(\s[^>]*)?>', body.group(1))
+                        if 'id=' not in (h[1] or '')]
+            if headless:
+                fail(f'{label} — {len(headless)} heading(s) rendered without an id')
+
     # 4. Feeds and crawler files must exist and parse.
     for name in ('sitemap.xml', 'rss.xml'):
         path = out / name

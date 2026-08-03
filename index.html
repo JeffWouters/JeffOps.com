@@ -194,8 +194,10 @@
         <div class="post-header">
           <div class="post-header-type">// Blog Post</div>
           <h1 id="post-title"></h1>
-          <div class="post-header-meta"><span id="post-date"></span><span id="post-readtime"></span><span>Jeff</span></div>
+          <div class="post-header-meta"><span id="post-date"></span><span class="post-reviewed" id="post-reviewed"></span><span id="post-readtime"></span><span>Jeff</span></div>
         </div>
+        <div id="series-nav"></div>
+        <div id="stale-note"></div>
         <div class="post-content" id="post-content"></div>
         <div id="related-section"></div>
       </article>
@@ -205,6 +207,7 @@
           <button class="share-btn" id="copy-link-btn" onclick="copyLink()">⎘ Copy link</button>
           <button class="share-btn" onclick="shareTo('x')">𝕏 Twitter / X</button>
           <button class="share-btn" onclick="shareTo('linkedin')">in LinkedIn</button>
+          <button class="share-btn" id="copy-md-btn" type="button">⌄ Copy as Markdown</button>
         </div>
         <div class="post-aside-box">
           <div class="post-aside-title">// The JeffOps Dispatch</div>
@@ -213,7 +216,7 @@
         </div>
         <div class="post-aside-box">
           <div class="post-aside-title">// Progress</div>
-          <div id="scroll-pct" style="font-family:var(--mono);font-size:1.4rem;font-weight:700;color:var(--cyan);">0%</div>
+          <div class="progress-readout"><span id="scroll-pct">0%</span><span id="scroll-remaining"></span></div>
           <div style="height:3px;background:var(--bg3);margin-top:8px;border-radius:2px;">
             <div id="scroll-bar" style="height:100%;width:0%;background:var(--cyan);border-radius:2px;transition:width 0.1s;"></div>
           </div>
@@ -629,6 +632,7 @@
 </footer>
   <script src="blog/index.js"></script>
   <script src="blog/speaking.js"></script>
+  <script src="js/post-enhance.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

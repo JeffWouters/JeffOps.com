@@ -202,9 +202,12 @@ async function showPost(id, postObj, updateHash = true) {
   document.getElementById('post-title').textContent = post.title;
   document.getElementById('post-date').textContent = post.date;
   document.getElementById('post-readtime').textContent = post.readtime;
+  renderFreshness(post);
+  renderSeriesNav(post);
 
   // Render markdown
   document.getElementById('post-content').innerHTML = marked.parse(post.markdown);
+  if (window.JeffOpsPost) JeffOpsPost.renderCallouts(document.getElementById('post-content'));
 
   // Add copy buttons
   document.querySelectorAll('#post-content pre').forEach(pre => {
@@ -248,14 +251,21 @@ async function showPost(id, postObj, updateHash = true) {
     paras[midIdx].insertAdjacentElement('afterend', cta);
   }
 
-  // Build TOC with progress dots
+  // Build TOC with progress dots.
+  // Heading ids come from the build's markdown renderer via the index, so a
+  // fragment copied here resolves on the static page too. 'heading-N' is only
+  // the fallback for a record built before that field existed.
   const headings = document.querySelectorAll('#post-content h2, #post-content h3');
+  const headingMeta = post.headings || [];
   const tocLinks = document.getElementById('toc-links');
   tocLinks.innerHTML = '';
   headings.forEach((h, i) => {
-    h.id = 'heading-' + i;
+    h.id = (headingMeta[i] && headingMeta[i].id) || ('heading-' + i);
+    h.dataset.idx = i;
     const a = document.createElement('a');
     a.dataset.idx = i;
+    a.dataset.target = h.id;
+    a.href = '#' + h.id;
     if (h.tagName === 'H3') a.classList.add('h3');
     const dot = document.createElement('span');
     dot.className = 'toc-progress-dot';
@@ -264,7 +274,7 @@ async function showPost(id, postObj, updateHash = true) {
     a.appendChild(dot);
     a.onclick = e => {
       e.preventDefault();
-      document.getElementById('heading-' + i).scrollIntoView({ behavior: 'smooth', block: 'start' });
+      h.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
     tocLinks.appendChild(a);
   });
@@ -296,7 +306,10 @@ async function showPost(id, postObj, updateHash = true) {
   window._tocObserver = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        const idx = parseInt(entry.target.id.replace('heading-', ''));
+        // Read the index off the element rather than parsing it out of the id:
+        // ids are now slugs shared with the static page, not sequence numbers.
+        const idx = parseInt(entry.target.dataset.idx, 10);
+        if (Number.isNaN(idx)) return;
         document.querySelectorAll('#toc-links a').forEach(a => a.classList.remove('active'));
         const activeA = document.querySelector('#toc-links a[data-idx="' + idx + '"]');
         if (activeA) activeA.classList.add('active');
@@ -314,22 +327,84 @@ async function showPost(id, postObj, updateHash = true) {
   }
 
   showPage('post', false);
-  document.getElementById('read-progress').style.display = 'block';
-  document.getElementById('read-progress').style.width = '0%';
+
+  if (window.JeffOpsPost) {
+    JeffOpsPost.addHeadingAnchors(document.getElementById('post-content'), currentShare().url);
+    JeffOpsPost.initProgress();
+    JeffOpsPost.initCopyMarkdown(() => (window._currentPostRecord || {}).markdown || '');
+  }
 }
 
-// ── READ PROGRESS + SCROLL TRACKER ────────────────────
-window.addEventListener('scroll', () => {
-  const bar = document.getElementById('read-progress');
-  if (!bar || bar.style.display === 'none') return;
-  const docH = document.documentElement.scrollHeight - window.innerHeight;
-  const pct = docH > 0 ? Math.round((window.scrollY / docH) * 100) : 0;
-  bar.style.width = pct + '%';
-  const pctEl = document.getElementById('scroll-pct');
-  const sbEl = document.getElementById('scroll-bar');
-  if (pctEl) pctEl.textContent = pct + '%';
-  if (sbEl) sbEl.style.width = pct + '%';
-});
+// ── FRESHNESS ─────────────────────────────────────────
+// A technical post that nobody has revisited in a year is not necessarily
+// wrong, but the page should not imply it has been checked. `reviewed` in the
+// frontmatter is the claim; without one the publish date stands in, and the
+// threshold below is the same number build.py uses (STALE_AFTER_DAYS).
+const STALE_AFTER_DAYS = 365;
+
+function renderFreshness(post) {
+  const meta = document.getElementById('post-reviewed');
+  const banner = document.getElementById('stale-note');
+  if (meta) {
+    meta.textContent = (post.reviewed_label && post.reviewed_label !== post.date)
+      ? 'Reviewed ' + post.reviewed_label : '';
+  }
+  if (!banner) return;
+  const stamp = post.reviewed || post.iso || '';
+  const when = stamp ? new Date(stamp) : null;
+  const days = when && !isNaN(when) ? (Date.now() - when.getTime()) / 86400000 : 0;
+  if (days <= STALE_AFTER_DAYS || post.is_newsletter) { banner.innerHTML = ''; return; }
+  const age = days < 730 ? 'over a year' : 'over ' + Math.floor(days / 365) + ' years';
+  banner.innerHTML = '<aside class="stale-note"><strong>This post has not been reviewed in '
+    + age + '.</strong> It was accurate when written. Version numbers, menu paths and '
+    + 'vendor behaviour all move, so check anything you are about to depend on.</aside>';
+}
+
+// ── SERIES NAVIGATION ─────────────────────────────────
+// Driven by the `series:` line in a post's frontmatter. Nothing renders until
+// two posts share one, which is deliberate — what belongs in a series is an
+// editorial call, not something to infer from tags.
+function renderSeriesNav(post) {
+  const host = document.getElementById('series-nav');
+  if (!host) return;
+  host.innerHTML = '';
+  if (!post.series) return;
+  const all = window._blogIndexData || window._blogEntries || [];
+  const members = all.filter(p => p.series === post.series)
+                     .sort((a, b) => (a.iso || '').localeCompare(b.iso || ''));
+  if (members.length < 2) return;
+  const idx = members.findIndex(p => p.url === post.url);
+  if (idx < 0) return;
+
+  const link = (item, rel) => {
+    const a = document.createElement('a');
+    a.className = 'series-link';
+    a.href = item.url;
+    a.rel = rel;
+    a.textContent = rel === 'prev' ? '‹ ' + item.title : item.title + ' ›';
+    a.onclick = e => { e.preventDefault(); showPostFromFolder(item.folder); };
+    return a;
+  };
+
+  const nav = document.createElement('nav');
+  nav.className = 'series-nav';
+  nav.setAttribute('aria-label', 'Series navigation');
+  const head = document.createElement('div');
+  head.className = 'series-nav-head';
+  const label = document.createElement('span');
+  label.className = 'series-nav-label';
+  label.textContent = '// ' + (post.series_label || post.series);
+  const count = document.createElement('span');
+  count.className = 'series-nav-count';
+  count.textContent = 'Part ' + (idx + 1) + ' of ' + members.length;
+  head.append(label, count);
+  const links = document.createElement('div');
+  links.className = 'series-nav-links';
+  if (idx > 0) links.appendChild(link(members[idx - 1], 'prev'));
+  if (idx + 1 < members.length) links.appendChild(link(members[idx + 1], 'next'));
+  nav.append(head, links);
+  host.appendChild(nav);
+}
 
 // ── SHARE ─────────────────────────────────────────────
 // Everything here shares the canonical URL rather than the SPA's #post= hash.

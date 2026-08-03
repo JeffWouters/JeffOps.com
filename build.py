@@ -459,7 +459,129 @@ def render_markdown(text: str) -> tuple[str, list[dict]]:
             walk(token.get('children', []))
 
     walk(getattr(md, 'toc_tokens', []))
-    return wrap_figures(body), toc
+    return render_callouts(wrap_figures(body)), toc
+
+
+# GitHub's blockquote callout syntax. Rendered here rather than in the browser
+# so the crawled HTML carries the real markup instead of a blockquote that opens
+# with a literal "[!WARNING]". js/post-enhance.js holds the SPA's copy of this —
+# the class names and this type list are the contract between them.
+CALLOUT_TYPES = {'NOTE': 'Note', 'TIP': 'Tip', 'IMPORTANT': 'Important',
+                 'WARNING': 'Warning', 'CAUTION': 'Caution'}
+
+_CALLOUT_RE = re.compile(
+    r'<blockquote>\s*<p>\s*\[!([A-Z]+)\]\s*(?:<br\s*/?>)?\s*',
+    re.IGNORECASE)
+
+
+def render_callouts(html_text: str) -> str:
+    def replace(match: re.Match) -> str:
+        kind = match.group(1).upper()
+        if kind not in CALLOUT_TYPES:
+            return match.group(0)
+        return (f'<blockquote class="callout callout-{kind.lower()}">'
+                f'<div class="callout-label">{CALLOUT_TYPES[kind]}</div><p>')
+
+    return _CALLOUT_RE.sub(replace, html_text)
+
+
+# How long a technical post is allowed to sit unreviewed before the page says so
+# out loud. Platform tooling moves fast enough that a year-old walkthrough is
+# often wrong; the banner does not claim the post is wrong, only that nobody has
+# checked. Change this number and every page re-evaluates on the next build.
+STALE_AFTER_DAYS = 365
+
+
+def freshness(post: dict, now: datetime) -> tuple[str, str]:
+    """Return (meta line HTML, banner HTML) for a post's age."""
+    reviewed = post.get('reviewed') or post.get('iso') or ''
+    if not reviewed:
+        return '', ''
+    try:
+        reviewed_dt = datetime.fromisoformat(reviewed[:19])
+    except ValueError:
+        return '', ''
+    label = post.get('reviewed_label') or ''
+    meta = ''
+    if label and label != post.get('date'):
+        meta = f'<span class="post-reviewed">Reviewed {html.escape(label)}</span>'
+    age = (now.replace(tzinfo=None) - reviewed_dt).days
+    # A newsletter edition is a dated dispatch, not a document anyone maintains.
+    # Telling a reader that a piece from last spring has not been revised since
+    # last spring is noise, so the banner is for posts only.
+    if age <= STALE_AFTER_DAYS or post.get('is_newsletter'):
+        return meta, ''
+    years = age / 365.0
+    when = f'{age} days' if years < 1 else (
+        'over a year' if years < 2 else f'over {int(years)} years')
+    banner = (
+        '<aside class="stale-note">'
+        f'<strong>This post has not been reviewed in {when}.</strong> '
+        'It was accurate when written. Version numbers, menu paths and vendor '
+        'behaviour all move, so check anything you are about to depend on.'
+        '</aside>'
+    )
+    return meta, banner
+
+
+def series_nav(post: dict, by_series: dict) -> str:
+    """Previous/next within a series, and where this post sits in it.
+
+    Driven entirely by the `series:` line in a post's frontmatter. No posts
+    carry one yet, so this renders nothing until two of them share a value.
+    """
+    key = post.get('series')
+    members = by_series.get(key) or []
+    if not key or len(members) < 2:
+        return ''
+    try:
+        idx = next(i for i, item in enumerate(members) if item['url'] == post['url'])
+    except StopIteration:
+        return ''
+    label = html.escape(post.get('series_label') or key)
+    prev_item = members[idx - 1] if idx > 0 else None
+    next_item = members[idx + 1] if idx + 1 < len(members) else None
+    links = ''
+    if prev_item:
+        links += (f'<a class="series-link" href="{prev_item["url"]}" rel="prev">'
+                  f'‹ {html.escape(prev_item["title"])}</a>')
+    if next_item:
+        links += (f'<a class="series-link" href="{next_item["url"]}" rel="next">'
+                  f'{html.escape(next_item["title"])} ›</a>')
+    return (f'<nav class="series-nav" aria-label="Series navigation">'
+            f'<div class="series-nav-head">'
+            f'<span class="series-nav-label">// {label}</span>'
+            f'<span class="series-nav-count">Part {idx + 1} of {len(members)}</span>'
+            f'</div>'
+            f'<div class="series-nav-links">{links}</div></nav>')
+
+
+def write_markdown_source(page_dir: Path, post: dict) -> None:
+    """Publish the post's markdown next to its HTML.
+
+    This is what the Copy as Markdown button fetches, and it doubles as a plain
+    source anyone — or anything — can read without parsing the page. The header
+    is two comment lines rather than frontmatter so that pasting the file
+    somewhere shows the attribution instead of hiding it in metadata.
+    """
+    body = (post.get('markdown') or '').strip()
+    if not body:
+        return
+    header = (f'<!-- {canonical_for(post)}\n'
+              f'     {post["title"]} — {SITE["author"]}, {post["date"]} -->\n\n')
+    (page_dir / 'index.md').write_text(header + body + '\n', encoding='utf-8')
+
+
+def group_series(posts: list[dict]) -> dict:
+    """series key → its posts, oldest first, which is the order they are read in."""
+    grouped: dict[str, list[dict]] = {}
+    for post in posts:
+        key = post.get('series')
+        if key:
+            grouped.setdefault(key, []).append(post)
+    for members in grouped.values():
+        members.sort(key=lambda item: item.get('iso', ''))
+    return grouped
 
 
 def wrap_figures(html: str) -> str:
@@ -509,7 +631,11 @@ def json_ld(post: dict) -> str:
     }
     if post.get('iso'):
         data['datePublished'] = post['iso']
-        data['dateModified'] = post['iso']
+        # dateModified is the review date when there is one. Repeating
+        # datePublished here, as this did, tells Google the post has never been
+        # touched — which is exactly the claim the freshness stamp exists to stop
+        # the site making by accident.
+        data['dateModified'] = post.get('reviewed') or post['iso']
     if post.get('tags'):
         data['keywords'] = ', '.join(post['tags'])
     # Google reads this for article rich results, and it is a separate field
@@ -559,6 +685,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
 <meta name="description" content="{description}">
 <meta name="author" content="{author}">
 <link rel="canonical" href="{canonical}">
+<link rel="alternate" type="text/markdown" href="index.md" title="{title} (Markdown source)">
 <meta property="og:type" content="article">
 <meta property="og:url" content="{canonical}">
 <meta property="og:title" content="{title}">
@@ -604,11 +731,13 @@ POST_TEMPLATE = """<!DOCTYPE html>
         <div class="post-header">
           <div class="post-header-type">// {kicker}</div>
           <h1 id="post-title">{title}</h1>
-          <div class="post-header-meta"><span id="post-date">{date}</span><span id="post-readtime">{readtime}</span><span>{author}</span></div>
+          <div class="post-header-meta"><span id="post-date">{date}</span>{reviewed}<span id="post-readtime">{readtime}</span><span>{author}</span></div>
           {tags}
         </div>
+{series}
 {cover}
 {origin}
+{stale}
         <div class="post-content" id="post-content">
 {content}
         </div>
@@ -620,6 +749,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
           <button class="share-btn" id="copy-link-btn" onclick="copyLink()">⎘ Copy link</button>
           <a class="share-btn" href="https://x.com/intent/post?url={canonical_enc}&amp;text={title_enc}" target="_blank" rel="noopener">𝕏 Twitter / X</a>
           <a class="share-btn" href="https://www.linkedin.com/sharing/share-offsite/?url={canonical_enc}" target="_blank" rel="noopener">in LinkedIn</a>
+          <button class="share-btn" id="copy-md-btn" type="button">⌄ Copy as Markdown</button>
         </div>
         <div class="post-aside-box">
           <div class="post-aside-title">// The JeffOps Dispatch</div>
@@ -628,7 +758,10 @@ POST_TEMPLATE = """<!DOCTYPE html>
         </div>
         <div class="post-aside-box">
           <div class="post-aside-title">// Progress</div>
-          <div id="scroll-pct" style="font-family:var(--mono);font-size:1.4rem;font-weight:700;color:var(--cyan);">0%</div>
+          <div class="progress-readout">
+            <span id="scroll-pct">0%</span>
+            <span id="scroll-remaining"></span>
+          </div>
           <div style="height:3px;background:var(--bg3);margin-top:8px;border-radius:2px;">
             <div id="scroll-bar" style="height:100%;width:0%;background:var(--cyan);border-radius:2px;transition:width 0.1s;"></div>
           </div>
@@ -641,6 +774,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
 {footer}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="/js/post-enhance.js"></script>
 <script src="/js/post-page.js"></script>
 </body>
 </html>
@@ -691,8 +825,10 @@ LIST_TEMPLATE = """<!DOCTYPE html>
 """
 
 
-def build_post_page(post: dict, by_folder: dict, nav: str, footer: str) -> str:
+def build_post_page(post: dict, by_folder: dict, nav: str, footer: str,
+                    by_series: dict | None = None, now: datetime | None = None) -> str:
     content, toc = render_markdown(post['body_markdown'])
+    reviewed_meta, stale_banner = freshness(post, now or utc_now())
     canonical = canonical_for(post)
     article_meta = ''
     if post.get('iso'):
@@ -748,6 +884,9 @@ def build_post_page(post: dict, by_folder: dict, nav: str, footer: str) -> str:
         footer=footer,
         toc=toc_html(toc),
         date=post['date'],
+        reviewed=reviewed_meta,
+        stale=stale_banner,
+        series=series_nav(post, by_series or {}),
         readtime=post['readtime'],
         tags=tags_html,
         content=content,
@@ -1291,14 +1430,16 @@ def edition_origin_note(edition: dict) -> str:
     )
 
 
-def build_edition_pages(out: Path, editions: list[dict], nav: str, footer: str) -> list[dict]:
+def build_edition_pages(out: Path, editions: list[dict], nav: str, footer: str,
+                        by_series: dict | None = None, now: datetime | None = None) -> list[dict]:
     """Render every edition that has a body. Returns the ones rendered."""
     published = [e for e in editions if e['has_body']]
     for edition in published:
         page_dir = out / edition['url'].strip('/')
         page_dir.mkdir(parents=True, exist_ok=True)
-        page = build_post_page(edition, {}, nav, footer)
+        page = build_post_page(edition, {}, nav, footer, by_series, now)
         (page_dir / 'index.html').write_text(page, encoding='utf-8')
+        write_markdown_source(page_dir, edition)
         # The cover sits next to the page it belongs to, the way a post's
         # assets do, so the URL in the markup and the file on disk cannot
         # drift apart.
@@ -1533,6 +1674,13 @@ def main() -> None:
     # The client-side index is always written from the live set, even in preview.
     # It is a committed file, so letting a scheduled post into it would put the
     # full text of an unpublished piece into the repository's own output.
+    # Heading ids come from the markdown renderer here, and the single-page app
+    # reads them back out of the index rather than inventing its own scheme.
+    # Two views of one post must not produce two different #fragment URLs — a
+    # link someone copied from the SPA has to land on the static page too.
+    for item in writing:
+        item['headings'] = render_markdown(item.get('body_markdown') or '')[1]
+
     write_index_files(writing)
     posts = live
     live_urls = {p['url'] for p in posts}
@@ -1597,11 +1745,16 @@ def main() -> None:
             if item.is_file():
                 shutil.copy2(item, out / item.name)
 
+    # Series membership is a property of the whole set, not of one post, so it
+    # is worked out once here and handed to every page.
+    by_series = group_series(posts + on_site_editions)
+
     print(f'Rendering {len(posts)} post pages…')
     for post in posts:
         page_dir = out / post['url'].strip('/')
         page_dir.mkdir(parents=True, exist_ok=True)
-        page = build_post_page(post, by_folder, nav, footer)
+        page = build_post_page(post, by_folder, nav, footer, by_series, now)
+        write_markdown_source(page_dir, post)
         if not post.get('is_published', True):
             when = post['published_at'][:16].replace('T', ' ') + ' UTC'
             page = page.replace('<head>',
@@ -1625,7 +1778,7 @@ def main() -> None:
 
     copy_blog(out, live)
 
-    rendered = build_edition_pages(out, editions, nav, footer)
+    rendered = build_edition_pages(out, editions, nav, footer, by_series, now)
     for edition in rendered:
         print(f'  → {edition["url"]}')
     waiting = [e for e in editions if not e['has_body']]

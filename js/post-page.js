@@ -57,22 +57,23 @@
     pre.appendChild(btn);
   });
 
-  // ── Read progress + scroll percentage ───────────────────────────────
-  var bar = document.getElementById('read-progress');
-  var pctEl = document.getElementById('scroll-pct');
-  var sbEl = document.getElementById('scroll-bar');
-  if (bar) bar.style.display = 'block';
-
-  function onScroll() {
-    var doc = document.documentElement;
-    var scrollable = doc.scrollHeight - doc.clientHeight;
-    var pct = scrollable > 0 ? Math.min(100, Math.round((doc.scrollTop / scrollable) * 100)) : 0;
-    if (bar) bar.style.width = pct + '%';
-    if (pctEl) pctEl.textContent = pct + '%';
-    if (sbEl) sbEl.style.width = pct + '%';
+  // ── Shared post behaviour ───────────────────────────────────────────
+  // Anchors, progress and Copy as Markdown live in post-enhance.js so the SPA
+  // renders the same behaviour from the same code. Callouts are already in this
+  // page's HTML — build.py renders them — so they are not re-run here.
+  var shared = window.JeffOpsPost;
+  if (shared) {
+    var canonical = document.querySelector('link[rel="canonical"]');
+    shared.addHeadingAnchors(content, canonical ? canonical.href : null);
+    shared.initProgress();
+    // The markdown sits next to the page as index.md. Fetching it keeps the
+    // article out of the HTML twice over.
+    shared.initCopyMarkdown(function () {
+      var src = document.querySelector('link[rel="alternate"][type="text/markdown"]');
+      return fetch(src ? src.getAttribute('href') : 'index.md')
+        .then(function (r) { return r.ok ? r.text() : ''; });
+    });
   }
-  window.addEventListener('scroll', onScroll, { passive: true });
-  onScroll();
 
   // ── Table-of-contents scroll spy ────────────────────────────────────
   var tocAnchors = Array.prototype.slice.call(document.querySelectorAll('#toc-links a'));

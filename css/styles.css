@@ -15,7 +15,10 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;display:flex;flex-direction:column;}
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);pointer-events:none;z-index:9999;}
+/* A fixed scanline overlay used to sit here — a 2px-on, 2px-off gradient across
+   the whole viewport. On any display whose device pixel ratio is not a whole
+   number it beats against the pixel grid and shows up as drifting horizontal
+   bands rather than an even texture, which is what it looked like. Removed. */
 
 /* READ PROGRESS */
 #read-progress{position:fixed;top:var(--nav-h);left:0;height:2px;width:0%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);z-index:200;transition:width 0.1s linear;display:none;}
@@ -258,6 +261,86 @@ footer{border-top:1px solid var(--border);padding:0 1rem;display:flex;align-item
 .post-content li{margin-bottom:0.4rem;}
 .post-content a{color:var(--cyan);text-decoration:underline;}
 .post-content hr{border:none;border-top:1px solid var(--border-dim);margin:2rem 0;}
+
+/* HEADING ANCHORS
+   Hidden until the heading is hovered or the anchor itself takes focus, so the
+   column reads clean but the affordance is still reachable from the keyboard.
+   It sits inside the heading, so it inherits the line box rather than needing
+   absolute positioning that would break when a heading wraps. */
+.post-content h2,.post-content h3{position:relative;}
+.heading-anchor{margin-left:0.5rem;font-family:var(--mono);font-weight:400;
+  font-size:0.75em;color:var(--cyan);text-decoration:none;opacity:0;
+  transition:opacity 0.15s,color 0.15s;vertical-align:middle;}
+.post-content h2:hover .heading-anchor,
+.post-content h3:hover .heading-anchor,
+.heading-anchor:focus{opacity:1;}
+.heading-anchor:focus{outline:1px solid var(--border);outline-offset:2px;}
+.heading-anchor.copied{opacity:1;}
+.heading-anchor.copied::after{content:' link copied';font-size:0.72rem;color:var(--text-dim);}
+@media (hover:none){.heading-anchor{opacity:0.45;}}
+
+/* CALLOUTS
+   > [!NOTE] and friends. build.py renders these into the static HTML and
+   post-enhance.js does the same in the SPA; both produce this markup. */
+/* A callout is an aside the author wrote, not a quotation, so it drops the
+   blockquote treatment above: no italics, no dimmed text, no cyan wash. Those
+   would say "someone else said this", which is the opposite of the point. */
+/* These are all written as `.post-content .callout` rather than `.callout`
+   on purpose. `.post-content blockquote` above is (0,1,1) and would otherwise
+   win on border-left and background, which is how the first attempt ended up
+   with five differently-labelled callouts all wearing the same cyan rule. */
+.post-content .callout{border:1px solid var(--border-dim);
+  border-left:3px solid var(--text-dim);background:var(--bg2);
+  padding:1rem 1.25rem;margin:1.75rem 0;font-style:normal;color:var(--text-mid);}
+.post-content .callout>p,.post-content .callout li{font-style:normal;color:var(--text-mid);}
+.post-content .callout>p{margin:0.5rem 0 0;}
+.post-content .callout>p:last-child{margin-bottom:0;}
+.post-content .callout>p:first-of-type{margin-top:0.35rem;}
+.post-content .callout code{font-style:normal;}
+.callout-label{font-family:var(--mono);font-size:0.62rem;text-transform:uppercase;
+  letter-spacing:0.12em;color:var(--text-dim);}
+.post-content .callout-note{border-left-color:var(--cyan);}
+.callout-note .callout-label{color:var(--cyan);}
+.post-content .callout-tip{border-left-color:#4ade80;}
+.callout-tip .callout-label{color:#4ade80;}
+.post-content .callout-important{border-left-color:#a78bfa;}
+.callout-important .callout-label{color:#a78bfa;}
+.post-content .callout-warning{border-left-color:#fbbf24;}
+.callout-warning .callout-label{color:#fbbf24;}
+.post-content .callout-caution{border-left-color:#f87171;}
+.callout-caution .callout-label{color:#f87171;}
+
+/* FRESHNESS
+   The stamp is quiet; the banner is only slightly less so. It reports an
+   absence of review, not an error, and the styling should not claim more. */
+.post-reviewed{color:var(--cyan);}
+.post-reviewed:empty{display:none;}
+.stale-note{border:1px solid var(--border-dim);border-left:3px solid #fbbf24;
+  background:var(--bg2);padding:1rem 1.25rem;margin:0 0 2rem;
+  font-size:0.85rem;line-height:1.65;color:var(--text-mid);}
+.stale-note strong{color:var(--text);font-weight:600;}
+
+/* SERIES NAVIGATION */
+.series-nav{border:1px solid var(--border);border-left:3px solid var(--cyan);
+  background:var(--bg2);padding:0.9rem 1.25rem;margin:0 0 2rem;}
+.series-nav-head{display:flex;align-items:baseline;justify-content:space-between;
+  gap:1rem;flex-wrap:wrap;font-family:var(--mono);font-size:0.65rem;
+  text-transform:uppercase;letter-spacing:0.12em;}
+.series-nav-label{color:var(--cyan);}
+.series-nav-count{color:var(--text-dim);}
+.series-nav-links{display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:0.6rem;}
+.series-link{font-size:0.85rem;color:var(--text-mid);text-decoration:none;
+  border-bottom:1px solid transparent;transition:all 0.15s;}
+.series-link:hover{color:var(--cyan);border-bottom-color:var(--border);}
+.series-link[rel="next"]{margin-left:auto;text-align:right;}
+
+/* PROGRESS READOUT
+   The percentage and the minutes left share a baseline, so the small number
+   reads as an annotation on the big one rather than a second statistic. */
+.progress-readout{display:flex;align-items:baseline;gap:0.6rem;flex-wrap:wrap;}
+#scroll-pct{font-family:var(--mono);font-size:1.4rem;font-weight:700;color:var(--cyan);}
+#scroll-remaining{font-family:var(--mono);font-size:0.68rem;color:var(--text-dim);
+  text-transform:uppercase;letter-spacing:0.08em;}
 .post-content table{width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.9rem;}
 .post-content th{font-family:var(--mono);font-size:0.72rem;text-transform:uppercase;color:var(--cyan);border-bottom:1px solid var(--border);padding:8px 12px;text-align:left;}
 .post-content td{padding:10px 12px;border-bottom:1px solid var(--border-dim);color:var(--text-mid);}

@@ -25,7 +25,8 @@ def strip_frontmatter(text):
 # parser is shared. A key absent from this tuple is silently dropped, which is how
 # every edition came through with no LinkedIn URL and nothing to credit.
 SCALAR_FRONTMATTER_KEYS = ('series', 'slug', 'canonical', 'description', 'title', 'date',
-                          'author', 'draft', 'number', 'linkedin_url', 'cover', 'cover_alt')
+                           'reviewed', 'author', 'draft', 'number', 'linkedin_url',
+                           'cover', 'cover_alt')
 
 
 
@@ -226,6 +227,28 @@ def parse_date(folder_name, year_dir):
     return {'formatted': '', 'iso': ''}
 
 
+def reviewed_iso(frontmatter, published_iso):
+    """ISO date the post was last reviewed, falling back to its publish date.
+
+    A `reviewed:` line in the frontmatter that cannot be parsed is ignored rather
+    than guessed at — a wrong review date is worse than none, because it claims
+    a check that never happened.
+    """
+    parsed = parse_publish_value(frontmatter.get('reviewed'))
+    if not parsed:
+        return published_iso
+    # Back into site time before dropping the offset, the same way the publish
+    # date is handled. Formatting the UTC value instead turns a review dated the
+    # 20th into the 19th for half the year, which is a lie about a date whose
+    # entire job is to be trusted.
+    return in_site_tz(parsed).replace(tzinfo=None).isoformat()
+
+
+def reviewed_label(frontmatter):
+    parsed = parse_publish_value(frontmatter.get('reviewed'))
+    return in_site_tz(parsed).strftime('%b %d, %Y') if parsed else ''
+
+
 def estimate_readtime(text):
     words = len(re.findall(r'\w+', text))
     return f'{max(1, round(words / 200))} min read'
@@ -369,6 +392,12 @@ def collect_posts(include_unpublished=False, now=None):
                 'year': year,
                 'url': url,
                 'iso': dt['iso'],
+                # When the post was last checked over, as opposed to when it was
+                # first published. Technical writing goes stale silently; this is
+                # the field that lets a page admit its own age. Absent means the
+                # post has not been revisited, so the publish date stands in.
+                'reviewed': reviewed_iso(frontmatter, dt['iso']),
+                'reviewed_label': reviewed_label(frontmatter),
                 'description': frontmatter.get('description', '') or excerpt,
                 'canonical': frontmatter.get('canonical', ''),
                 'body_markdown': strip_leading_h1(text).strip(),

@@ -5,6 +5,11 @@
     "count": 5
   },
   {
+    "key": "Newsletter",
+    "label": "Newsletter",
+    "count": 3
+  },
+  {
     "key": "ai",
     "label": "AI",
     "count": 2
