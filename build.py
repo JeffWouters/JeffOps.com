@@ -1255,9 +1255,91 @@ def inject_editions(index_html: str, editions: list[dict]) -> str:
     return result
 
 
+# AI crawlers split three ways, and lumping them together is the mistake most
+# robots.txt files make. A training crawler collects text to build a model. A
+# retrieval agent fetches a page while answering someone's question right now,
+# and cites it. A search crawler builds an index. Blocking the first does not
+# block the other two, so a site can stay out of training corpora and still be
+# read, quoted and linked in AI answers.
+#
+# Jeff's choice, 3 August 2026: block training, allow retrieval and search.
+#
+# Google-Extended is the subtle one. It governs Gemini and AI Overviews
+# grounding only. It has no effect on ordinary Google Search ranking, and
+# Googlebot is deliberately left alone below.
+#
+# None of this is enforcement. robots.txt is a request, honoured voluntarily,
+# and a crawler that ignores it faces nothing here. It states the policy; it
+# does not implement it.
+
+AI_TRAINING_BOTS = [
+    ('GPTBot', 'OpenAI, model training'),
+    ('ClaudeBot', 'Anthropic, model training'),
+    ('anthropic-ai', 'Anthropic, older training token'),
+    ('Google-Extended', 'Google, Gemini and AI Overviews grounding only'),
+    ('Applebot-Extended', 'Apple, model training'),
+    ('CCBot', 'Common Crawl, the corpus most other models are built from'),
+    ('FacebookBot', 'Meta, model training'),
+    ('Amazonbot', 'Amazon, model training'),
+    ('cohere-ai', 'Cohere, model training'),
+]
+
+# Crawl hard, send nothing back, and exist to aggregate or resell content.
+SCRAPER_BOTS = [
+    ('Bytespider', 'ByteDance'),
+    ('omgili', 'Webz.io, content aggregation'),
+    ('Diffbot', 'knowledge-graph extraction'),
+    ('img2dataset', 'bulk image dataset collection'),
+]
+
+# Fetch a page to answer a question a person is asking, and link back. These are
+# how the writing gets found, so they are welcome.
+AI_RETRIEVAL_BOTS = [
+    ('ChatGPT-User', 'OpenAI, browsing on a user request'),
+    ('OAI-SearchBot', 'OpenAI, search index'),
+    ('Claude-Web', 'Anthropic, browsing on a user request'),
+    ('PerplexityBot', 'Perplexity, search index'),
+    ('YouBot', 'You.com, search index'),
+]
+
+
 def build_robots() -> str:
-    return f"""User-agent: *
+    # Every comment is on its own line, never trailing a directive. RFC 9309
+    # does allow an inline '#' and says the value ends there, but not every
+    # crawler implements that: a naive parser reads the whole rest of the line
+    # as the token, matches nothing, and the rule silently does nothing at all.
+    # A rule that quietly fails is worse than no rule, because it looks present.
+    def group(bots, note, rule):
+        width = max(len(token) for token, _ in bots)
+        lines = [f'# {note}', '#']
+        lines += [f'#   {token.ljust(width)}   {why}' for token, why in bots]
+        lines += [f'User-agent: {token}' for token, _ in bots]
+        lines.append(rule)
+        return '\n'.join(lines)
+
+    return f"""# robots.txt for {SITE['base_url']}
+#
+# Search engines: welcome, all of it.
+# AI training crawlers: no.
+# AI retrieval agents answering a person's question: welcome.
+#
+# The distinction is deliberate. Being read, quoted and linked by an assistant
+# is how people find this writing. Being swallowed into a training corpus is a
+# different thing, and it is the one thing here that is declined.
+#
+# This file is a request. Crawlers honour it voluntarily.
+
+User-agent: *
 Allow: /
+
+{group(AI_TRAINING_BOTS, 'Model training. Declined.', 'Disallow: /')}
+
+{group(SCRAPER_BOTS, 'Bulk scrapers and aggregators. Heavy crawling, no referral value.', 'Disallow: /')}
+
+{group(AI_RETRIEVAL_BOTS,
+       'Retrieval and search agents. Welcome. These fetch a page to answer a'
+       + chr(10) + '# question someone is asking and link back, which is how writing gets found.',
+       'Allow: /')}
 
 Sitemap: {SITE['base_url']}/sitemap.xml
 """

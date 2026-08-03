@@ -400,6 +400,48 @@ STATS_MAX_AGE_DAYS = 183
 # builder's own configuration cannot pass its own check.
 SITE_URL = 'https://jeffops.com'
 
+# Checked by behaviour rather than by string. A robots.txt rule that a parser
+# does not apply is the failure worth catching: the file looks right, the
+# policy reads correctly, and the crawler it names walks straight in. Comments
+# trailing a directive are the usual cause, so the assertion is what a real
+# parser concludes, not what the text appears to say.
+ROBOTS_MUST_BE_BLOCKED = ('GPTBot', 'ClaudeBot', 'anthropic-ai', 'Google-Extended',
+                          'Applebot-Extended', 'CCBot', 'FacebookBot', 'Amazonbot',
+                          'cohere-ai', 'Bytespider', 'omgili', 'Diffbot', 'img2dataset')
+ROBOTS_MUST_BE_ALLOWED = ('Googlebot', 'bingbot', 'ChatGPT-User', 'OAI-SearchBot',
+                          'Claude-Web', 'PerplexityBot', 'YouBot')
+
+
+def check_robots(out: Path, fail) -> None:
+    from urllib.robotparser import RobotFileParser
+
+    path = out / 'robots.txt'
+    if not path.exists():
+        fail('robots.txt is missing')
+        return
+
+    parser = RobotFileParser()
+    parser.parse(path.read_text(encoding='utf-8').splitlines())
+
+    probe = f'{SITE_URL}/posts/'
+    for agent in ROBOTS_MUST_BE_BLOCKED:
+        if parser.can_fetch(agent, probe):
+            fail(f'robots.txt does not actually block {agent}. The rule is either '
+                 f'missing or written so a parser ignores it.')
+    for agent in ROBOTS_MUST_BE_ALLOWED:
+        if not parser.can_fetch(agent, probe):
+            fail(f'robots.txt blocks {agent}, which must be allowed to crawl the site')
+
+    # Googlebot is the one that must never be caught by a broad rule aimed at
+    # Google-Extended. They are separate tokens and blocking the wrong one
+    # removes the site from Google Search altogether.
+    if not parser.can_fetch('Googlebot', f'{SITE_URL}/'):
+        fail('robots.txt blocks Googlebot from the home page')
+
+    sitemaps = parser.site_maps() or []
+    if f'{SITE_URL}/sitemap.xml' not in sitemaps:
+        fail(f'robots.txt does not declare {SITE_URL}/sitemap.xml as its sitemap')
+
 
 def check_home_page(out: Path, fail) -> None:
     """The home page must say nothing it cannot support.
@@ -630,6 +672,7 @@ def main() -> int:
         if not (out / name).exists():
             fail(f'{name} is missing')
 
+    check_robots(out, fail)
     check_security_txt(out, fail)
     check_schedule(out, fail)
     check_live_urls(out, fail)
