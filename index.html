@@ -13,7 +13,17 @@
      here was a second description of the site, and it was the one LinkedIn read.
      If {description} survives into the output, verify_build fails the build. -->
 <meta property="og:description" content="{description}">
+<!-- Dimensions and type are declared so LinkedIn can size the card before it
+     has fetched the file. Without them the crawler renders a small square
+     thumbnail until it has measured the image itself, which is not the
+     preview this card was drawn for. verify_build checks these against the
+     real og-card.png, so they cannot drift. -->
 <meta property="og:image" content="https://jeffops.com/og-card.png">
+<meta property="og:image:secure_url" content="https://jeffops.com/og-card.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="JeffOps.com — Jeff. Tech. Dev. Ops.">
 <meta name="twitter:card" content="summary_large_image">
 <!-- The X account, not the YouTube handle. @jeffops is not an account Jeff
      owns, so every share attributed the site to somebody else. -->

@@ -549,6 +549,28 @@ def check_home_page(out: Path, fail) -> None:
                      f'hand-written number with no source. Every figure there must '
                      f'be counted at build time or declared in stats.json.')
 
+    # Declared image dimensions are a promise about a file. If they drift, the
+    # crawler lays out a space of one size and drops an image of another into
+    # it, and the only place that shows up is somebody else's timeline.
+    card = out / 'og-card.png'
+    declared_w = re.search(r'<meta property="og:image:width" content="(\d+)"', markup)
+    declared_h = re.search(r'<meta property="og:image:height" content="(\d+)"', markup)
+    if not (declared_w and declared_h):
+        fail('the home page does not declare og:image:width and og:image:height, '
+             'so a crawler must fetch the card before it can size the preview')
+    elif not card.exists():
+        fail('og-card.png is missing from the build, but the page advertises it')
+    else:
+        try:
+            from PIL import Image
+            with Image.open(card) as im:
+                real = im.size
+            if real != (int(declared_w.group(1)), int(declared_h.group(1))):
+                fail(f'og:image is declared {declared_w.group(1)}x{declared_h.group(1)} '
+                     f'but og-card.png is actually {real[0]}x{real[1]}')
+        except ImportError:
+            pass
+
     # A figure in stats.json is a promise that somebody checked it on a date.
     path = ROOT / 'stats.json'
     if path.exists():
