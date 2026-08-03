@@ -458,7 +458,11 @@ footer{border-top:1px solid var(--border-dim);padding:0 1rem;display:flex;align-
 .course-topics{list-style:none;padding:0;margin-bottom:1.25rem;}
 .course-topics li{font-family:var(--mono);font-size:0.72rem;color:var(--text-dim);padding:3px 0;display:flex;align-items:center;gap:6px;}
 .course-topics li::before{content:"\2192"; color:var(--cyan);}
-.course-meta{font-family:var(--mono);font-size:0.65rem;color:var(--text-dim);border-top:1px solid var(--border-dim);padding-top:0.75rem;display:flex;gap:1rem;flex-wrap:wrap;}
+/* Duration and group size, set to match .course-desc exactly: same family,
+   size and colour. These were 0.65rem mono in the dim grey used for
+   de-emphasis, which is the treatment for a footnote, and they are two of the
+   first things anyone booking a course actually needs. */
+.course-meta{font-size:0.88rem;color:var(--text-mid);line-height:1.7;border-top:1px solid var(--border-dim);padding-top:0.75rem;display:flex;gap:1.25rem;flex-wrap:wrap;}
 .training-formats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border-dim);border:1px solid var(--border-dim);margin-bottom:4rem;}
 .format-card{background:var(--bg2);padding:1.5rem;text-align:center;}
 .format-icon{font-size:1.5rem;margin-bottom:0.75rem;}
