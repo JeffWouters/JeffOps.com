@@ -618,8 +618,8 @@ POST_TEMPLATE = """<!DOCTYPE html>
         <div class="post-aside-box">
           <div class="post-aside-title">// Share</div>
           <button class="share-btn" id="copy-link-btn" onclick="copyLink()">⎘ Copy link</button>
+          <a class="share-btn" href="https://x.com/intent/post?url={canonical_enc}&amp;text={title_enc}" target="_blank" rel="noopener">𝕏 Twitter / X</a>
           <a class="share-btn" href="https://www.linkedin.com/sharing/share-offsite/?url={canonical_enc}" target="_blank" rel="noopener">in LinkedIn</a>
-          <a class="share-btn" href="https://twitter.com/intent/tweet?url={canonical_enc}&amp;text={title_enc}" target="_blank" rel="noopener">𝕏 Twitter / X</a>
         </div>
         <div class="post-aside-box">
           <div class="post-aside-title">// The JeffOps Dispatch</div>

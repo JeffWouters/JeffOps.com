@@ -195,6 +195,9 @@ async function showPost(id, postObj, updateHash = true) {
   if (!post.markdown && post.folder) await loadPostMarkdown(post);
   if (!post.markdown) return;
   window._currentPost = post.folder || id || 'post';
+  // The share buttons need the record, not just the folder string: it is what
+  // carries the canonical URL.
+  window._currentPostRecord = post;
 
   document.getElementById('post-title').textContent = post.title;
   document.getElementById('post-date').textContent = post.date;
@@ -328,23 +331,59 @@ window.addEventListener('scroll', () => {
   if (sbEl) sbEl.style.width = pct + '%';
 });
 
-// ── COPY LINK ─────────────────────────────────────────
-function copyLink() {
-  const current = window._currentPost || '';
-  let url = 'https://jeffops.com/';
-  if (current.startsWith('blog/')) {
-    url += '#post=' + encodeURIComponent(current);
-  } else if (posts[current]) {
-    url += '#post=' + encodeURIComponent(current);
-  } else {
-    url += '#home';
-  }
+// ── SHARE ─────────────────────────────────────────────
+// Everything here shares the canonical URL rather than the SPA's #post= hash.
+// LinkedIn and X both scrape whatever they are handed, and a hash URL resolves
+// to the home page, so a shared post would arrive carrying the site's Open
+// Graph card instead of its own — the same failure we chased through the Post
+// Inspector. The blog index already records `url` and `canonical` for every
+// post, so this reads them rather than rebuilding a slug in a second place.
+const SITE_ORIGIN = 'https://jeffops.com';
 
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(url).then(() => {
-      const btn = document.getElementById('copy-link-btn');
-      if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => { btn.textContent = '⎘ Copy link'; }, 2000); }
-    });
+function currentShare() {
+  const post = window._currentPostRecord;
+  const title = (post && post.title)
+    || (document.getElementById('post-title') || {}).textContent
+    || 'JeffOps';
+  let url;
+  if (post && post.canonical) {
+    url = post.canonical;
+  } else if (post && post.url) {
+    url = SITE_ORIGIN + post.url;
+  } else if (window._currentPost) {
+    // No record to read a canonical from — fall back to the hash route, which
+    // at least lands the reader on the right post.
+    url = SITE_ORIGIN + '/#post=' + encodeURIComponent(window._currentPost);
+  } else {
+    url = SITE_ORIGIN + '/';
+  }
+  return { url: url, title: title };
+}
+
+function shareTo(network) {
+  const share = currentShare();
+  const targets = {
+    x: 'https://x.com/intent/post?url=' + encodeURIComponent(share.url)
+       + '&text=' + encodeURIComponent(share.title),
+    linkedin: 'https://www.linkedin.com/sharing/share-offsite/?url='
+       + encodeURIComponent(share.url),
+  };
+  if (targets[network]) window.open(targets[network], '_blank', 'noopener,noreferrer');
+}
+
+function copyLink() {
+  const url = currentShare().url;
+  const btn = document.getElementById('copy-link-btn');
+  const done = function (ok) {
+    if (!btn) return;
+    btn.textContent = ok ? '✓ Copied!' : '✗ Copy failed';
+    setTimeout(function () { btn.textContent = '⎘ Copy link'; }, 2000);
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url).then(function () { done(true); },
+                                           function () { done(false); });
+  } else {
+    done(false);
   }
 }
 
