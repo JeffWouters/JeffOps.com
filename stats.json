@@ -1,0 +1,17 @@
+{
+  "_comment": "Numbers shown on the home page that cannot be counted from the repository. Anything countable (articles, talks, newsletter editions) is derived at build time and must not be listed here. A null value is omitted from the page rather than guessed. A value with a 'verified' date older than STATS_MAX_AGE_DAYS fails the build, so a stale claim becomes an error instead of something nobody notices for a year.",
+  "stats": {
+    "subscribers": {
+      "value": null,
+      "label": "Subscribers",
+      "source": "LinkedIn newsletter subscriber count, shown on the newsletter's LinkedIn page",
+      "verified": null
+    },
+    "teams_led": {
+      "value": null,
+      "label": "Teams Led",
+      "source": "Jeff's own record. No repository source exists for this.",
+      "verified": null
+    }
+  }
+}

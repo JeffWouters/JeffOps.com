@@ -388,6 +388,102 @@ def check_live_urls(out: Path, fail) -> None:
                  f'Add a page, or a redirect in redirects.json.')
 
 
+
+# Claims on the home page that no longer have a source. If any of these strings
+# reappear, something has bypassed the generated statistics and gone back to
+# typing numbers into the HTML.
+RETIRED_CLAIMS = ('128+', '12K', '40+ ', 'Teams Led')
+
+STATS_MAX_AGE_DAYS = 183
+
+
+def check_home_page(out: Path, fail) -> None:
+    """The home page must say nothing it cannot support.
+
+    Search metadata and unsupported numbers are checked in the same place
+    deliberately: both are things that look fine on screen and are wrong in a
+    way only a machine notices. The home page had no description, no canonical
+    and no structured data at all, while claiming 128 articles against seven and
+    12,000 subscribers against no source.
+    """
+    home = out / 'index.html'
+    if not home.exists():
+        return
+    markup = home.read_text(encoding='utf-8')
+
+    for tag, what in (('rel="canonical"', 'a canonical link'),
+                      ('name="description"', 'a meta description'),
+                      ('application/ld+json', 'structured data')):  # noqa: E501
+        if tag not in markup:
+            fail(f'the home page is missing {what}, on the one URL most likely to '
+                 f'rank for the author\'s own name')
+
+    stats = re.search(r'<div class="stats-bar">(.*?)</div>\s*\n', markup, re.DOTALL)
+    if not stats:
+        fail('the home page statistics block is missing')
+    else:
+        block = stats.group(1)
+        if not block.strip():
+            fail('the home page statistics block is empty')
+        for claim in RETIRED_CLAIMS:
+            if claim in block:
+                fail(f'the home page statistics contain "{claim}", which is a '
+                     f'hand-written number with no source. Every figure there must '
+                     f'be counted at build time or declared in stats.json.')
+
+    # A figure in stats.json is a promise that somebody checked it on a date.
+    path = ROOT / 'stats.json'
+    if path.exists():
+        import json as _json
+        today = datetime.now(timezone.utc).date()
+        for key, meta in _json.loads(path.read_text(encoding='utf-8')).get('stats', {}).items():
+            if meta.get('value') in (None, ''):
+                continue
+            checked = meta.get('verified')
+            if not checked:
+                fail(f'stats.json: "{key}" has a value but no verified date')
+                continue
+            try:
+                age = (today - datetime.fromisoformat(str(checked)).date()).days
+            except ValueError:
+                fail(f'stats.json: "{key}" has an unparseable verified date {checked!r}')
+                continue
+            if age > STATS_MAX_AGE_DAYS:
+                fail(f'stats.json: "{key}" was last verified {age} days ago. '
+                     f'Re-check the number or clear the value.')
+
+
+def check_speaking(out: Path, fail) -> None:
+    """No talk may advertise itself as upcoming after it has happened.
+
+    Two sat on the live site marked Upcoming for conferences 502 and 557 days
+    past. Status is now derived from the date at build time, so this asserts the
+    derivation rather than the data, and it is the daily build that flips a talk
+    from upcoming to past on the right morning.
+    """
+    path = out / 'speaking_talks.json'
+    if not path.exists():
+        return
+    import json as _json
+    today = datetime.now(timezone.utc).date()
+    for talk in _json.loads(path.read_text(encoding='utf-8')):
+        try:
+            when = datetime.fromisoformat(str(talk.get('date'))).date()
+        except (TypeError, ValueError):
+            fail(f'speaking_talks.json: {talk.get("event", "?")!r} has an unusable date '
+                 f'{talk.get("date")!r}')
+            continue
+        expected = 'Upcoming' if when >= today else 'Past'
+        if talk.get('status') != expected:
+            fail(f'{talk.get("event", "?")} on {when} is marked '
+                 f'{talk.get("status")!r} but should be {expected!r}')
+
+    page = out / 'speaking' / 'index.html'
+    if page.exists() and 'class="talk-item"' not in page.read_text(encoding='utf-8'):
+        fail('/speaking/ renders no talks without JavaScript, so a crawler sees an '
+             'empty page')
+
+
 def main() -> int:
     out = Path(sys.argv[1] if len(sys.argv) > 1 else '_site')
     if not out.is_absolute():
@@ -483,6 +579,8 @@ def main() -> int:
     check_security_txt(out, fail)
     check_schedule(out, fail)
     check_live_urls(out, fail)
+    check_home_page(out, fail)
+    check_speaking(out, fail)
 
     # 5. The subscribe path must not lie.
     #

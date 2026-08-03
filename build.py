@@ -51,9 +51,8 @@ SITE = {
 }
 
 # Files and folders copied verbatim into the output.
-STATIC_ASSETS = ['index.html', 'css', 'js', 'speaking_talks.json',
-                 'speaking_topics.json', 'newsletter_editions.json',
-                 'JeffOps_Speaking.jpg']
+STATIC_ASSETS = ['index.html', 'css', 'js', 'speaking_topics.json',
+                 'newsletter_editions.json', 'JeffOps_Speaking.jpg']
 
 MD_EXTENSIONS = ['fenced_code', 'tables', 'attr_list', 'sane_lists', 'toc', 'footnotes']
 MD_CONFIG = {'toc': {'permalink': False, 'toc_depth': '2-3'}}
@@ -177,6 +176,162 @@ def write_redirects(out: Path, redirects: dict, taken: set) -> list[str]:
         ), encoding='utf-8')
         written.append(source)
     return written
+
+
+
+# ── Home page statistics ──────────────────────────────────────────────
+#
+# Every number in the hero used to be typed into the HTML by hand: "128+
+# Articles" against seven real posts, "12K Subscribers" with no source
+# anywhere, "40+ Talks" against a file holding five. A number nobody can trace
+# is indistinguishable from one that is made up, and on a personal site it is
+# the author who carries that.
+#
+# So: anything countable is counted here, at build time, and cannot drift.
+# Anything not countable lives in stats.json with a source and a date it was
+# last checked. A stat with no value is left off the page rather than guessed,
+# and one whose check has gone stale fails the build.
+
+STATS_MAX_AGE_DAYS = 183
+
+
+def load_stats() -> dict:
+    path = ROOT / 'stats.json'
+    if not path.exists():
+        return {}
+    return json.loads(path.read_text(encoding='utf-8')).get('stats', {})
+
+
+def derived_stats(posts: list[dict], talks: list[dict], editions: list[dict]) -> list[tuple]:
+    """The numbers the repository can prove, as (value, label) pairs."""
+    years = {p['iso'][:4] for p in posts if p.get('iso')}
+    span = (max(int(y) for y in years) - min(int(y) for y in years) + 1) if years else 0
+    out = [(str(len(posts)), 'Articles')]
+    if talks:
+        out.append((str(len(talks)), 'Talks'))
+    if editions:
+        out.append((str(len(editions)), 'Newsletter editions'))
+    if span > 1:
+        out.append((f'{span}', 'Years writing'))
+    return out
+
+
+def build_stat_cells(posts, talks, editions, fail=print) -> str:
+    cells = derived_stats(posts, talks, editions)
+
+    today = datetime.now(timezone.utc).date()
+    for key, meta in load_stats().items():
+        value = meta.get('value')
+        if value in (None, ''):
+            continue                       # not known yet, so not claimed
+        checked = meta.get('verified')
+        if not checked:
+            fail(f'stats.json: "{key}" has a value but no verified date')
+            continue
+        age = (today - datetime.fromisoformat(str(checked)).date()).days
+        if age > STATS_MAX_AGE_DAYS:
+            fail(f'stats.json: "{key}" was last verified {age} days ago. '
+                 f'Re-check it or remove the value.')
+            continue
+        cells.append((str(value), meta.get('label', key)))
+
+    return ''.join(
+        f'<div class="stat-cell"><span class="stat-val">{html.escape(v)}</span>'
+        f'<span class="stat-lbl">{html.escape(l)}</span></div>'
+        for v, l in cells[:4]
+    )
+
+
+def inject_stats(index_html: str, cells: str) -> str:
+    """Replace the hero stat cells with the generated ones."""
+    m = re.search(r'<div class="stats-bar">(.*?)</div>\s*\n', index_html, re.DOTALL)
+    if not m:
+        # Silence here would mean shipping whatever numbers happen to be typed
+        # into the HTML, which is the exact failure this replaced.
+        raise SystemExit('Could not find <div class="stats-bar"> in index.html. '
+                         'The home page statistics could not be generated, and '
+                         'hand-written ones must not ship.')
+    return index_html[:m.start(1)] + cells + index_html[m.end(1):]
+
+
+def normalise_talks(talks: list[dict]) -> list[dict]:
+    """Derive each talk's status from its date.
+
+    Status used to be stored, and two talks sat on the live site marked
+    Upcoming for conferences that had happened 502 and 557 days earlier. A
+    stored status is a second copy of a fact the date already carries, and the
+    copy is the one that rots. With the daily build, this flips on the day.
+    """
+    today = datetime.now(timezone.utc).date()
+    out = []
+    for talk in talks:
+        item = dict(talk)
+        try:
+            upcoming = datetime.fromisoformat(str(talk.get('date'))).date() >= today
+        except (TypeError, ValueError):
+            upcoming = False
+        item['status'] = 'Upcoming' if upcoming else 'Past'
+        item['statusLabel'] = item['status']
+        out.append(item)
+    return sorted(out, key=lambda t: str(t.get('date', '')), reverse=True)
+
+
+
+# ── Home page metadata ────────────────────────────────────────────────
+#
+# The home page is hand-written, and it was missing the three things that
+# matter most on the one URL most likely to rank for the author's own name: a
+# meta description, a canonical, and any structured data at all. It had Open
+# Graph and Twitter cards, which serve social previews and do nothing for
+# search. These are injected at build time rather than typed in, so they cannot
+# drift from the site configuration or from the posts that actually exist.
+
+def home_json_ld(posts: list[dict]) -> str:
+    person = {
+        '@type': 'Person',
+        '@id': SITE['base_url'] + '/#person',
+        'name': SITE['author'],
+        'url': SITE['base_url'] + '/',
+        'email': f"mailto:{SITE['email']}",
+        'jobTitle': 'Platform and enterprise IT engineer',
+        'description': SITE['description'],
+        'sameAs': ['https://github.com/jeffwouters',
+                   'https://www.linkedin.com/in/jeffwouters/'],
+    }
+    website = {
+        '@type': 'WebSite',
+        '@id': SITE['base_url'] + '/#website',
+        'url': SITE['base_url'] + '/',
+        'name': SITE['title'],
+        'description': SITE['description'],
+        'inLanguage': SITE['language'],
+        'publisher': {'@id': SITE['base_url'] + '/#person'},
+    }
+    blog = {
+        '@type': 'Blog',
+        '@id': SITE['base_url'] + '/posts/',
+        'url': SITE['base_url'] + '/posts/',
+        'name': f"{SITE['title']} Blog",
+        'author': {'@id': SITE['base_url'] + '/#person'},
+        'blogPost': [{'@type': 'BlogPosting',
+                      'headline': p['title'],
+                      'url': canonical_for(p),
+                      'datePublished': p.get('iso', '')} for p in posts[:10]],
+    }
+    return json.dumps({'@context': 'https://schema.org',
+                       '@graph': [person, website, blog]},
+                      ensure_ascii=False, indent=2)
+
+
+def inject_home_meta(index_html: str, posts: list[dict]) -> str:
+    if 'rel="canonical"' in index_html:
+        return index_html
+    description = re.search(r'<meta property="og:description" content="([^"]*)"', index_html)
+    description = description.group(1) if description else html.escape(SITE['description'])
+    head = (f'<link rel="canonical" href="{SITE["base_url"]}/">\n'
+            f'<meta name="description" content="{description}">\n'
+            f'<script type="application/ld+json">\n{home_json_ld(posts)}\n</script>\n')
+    return index_html.replace('<meta property="og:type"', head + '<meta property="og:type"', 1)
 
 
 # ── Shell extraction ──────────────────────────────────────────────────
@@ -634,6 +789,144 @@ def write_security_txt(out: Path) -> bool:
     return True
 
 
+
+# ── Sections promoted to real URLs ────────────────────────────────────
+#
+# Consulting, Training, Speaking and About existed only as hash routes inside
+# the single-page app, which means they had no URL, no title, no description
+# and no presence in search at all. These are the pages that bring work in, so
+# that is an odd place to be invisible.
+#
+# The content is lifted out of index.html rather than duplicated, so there is
+# still one source of truth and the two can never disagree. The app keeps
+# working exactly as before; this adds a crawlable copy underneath it, the same
+# trick already used for blog posts.
+
+PROMOTED_SECTIONS = {
+    'consulting': {
+        'title': 'Consulting',
+        'kicker': 'services',
+        'description': 'Platform engineering and enterprise IT consulting from Jeff '
+                       'Wouters. Practical work on Azure, Kubernetes and developer '
+                       'platforms, from inside a 25,000-user environment.',
+    },
+    'training': {
+        'title': 'Training',
+        'kicker': 'services',
+        'description': 'Hands-on training in platform engineering, Kubernetes, Azure '
+                       'and DevOps practice, delivered in person or remotely.',
+    },
+    'speaking': {
+        'title': 'Speaking',
+        'kicker': 'services',
+        'description': 'Conference talks and workshops by Jeff Wouters on platform '
+                       'engineering, developer experience and enterprise operations.',
+    },
+    'about': {
+        'title': 'About',
+        'kicker': 'about',
+        'description': 'Jeff Wouters writes about platform engineering, AI-tomation '
+                       'and enterprise IT from inside a 25,000-user environment, not '
+                       'from a vendor deck.',
+    },
+}
+
+
+def extract_section(index_html: str, section_id: str) -> str | None:
+    """Lift one .page div out of index.html, balanced on nesting."""
+    anchor = f'id="page-{section_id}"'
+    if anchor not in index_html:
+        return None
+    start = index_html.rindex('<div', 0, index_html.index(anchor))
+    depth, cursor = 0, start
+    while True:
+        token = re.search(r'<div\b|</div>', index_html[cursor:])
+        if not token:
+            return None
+        depth += 1 if index_html[cursor + token.start(): cursor + token.end()].startswith('<div') else -1
+        cursor += token.end()
+        if depth == 0:
+            return index_html[start:cursor]
+
+
+
+def render_talks(talks: list[dict]) -> str:
+    """Server-side copy of the talk list the app builds in the browser.
+
+    Without this the promoted /speaking/ page is 500 characters of heading and
+    a contact form: the talks themselves arrive by fetch and a crawler never
+    sees them. It mirrors the markup in app.js exactly, so the page looks the
+    same whether the script runs or not.
+    """
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    items = []
+    for talk in talks:
+        try:
+            when = datetime.fromisoformat(str(talk.get('date')))
+            month, day, year = months[when.month - 1], f'{when.day:02d}', str(when.year)
+        except (TypeError, ValueError):
+            month = day = year = ''
+        badge = (f'<span class="talk-badge '
+                 f'{"badge-upcoming" if talk.get("status") == "Upcoming" else "badge-past"}">'
+                 f'{html.escape(str(talk.get("statusLabel", "")))}</span>'
+                 if talk.get('statusLabel') else '')
+        links = ''.join(
+            f'<a class="talk-link" href="{html.escape(str(l.get("href", "#")))}" '
+            f'target="_blank" rel="noopener">{html.escape(str(l.get("label", "")))}</a>'
+            for l in talk.get('links', []) if l.get('type') != 'abstract')
+        items.append(
+            '<div class="talk-item">'
+            f'<div class="talk-date-col"><div class="talk-month">{month}</div>'
+            f'<div class="talk-day">{day}</div><div class="talk-year">{year}</div></div>'
+            '<div>'
+            f'<div class="talk-event">{html.escape(str(talk.get("event", "")))} {badge}</div>'
+            f'<div class="talk-title">{html.escape(str(talk.get("title", "")))}</div>'
+            f'<div class="talk-location">📍 {html.escape(str(talk.get("location", "")))}</div>'
+            f'<div class="talk-links">{links}</div>'
+            '</div></div>')
+    return ''.join(items)
+
+
+def build_promoted_pages(out: Path, index_html: str, nav: str, footer: str,
+                         talks: list[dict] | None = None) -> list[str]:
+    # The app hides every .page that is not active, so a lifted section would
+    # render invisible on its own URL. It also carries a fragment link back to
+    # itself, which on a standalone page would go nowhere useful.
+    plain_nav = nav.replace(' class="active"', '')
+    urls = []
+    for section_id, meta in PROMOTED_SECTIONS.items():
+        block = extract_section(index_html, section_id)
+        if not block:
+            print(f'  ! No #{section_id} section found in index.html; skipping')
+            continue
+        content = block.replace(f'id="page-{section_id}" class="page"',
+                                f'id="page-{section_id}"', 1)
+        if section_id == 'speaking' and talks:
+            content = content.replace('<div id="talks-list"></div>',
+                                      f'<div id="talks-list">{render_talks(talks)}</div>', 1)
+        content = _absolutise(content)
+        url = f'/{section_id}/'
+        page_dir = out / section_id
+        page_dir.mkdir(parents=True, exist_ok=True)
+        (page_dir / 'index.html').write_text(PAGE_TEMPLATE.format(
+            lang=SITE['language'],
+            site_title=SITE['title'],
+            author=html.escape(SITE['author']),
+            base_url=SITE['base_url'],
+            og_image=SITE['og_image'],
+            canonical=SITE['base_url'] + url,
+            title=html.escape(meta['title']),
+            kicker=html.escape(meta['kicker']),
+            description=html.escape(meta['description']),
+            nav=plain_nav,
+            footer=footer,
+            content=content,
+        ), encoding='utf-8')
+        urls.append(url)
+    return urls
+
+
 # ── Feeds and crawler files ───────────────────────────────────────────
 def _rfc822(iso: str) -> str:
     try:
@@ -904,12 +1197,34 @@ def main() -> None:
 
     copy_blog(out, live)
 
-    editions = load_editions()
     index_source = (ROOT / 'index.html').read_text(encoding='utf-8')
-    (out / 'index.html').write_text(inject_editions(index_source, editions), encoding='utf-8')
+    editions = load_editions()
+
+    talks_file = ROOT / 'speaking_talks.json'
+    talks = json.loads(talks_file.read_text(encoding='utf-8')) if talks_file.exists() else []
+    if isinstance(talks, dict):
+        talks = talks.get('talks', [])
+    talks = normalise_talks(talks)
+    (out / 'speaking_talks.json').write_text(
+        json.dumps(talks, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+    upcoming = sum(1 for t in talks if t['status'] == 'Upcoming')
+    print(f'Normalised {len(talks)} talk(s): {upcoming} upcoming, {len(talks) - upcoming} past')
+
+    index_source = inject_editions(index_source, editions)
+
+    problems: list[str] = []
+    cells = build_stat_cells(live, talks, editions, problems.append)
+    for problem in problems:
+        print(f'  ! {problem}')
+    index_source = inject_stats(index_source, cells)
+    index_source = inject_home_meta(index_source, live)
+    print(f'Injected {cells.count("stat-cell")} home page statistic(s), all derived')
+
+    (out / 'index.html').write_text(index_source, encoding='utf-8')
     print(f'Injected {len(editions)} newsletter edition(s) into index.html')
 
     page_urls = build_standalone_pages(out, nav, footer)
+    page_urls += build_promoted_pages(out, index_source, nav, footer, talks)
     for url in page_urls:
         print(f'  → {url}')
 
