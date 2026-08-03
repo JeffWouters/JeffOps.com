@@ -717,6 +717,15 @@ def build_list_page(posts: list[dict], nav: str, footer: str) -> str:
     )
 
 
+# {content_class} is not cosmetic. `.post-content` is prose styling for markdown
+# we generated ourselves: it sets a measure, and it restyles every img with
+# `max-width:100%;height:auto;border;margin`. That is right for a screenshot in
+# an article and wrong for markup lifted out of index.html, where the images are
+# UI furniture. `.post-content img` (0,1,1) outranks `.avatar-image` (0,1,0), so
+# the About avatar lost its `height:100%` and stopped being cropped by its
+# circle, and the course logos on /training/ rendered at 177px with a border
+# instead of 40px. Markdown pages keep `post-content`; lifted sections get
+# `lifted-content`, which styles nothing and lets the site's own rules apply.
 PAGE_TEMPLATE = """<!DOCTYPE html>
 <html lang="{lang}">
 <head>
@@ -755,7 +764,7 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
         <div class="post-header-type">// {kicker}</div>
         <h1>{title}</h1>
       </div>
-      <div class="post-content">
+      <div class="{content_class}">
 {content}
       </div>
     </article>
@@ -809,6 +818,7 @@ def build_standalone_pages(out: Path, nav: str, footer: str) -> list[str]:
             description=html.escape(front.get('description', SITE['description'])),
             nav=nav,
             footer=footer,
+            content_class='post-content',
             content=content,
         ), encoding='utf-8')
         urls.append(url)
@@ -970,6 +980,7 @@ def build_promoted_pages(out: Path, index_html: str, nav: str, footer: str,
             description=html.escape(meta['description']),
             nav=plain_nav,
             footer=footer,
+            content_class='lifted-content',
             content=content,
         ), encoding='utf-8')
         urls.append(url)
