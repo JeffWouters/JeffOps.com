@@ -44,10 +44,7 @@ function showPage(name, updateHash = true) {
   if (navEl) navEl.classList.add('active');
 
   // Also mark the parent dropdown label active for sub-pages
-  // 'videos' is deliberately absent: the page still exists but is no longer
-  // offered in the Content menu, and lighting up a dropdown that does not
-  // list the page you are on is worse than lighting up nothing.
-  const contentPages = ['blog','newsletter'];
+  const contentPages = ['blog','newsletter','videos'];
   const servicePages = ['speaking','training'];
   if (contentPages.includes(name)) {
     const el = document.getElementById('nav-content');
