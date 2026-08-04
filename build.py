@@ -2010,8 +2010,12 @@ def main() -> None:
     pending = unpublished_posts(now=now)
 
     # Editions that have been copied across are part of the site's writing, so
-    # they join the blog index, the feed and the sitemap. Ones that have not are
-    # still only on LinkedIn and appear nowhere but the archive list, pointing
+    # they join the feed and the sitemap. They do not join the blog index. A
+    # newsletter edition is not a blog post, and the two archives stay separate:
+    # /posts/ and the blog list in the single-page app both read the blog index,
+    # while /#newsletter reads the archive injected into index.html. Each list
+    # holds one kind of thing. Editions that have not been copied across are
+    # still only on LinkedIn and appear nowhere but that archive, pointing
     # there. One list, filtered once, so no consumer can disagree about which
     # editions exist here.
     editions = load_editions()
@@ -2026,7 +2030,7 @@ def main() -> None:
     # reads them back out of the index rather than inventing its own scheme.
     # Two views of one post must not produce two different #fragment URLs — a
     # link someone copied from the SPA has to land on the static page too.
-    for item in writing:
+    for item in live:
         item['headings'] = render_markdown(item.get('body_markdown') or '')[1]
 
     posts = live
@@ -2134,7 +2138,7 @@ def main() -> None:
     # carries which assets gained a WebP sibling — and that is only known once
     # the pages have been rendered and their images written out. copy_blog then
     # publishes the freshly written files.
-    write_index_files(writing)
+    write_index_files(live)
     copy_blog(out, live)
     waiting = [e for e in editions if not e['has_body']]
     if waiting:

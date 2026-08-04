@@ -5,11 +5,6 @@
     "count": 5
   },
   {
-    "key": "Newsletter",
-    "label": "Newsletter",
-    "count": 3
-  },
-  {
     "key": "ai",
     "label": "AI",
     "count": 2
@@ -70,8 +65,18 @@
     "count": 1
   },
   {
+    "key": "cloudflare",
+    "label": "Cloudflare",
+    "count": 1
+  },
+  {
     "key": "dev",
     "label": "DEV",
+    "count": 1
+  },
+  {
+    "key": "dns",
+    "label": "DNS",
     "count": 1
   },
   {
@@ -80,8 +85,18 @@
     "count": 1
   },
   {
+    "key": "email",
+    "label": "Email",
+    "count": 1
+  },
+  {
     "key": "gpu",
     "label": "GPU",
+    "count": 1
+  },
+  {
+    "key": "github-pages",
+    "label": "Github Pages",
     "count": 1
   },
   {
@@ -97,6 +112,16 @@
   {
     "key": "linux",
     "label": "Linux",
+    "count": 1
+  },
+  {
+    "key": "mta-sts",
+    "label": "MTA STS",
+    "count": 1
+  },
+  {
+    "key": "microsoft-365",
+    "label": "Microsoft 365",
     "count": 1
   },
   {
@@ -127,6 +152,16 @@
   {
     "key": "ssh",
     "label": "SSH",
+    "count": 1
+  },
+  {
+    "key": "security",
+    "label": "Security",
+    "count": 1
+  },
+  {
+    "key": "tls",
+    "label": "TLS",
     "count": 1
   },
   {
