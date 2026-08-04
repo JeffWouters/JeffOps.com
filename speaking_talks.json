@@ -79,7 +79,49 @@
     ]
   },
   {
-    "date": "2018-06-08",
+    "date": "2022-06-10",
+    "event": "Scottish Summit 2022",
+    "title": "Meetings in a Covid Era",
+    "location": "Glasgow, United Kingdom",
+    "links": []
+  },
+  {
+    "date": "2021-09-16",
+    "event": "PDCConf 2021",
+    "title": "Your own (advanced) PowerShell function template in 45 minutes",
+    "location": "Online",
+    "links": []
+  },
+  {
+    "date": "2020-01-25",
+    "event": "dotNed Saturday 2020",
+    "title": "From Ops to Dev – The journey so far",
+    "location": "Veenendaal, Netherlands",
+    "links": []
+  },
+  {
+    "date": "2019-10-11",
+    "event": "AppManagEvent 2019",
+    "title": "PowerShell – Tips 'n Tricks",
+    "location": "Utrecht, Netherlands",
+    "links": []
+  },
+  {
+    "date": "2018-11-13",
+    "event": "DevOpsPro Moscow 2018",
+    "title": "PowerShell Unbound – Tips & Tricks",
+    "location": "Moscow, Russia",
+    "links": []
+  },
+  {
+    "date": "2018-10-31",
+    "event": "Infosecurity.nl 2018",
+    "title": "Het Automatiseren van Identity en Access Management",
+    "location": "Utrecht, Netherlands",
+    "links": []
+  },
+  {
+    "date": "2018-07-19",
     "event": "TugaIT 2018 Conference",
     "title": "The psychology to building a team that automates, scripts and DevOps",
     "location": "Lisbon, Portugal",
@@ -93,7 +135,7 @@
     ]
   },
   {
-    "date": "2018-06-08",
+    "date": "2018-07-19",
     "event": "TugaIT 2018 Conference",
     "title": "PowerShell Unbound – Tips & Tricks",
     "location": "Lisbon, Portugal",
@@ -107,23 +149,287 @@
     ]
   },
   {
-    "date": "2016-06-22",
-    "event": "PowerShell Conference Europe 2016",
-    "title": "PowerShell Session (Track contribution)",
-    "location": "Berlin, Germany",
+    "date": "2018-07-19",
+    "event": "TugaIT 2018 Conference",
+    "title": "Azure Automation & DSC – Easy as 1,2,3",
+    "location": "Lisbon, Portugal",
+    "links": []
+  },
+  {
+    "date": "2018-04-17",
+    "event": "PowerShell Conference Europe 2018",
+    "title": "TFS and VSTS through Infrastructure as Code",
+    "location": "Hannover, Germany",
+    "links": []
+  },
+  {
+    "date": "2018-04-17",
+    "event": "PowerShell Conference Europe 2018",
+    "title": "How to satisfy your OCD for and with PowerShell",
+    "location": "Hannover, Germany",
     "links": [
       {
         "type": "save-date",
-        "label": "Slides Repo",
-        "href": "https://github.com/psconfeu/2016/tree/master/Jeff%20Wouters"
+        "label": "Recording",
+        "href": "https://www.youtube.com/watch?v=4M-ddIFZy2E"
       }
     ]
+  },
+  {
+    "date": "2018-04-17",
+    "event": "PowerShell Conference Europe 2018",
+    "title": "How to not get a burnout",
+    "location": "Hannover, Germany",
+    "links": [
+      {
+        "type": "save-date",
+        "label": "Recording",
+        "href": "https://www.youtube.com/watch?v=0MjqMlkA3gs"
+      }
+    ]
+  },
+  {
+    "date": "2017-11-01",
+    "event": "Infosecurity.nl 2017",
+    "title": "Automatiseren met PowerShell",
+    "location": "Utrecht, Netherlands",
+    "links": []
+  },
+  {
+    "date": "2017-10-06",
+    "event": "AppManagEvent 2017",
+    "title": "PowerShell Unbound – Tips 'n Tricks",
+    "location": "Utrecht, Netherlands",
+    "links": []
+  },
+  {
+    "date": "2017-05-03",
+    "event": "PowerShell Conference Europe 2017",
+    "title": "The psychology to building a team that automates, scripts and DevOpses",
+    "location": "Hannover, Germany",
+    "links": [
+      {
+        "type": "save-date",
+        "label": "Recording",
+        "href": "https://www.youtube.com/watch?v=zvNbzuhU30U"
+      }
+    ]
+  },
+  {
+    "date": "2016-10-07",
+    "event": "AppManagEvent 2016",
+    "title": "PowerShell Unbound – Tips & Tricks",
+    "location": "Utrecht, Netherlands",
+    "links": []
+  },
+  {
+    "date": "2016-04-20",
+    "event": "PowerShell Conference Europe 2016",
+    "title": "PowerShell Unbound – Tips & Tricks",
+    "location": "Hannover, Germany",
+    "links": []
+  },
+  {
+    "date": "2016-04-20",
+    "event": "PowerShell Conference Europe 2016",
+    "title": "Generating declarative code through imperative code",
+    "location": "Hannover, Germany",
+    "links": []
+  },
+  {
+    "date": "2015-11-11",
+    "event": "Midwest Management Summit 2015",
+    "title": "PowerShell Unbound – Tips 'n Tricks",
+    "location": "Bloomington, Minnesota, United States",
+    "links": []
+  },
+  {
+    "date": "2015-11-11",
+    "event": "Midwest Management Summit 2015",
+    "title": "PowerShell DSC – Notes from the field",
+    "location": "Bloomington, Minnesota, United States",
+    "links": []
+  },
+  {
+    "date": "2015-11-10",
+    "event": "Midwest Management Summit 2015",
+    "title": "Package Management in PowerShell (DSC)",
+    "location": "Bloomington, Minnesota, United States",
+    "links": []
+  },
+  {
+    "date": "2015-11-09",
+    "event": "Midwest Management Summit 2015",
+    "title": "Birds of a Feather – PowerShell",
+    "location": "Bloomington, Minnesota, United States",
+    "links": []
+  },
+  {
+    "date": "2015-10-08",
+    "event": "AppManagEvent 2015",
+    "title": "PowerShell Package Manager",
+    "location": "Utrecht, Netherlands",
+    "links": []
+  },
+  {
+    "date": "2015-10-08",
+    "event": "AppManagEvent 2015",
+    "title": "PowerShell Desired State Configuration",
+    "location": "Utrecht, Netherlands",
+    "links": []
+  },
+  {
+    "date": "2015-09-14",
+    "event": "PowerShell Summit Europe 2015",
+    "title": "OMI & DAL – Understanding the big picture",
+    "location": "Stockholm, Sweden",
+    "links": []
+  },
+  {
+    "date": "2015-09-14",
+    "event": "PowerShell Summit Europe 2015",
+    "title": "From PowerShell to a Declarative Cloud (AWS)",
+    "location": "Stockholm, Sweden",
+    "links": []
+  },
+  {
+    "date": "2015-08-01",
+    "event": "System Center Universe Europe 2015",
+    "title": "OMI & DAL – Understanding the big picture",
+    "location": "Basel, Switzerland",
+    "links": []
+  },
+  {
+    "date": "2015-08-01",
+    "event": "System Center Universe Europe 2015",
+    "title": "DSC – Resource Authoring",
+    "location": "Basel, Switzerland",
+    "links": []
+  },
+  {
+    "date": "2015-08-01",
+    "event": "System Center Universe Europe 2015",
+    "title": "DSC – Notes from the field",
+    "location": "Basel, Switzerland",
+    "links": []
+  },
+  {
+    "date": "2015-05-19",
+    "event": "BriForum London 2015",
+    "title": "PowerShell Remoting",
+    "location": "London, United Kingdom",
+    "links": []
+  },
+  {
+    "date": "2015-04-22",
+    "event": "PowerShell Konferenz Deutschland 2015",
+    "title": "AD Health Check",
+    "location": "Essen, Germany",
+    "links": []
   },
   {
     "date": "2015-01-15",
     "event": "TechDays NL 2015",
     "title": "Azure / DevOps Talk & Community Interaction",
     "location": "Netherlands",
+    "links": []
+  },
+  {
+    "date": "2014-11-12",
+    "event": "Midwest Management Summit 2014",
+    "title": "Windows PowerShell Workflow",
+    "location": "Bloomington, Minnesota, United States",
+    "links": []
+  },
+  {
+    "date": "2014-11-12",
+    "event": "Midwest Management Summit 2014",
+    "title": "SMA and ConfigMgr – The New Orchestration Team",
+    "location": "Bloomington, Minnesota, United States",
+    "links": []
+  },
+  {
+    "date": "2014-11-10",
+    "event": "Midwest Management Summit 2014",
+    "title": "Servers bowing to your desire – PowerShell to rule them all",
+    "location": "Bloomington, Minnesota, United States",
+    "links": []
+  },
+  {
+    "date": "2014-11-10",
+    "event": "Midwest Management Summit 2014",
+    "title": "Practical PowerShell Tips 'n Tricks",
+    "location": "Bloomington, Minnesota, United States",
+    "links": []
+  },
+  {
+    "date": "2014-10-02",
+    "event": "Dutch PowerShell User Group (DuPSUG 5)",
+    "title": "PowerShell AST – Dissecting PowerShell scripts",
+    "location": "Amsterdam, Netherlands",
+    "links": []
+  },
+  {
+    "date": "2014-09-29",
+    "event": "PowerShell Summit Europe 2014",
+    "title": "Speedy PowerShell",
+    "location": "Amsterdam, Netherlands",
+    "links": []
+  },
+  {
+    "date": "2014-09-29",
+    "event": "PowerShell Summit Europe 2014",
+    "title": "Secure Remoting",
+    "location": "Amsterdam, Netherlands",
+    "links": []
+  },
+  {
+    "date": "2014-06-19",
+    "event": "devopsdays Amsterdam 2014",
+    "title": "Desired State Configuration – Workshop",
+    "location": "Amsterdam, Netherlands",
+    "links": []
+  },
+  {
+    "date": "2014-05-30",
+    "event": "E2EVC Brussels 2014",
+    "title": "possessod",
+    "location": "Brussels, Belgium",
+    "links": []
+  },
+  {
+    "date": "2014-04-16",
+    "event": "TechDays NL 2014",
+    "title": "PowerShell's Desired State Configuration",
+    "location": "The Hague, Netherlands",
+    "links": []
+  },
+  {
+    "date": "2014-04-16",
+    "event": "TechDays NL 2014",
+    "title": "Documenting through PowerShell",
+    "location": "The Hague, Netherlands",
+    "links": []
+  },
+  {
+    "date": "2014-04-02",
+    "event": "Dutch PowerShell User Group (DuPSUG 4)",
+    "title": "Active Directory Health Check",
+    "location": "Amsterdam, Netherlands",
+    "links": []
+  },
+  {
+    "date": "2013-09-16",
+    "event": "System Center Universe DACH 2013",
+    "title": "PowerShell – Tips 'n Tricks",
+    "location": "Bern, Switzerland",
+    "links": []
+  },
+  {
+    "date": "2013-09-16",
+    "event": "System Center Universe DACH 2013",
+    "title": "Desired State Configuration",
+    "location": "Bern, Switzerland",
     "links": []
   },
   {
