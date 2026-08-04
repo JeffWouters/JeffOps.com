@@ -99,5 +99,3 @@ You can automate the work. You can’t automate the blame. A tool to enhance, no
 But here’s the catch, and it’s the one that’s been quietly undermining half of what I just told you. “Keep a human in the loop” (the answer I keep reaching for) only works if that human can actually catch the error. And thanks to everything I’ve written about the illusion of competence, that’s a much bigger *if* than it looks. Sometimes the human in the loop isn’t a safeguard at all. Sometimes they’re just there to absorb the blame for a system nobody could realistically supervise.
 
 That’s the next edition. Safeguard, or blame sponge? We’ll find out.
-
-A quick note: everything here reflects my own personal views and experience — not those of my employer or any organization I'm affiliated with. It's my personal take, nothing more and nothing less 😉

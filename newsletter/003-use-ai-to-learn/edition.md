@@ -114,5 +114,3 @@ AI can be a genuinely powerful learning tool. Probably the most powerful one mos
 AI doesn't replace learning. It amplifies how you already learn. Hand it good questions, your own attempts, and a habit of checking, and it will accelerate you enormously. Hand it "just give me the answer," and it will accelerate that too, straight past the point where learning happens. That's the part worth sitting with. AI scales whatever you bring to it.
 
 It’s a tool to enhance, so let the thing it's enhancing be you.
-
-A quick note: everything here reflects my own personal views and experience — not those of my employer or any organization I'm affiliated with. It's my personal take, nothing more and nothing less 😉

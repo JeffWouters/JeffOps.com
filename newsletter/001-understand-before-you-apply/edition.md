@@ -198,5 +198,3 @@ A human team isn't immune to this — people miscommunicate too. But people shar
 Please don’t misunderstand me: I love AI and I think it’s a transformative and game-changing tool for finding and structuring information, and to an extent automating certain tasks and perhaps even very specific jobs, but not for deciding what that information means in the real world.
 
 Using AI for the right tasks can enhance the productivity of people, enhance the quality of their work, broaden their experiences and knowledge, and much more. But it should be used as such: A tool to enhance, not to replace.
-
-A quick note: everything here reflects my own personal views and experience — not those of my employer or any organization I'm affiliated with. It's my personal take, nothing more and nothing less 😉

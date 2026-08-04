@@ -145,5 +145,3 @@ The reliability was never in the model. It was in the environment around it.
 So use it. For scaffolding, tests, refactoring, translation, and getting yourself unstuck, it's a real multiplier. Just keep doing the part that was always the actual work: deciding what to build, and knowing whether what came back is any good.
 
 A tool to enhance, not to replace. Same as it ever was. Just this time with a stack trace.
-
-A quick note: everything here reflects my own personal views and experience — not those of my employer or any organization I'm affiliated with. It's my personal take, nothing more and nothing less 😉
