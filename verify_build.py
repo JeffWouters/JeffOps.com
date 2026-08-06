@@ -402,14 +402,21 @@ SITE_URL = 'https://jeffops.com'
 
 # Checked by behaviour rather than by string. A robots.txt rule that a parser
 # does not apply is the failure worth catching: the file looks right, the
-# policy reads correctly, and the crawler it names walks straight in. Comments
-# trailing a directive are the usual cause, so the assertion is what a real
-# parser concludes, not what the text appears to say.
-ROBOTS_MUST_BE_BLOCKED = ('GPTBot', 'ClaudeBot', 'anthropic-ai', 'Google-Extended',
+# policy reads correctly, and the crawler it names is turned away anyway.
+# Comments trailing a directive are the usual cause, so the assertion is what a
+# real parser concludes, not what the text appears to say.
+#
+# The policy is open to everything, so the list runs the other way now: nothing
+# must be blocked, and a broad sample across search, AI training, AI retrieval
+# and aggregation must all get through. A stray Disallow reintroduced by an
+# edit fails here rather than quietly removing the site from something.
+ROBOTS_MUST_BE_BLOCKED = ()
+ROBOTS_MUST_BE_ALLOWED = ('Googlebot', 'bingbot', 'DuckDuckBot', 'Applebot',
+                          'GPTBot', 'ClaudeBot', 'anthropic-ai', 'Google-Extended',
                           'Applebot-Extended', 'CCBot', 'FacebookBot', 'Amazonbot',
-                          'cohere-ai', 'Bytespider', 'omgili', 'Diffbot', 'img2dataset')
-ROBOTS_MUST_BE_ALLOWED = ('Googlebot', 'bingbot', 'ChatGPT-User', 'OAI-SearchBot',
-                          'Claude-Web', 'PerplexityBot', 'YouBot')
+                          'cohere-ai', 'Bytespider', 'omgili', 'Diffbot', 'img2dataset',
+                          'ChatGPT-User', 'OAI-SearchBot', 'Claude-Web',
+                          'PerplexityBot', 'YouBot', 'SomeCrawlerNobodyHasNamedYet')
 
 
 # WCAG AA wants 4.5:1 for body text. These are the backgrounds text actually
@@ -475,11 +482,20 @@ def check_robots(out: Path, fail) -> None:
         if not parser.can_fetch(agent, probe):
             fail(f'robots.txt blocks {agent}, which must be allowed to crawl the site')
 
-    # Googlebot is the one that must never be caught by a broad rule aimed at
-    # Google-Extended. They are separate tokens and blocking the wrong one
-    # removes the site from Google Search altogether.
+    # Googlebot is checked against the home page separately from the /posts/
+    # probe above. It is the single crawler whose loss costs the most, and a
+    # rule that reaches only the root would not show up in the probe.
     if not parser.can_fetch('Googlebot', f'{SITE_URL}/'):
         fail('robots.txt blocks Googlebot from the home page')
+
+    # The policy is that nothing is disallowed, so no Disallow line with a path
+    # should exist at all. An empty 'Disallow:' is the RFC 9309 way of spelling
+    # "allow everything" and is fine; anything after it is not.
+    for number, line in enumerate(path.read_text(encoding='utf-8').splitlines(), 1):
+        text = line.split('#', 1)[0].strip()
+        if text.lower().startswith('disallow:') and text.split(':', 1)[1].strip():
+            fail(f'robots.txt line {number} disallows a path ({text!r}); the site '
+                 f'is meant to be open to every crawler')
 
     sitemaps = parser.site_maps() or []
     if f'{SITE_URL}/sitemap.xml' not in sitemaps:
