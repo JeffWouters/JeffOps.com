@@ -896,6 +896,28 @@ def check_newsletter_schedule(out: "Path", fail) -> None:
                     break
 
 
+# What the policy has to say, not merely which directives it mentions. An empty set means the
+# directive must be present and its value is not asserted here.
+# Scripts that write to the DOM, and therefore need the Trusted Types policy installed ahead of
+# them. app.js, post-enhance.js, highlight.min.js and marked.min.js each genuinely use a sink.
+# post-page.js is listed conservatively: it has none today, but it ships only alongside the ones
+# that do, so requiring the policy with it costs nothing and errs in the safe direction.
+#
+# forms.js is deliberately absent, and that is the whole point of this list. It touches .value,
+# .textContent, .style.display and location.href — no innerHTML, no insertAdjacentHTML, no
+# document.write, no new Function. The five promoted pages load it and nothing else.
+SINK_SCRIPTS = ('app.js', 'post-enhance.js', 'post-page.js', 'highlight.min.js', 'marked.min.js')
+
+
+REQUIRED_CSP = {
+    'default-src': {"'none'"},
+    'script-src': {"'self'"},
+    'base-uri': {"'none'"},
+    'object-src': {"'none'"},
+    'require-trusted-types-for': {"'script'"},
+}
+
+
 def main() -> int:
     out = Path(sys.argv[1] if len(sys.argv) > 1 else '_site')
     if not out.is_absolute():
@@ -1051,6 +1073,7 @@ def main() -> int:
     # defending against the thing it exists for — so both are checked, and the
     # handler check is the one that will actually catch a regression, because
     # writing onclick="" is the natural thing to reach for.
+    policies_seen: dict[str, list[str]] = {}
     for page in sorted(out.rglob('*.html')):
         label = '/' + page.relative_to(out).as_posix()
         markup = page.read_text(encoding='utf-8', errors='ignore')
@@ -1060,15 +1083,41 @@ def main() -> int:
             fail(f'{label} has no Content Security Policy')
             continue
         policy = csp.group(1)
-        for directive in ("script-src 'self'", "object-src", "default-src 'none'",
-                          "base-uri 'none'", "require-trusted-types-for 'script'"):
-            if directive.split()[0] not in policy:
-                fail(f'{label} — CSP is missing {directive.split()[0]}')
-        if "'unsafe-inline'" in policy.split('style-src')[0]:
-            fail(f'{label} — CSP allows inline script, which defeats it')
-        if "'unsafe-eval'" in policy:
-            fail(f'{label} — CSP allows eval')
+        policies_seen.setdefault(policy, []).append(label)
 
+        # Parsed into directive -> tokens, rather than asking whether a directive NAME appears
+        # anywhere in the string. The old form spelled out the values it wanted and then threw every
+        # one of them away with .split()[0], so a policy reading
+        #     default-src *; base-uri https://attacker.example; object-src *; script-src https://…
+        # satisfied every check. The 'unsafe-inline' test had the same shape: it searched the text
+        # before the first occurrence of 'style-src', so the same token written after style-src was
+        # invisible. Both were order-dependent string matching standing in for the one control this
+        # site's whole no-inline-script design rests on.
+        parsed = {}
+        for chunk in policy.split(';'):
+            parts = chunk.split()
+            if parts:
+                parsed[parts[0]] = set(parts[1:])
+
+        for name, required in REQUIRED_CSP.items():
+            if name not in parsed:
+                fail(f'{label} — CSP is missing {name}')
+            elif required and not required.issubset(parsed[name]):
+                missing = ', '.join(sorted(required - parsed[name]))
+                fail(f'{label} — CSP {name} is missing {missing} (has: '
+                     f'{" ".join(sorted(parsed[name])) or "nothing"})')
+
+        for name in ('script-src', 'default-src'):
+            tokens = parsed.get(name, set())
+            if "'unsafe-inline'" in tokens:
+                fail(f'{label} — CSP {name} allows inline script, which defeats it')
+            if "'unsafe-eval'" in tokens:
+                fail(f'{label} — CSP {name} allows eval')
+            if '*' in tokens:
+                fail(f'{label} — CSP {name} allows any origin')
+
+        # The policy is four verbatim copies in build.py, with nothing asserting they agree. All
+        # pages carrying one identical policy today is luck, not a check.
         handlers = re.findall(r'\son[a-z]+\s*=\s*["\']?[^>\s]', markup)
         if handlers:
             fail(f'{label} carries {len(handlers)} inline event handler(s); '
@@ -1093,16 +1142,21 @@ def main() -> int:
         if mains != 1:
             fail(f'{label} has {mains} <main> landmark(s); it needs exactly one')
 
-        # Only pages that run JavaScript need the policy installed. The redirect
-        # stubs and the blog list carry no script at all, and adding a sanitiser
-        # to a page with nothing to sanitise is bytes for the sake of a green
-        # tick. The policy has to be there whenever anything else is, though,
-        # and it has to come first: deferred scripts run in document order, so
-        # the order in the markup is the guarantee.
+        # Only pages that run a script which WRITES TO THE DOM need the policy installed. The
+        # comment here used to say "adding a sanitiser to a page with nothing to sanitise is bytes
+        # for the sake of a green tick" and then required it on any page running any script at all —
+        # which is how /about, /consulting, /training, /speaking and /security-policy came to ship
+        # purify plus the policy, 10.7 KB gzipped, for forms.js, which has no sink in it.
+        #
+        # Keyed on the script rather than on "has any script", so the requirement follows the thing
+        # that creates the risk. A page with only forms.js still sends
+        # require-trusted-types-for 'script', so if a sink ever appears there it throws rather than
+        # running unsanitised — the sanitiser has to come back with the sink, not before it.
         scripts = re.findall(r'<script[^>]*\bsrc=["\']?([^"\'\s>]+)', markup)
-        if scripts:
+        if any(any(sink in s for sink in SINK_SCRIPTS) for s in scripts):
             if not any('trusted-types.js' in s for s in scripts):
-                fail(f'{label} runs scripts but does not install the Trusted Types policy')
+                fail(f'{label} runs a script that writes to the DOM but does not install the '
+                     f'Trusted Types policy')
             elif not any('purify' in s for s in scripts):
                 fail(f'{label} installs the policy without the sanitiser it depends on')
             else:
@@ -1127,6 +1181,12 @@ def main() -> int:
     check_accessible_controls(out, fail)
     check_pages_are_linked(out, fail)
     check_newsletter_schedule(out, fail)
+
+    # One policy, everywhere. It is written out four times in build.py and nothing has ever asserted
+    # the four agree; every page carrying the same one today is luck.
+    if len(policies_seen) > 1:
+        for policy, pages in sorted(policies_seen.items(), key=lambda kv: -len(kv[1])):
+            fail(f'{len(pages)} page(s) carry a distinct CSP, e.g. {pages[0]}: {policy[:90]}...')
 
     # 5. The subscribe path must not lie.
     #

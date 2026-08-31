@@ -416,12 +416,28 @@ def collect_posts(include_unpublished=False, now=None):
 _INDEX_ONLY_DROP = ('body_markdown', 'markdown')
 
 
+def _write_lf(path, text):
+    """Write with LF endings whatever the platform thinks a newline is.
+
+    Path.write_text opens in text mode with no newline argument, so on Windows every \\n became
+    \\r\\n. These four files are tracked, HEAD holds LF, and the result was that every local build
+    reported blog/index.json and blog/topics.json as 850 changed lines of pure carriage returns. A
+    real change — a new post entering the index — is invisible inside that churn, `git commit -a`
+    commits it, and Linux CI flips it straight back on the next run. It also meant
+    `build.py --out <dir>` was not side-effect-free.
+
+    .gitattributes now normalises the repository as well; this pins the writer so the two agree.
+    """
+    with open(path, 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write(text)
+
+
 def write_index_files(posts):
     payload = [{k: v for k, v in item.items() if k not in _INDEX_ONLY_DROP} for item in posts]
-    OUTPUT_FILE.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding='utf-8')
-    JS_OUTPUT_FILE.write_text('window._blogIndexData = ' + json.dumps(payload, ensure_ascii=False) + ';', encoding='utf-8')
-    TOPICS_FILE.write_text(json.dumps(build_topics(posts), indent=2, ensure_ascii=False), encoding='utf-8')
-    SERIES_FILE.write_text(json.dumps(build_series(posts), indent=2, ensure_ascii=False), encoding='utf-8')
+    _write_lf(OUTPUT_FILE, json.dumps(payload, indent=2, ensure_ascii=False))
+    _write_lf(JS_OUTPUT_FILE, 'window._blogIndexData = ' + json.dumps(payload, ensure_ascii=False) + ';')
+    _write_lf(TOPICS_FILE, json.dumps(build_topics(posts), indent=2, ensure_ascii=False))
+    _write_lf(SERIES_FILE, json.dumps(build_series(posts), indent=2, ensure_ascii=False))
 
     print(f'Generated {len(posts)} blog index entries in {OUTPUT_FILE}')
     print(f'Generated {TOPICS_FILE.name} with {len(build_topics(posts))} topics')

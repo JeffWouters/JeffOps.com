@@ -319,7 +319,11 @@ def rotate_portrait(index_html: str, now: datetime, out: Path) -> str:
     # Now that one photograph is chosen for the whole build rather than swapped
     # in the browser, it can be offered as WebP the same way covers are. A
     # <source> would have lost that race against a JS-assigned src.
-    webp = write_webp(out / src) if (out / src).exists() else None
+    # narrow=True, like every content image. Without it this was the only picture on the site
+    # offered as a single candidate with no widths and no sizes: one 750px file served a 374px hero,
+    # a ~193px hero, a ~104px phone hero and the fixed 100px avatar on /about/, where it is the only
+    # image on the page and therefore its entire image budget.
+    webp = write_webp(out / src, narrow=True) if (out / src).exists() else None
 
     def swap(m: re.Match) -> str:
         tag = m.group(0)
@@ -327,7 +331,12 @@ def rotate_portrait(index_html: str, now: datetime, out: Path) -> str:
         if alt:
             tag = re.sub(r'\salt="[^"]*"', f' alt="{html.escape(alt, quote=True)}"', tag)
         if webp:
-            return (f'<picture><source srcset="{html.escape(webp, quote=True)}" '
+            webp_set = srcset_for(out, src, '.webp') or html.escape(webp, quote=True)
+            jpeg_set = srcset_for(out, src, Path(src).suffix)
+            if jpeg_set and ' ' in jpeg_set:
+                tag = tag[:-1].rstrip().rstrip('/').rstrip() + \
+                      f' srcset="{jpeg_set}" sizes="{PORTRAIT_SIZES}">'
+            return (f'<picture><source srcset="{webp_set}" sizes="{PORTRAIT_SIZES}" '
                     f'type="image/webp">{tag}</picture>')
         return tag
 
@@ -546,7 +555,7 @@ def render_markdown(text: str) -> tuple[str, list[dict]]:
             walk(token.get('children', []))
 
     walk(getattr(md, 'toc_tokens', []))
-    return render_callouts(wrap_figures(body)), toc
+    return render_callouts(wrap_figures(reachable_code_blocks(body))), toc
 
 
 # GitHub's blockquote callout syntax. Rendered here rather than in the browser
@@ -671,6 +680,22 @@ def group_series(posts: list[dict]) -> dict:
     return grouped
 
 
+def reachable_code_blocks(html: str) -> str:
+    """Make a scrolling <pre> reachable from a keyboard.
+
+    .post-content pre is overflow-x:auto with no focusable descendant, so a mouse can pan a long
+    line and a keyboard cannot reach it at all — axe-core's scrollable-region-focusable, WCAG 2.1.1.
+    The overflow is real: the longest line on the site is 90 characters against a content box around
+    596px, which needs roughly 734px.
+
+    role=group rather than region, because eighteen landmarks on one page is worse than none, and a
+    group still carries the name into the accessibility tree.
+    """
+    return re.sub(r'<pre(?![^>]*\btabindex=)',
+                  '<pre tabindex="0" role="group" aria-label="Code, scrollable"',
+                  html)
+
+
 def wrap_figures(html: str) -> str:
     """Put each inline SVG in its own scroll container.
 
@@ -681,8 +706,15 @@ def wrap_figures(html: str) -> str:
     horizontal scroll. Feed readers that ignore the class simply see the SVG in
     a div, which is what they saw before.
     """
+    # tabindex and a name, because a region that scrolls has to be scrollable from a keyboard. That
+    # is axe-core's scrollable-region-focusable, WCAG 2.1.1, and the overflow here is guaranteed
+    # rather than hypothetical: .figure-scroll svg carries min-width:640px inside a column narrower
+    # than 640px at that breakpoint. The obvious escape hatch does not apply — the copy button that
+    # would give the region focusable content is added only in the single-page view, and a static
+    # post page never loads it.
     return re.sub(r'(<svg\b.*?</svg>)',
-                  r'<div class="figure-scroll">\1</div>',
+                  r'<div class="figure-scroll" tabindex="0" role="group" '
+                  r'aria-label="Diagram, scrollable">\1</div>',
                   html, flags=re.DOTALL)
 
 
@@ -714,6 +746,10 @@ WEBP_SOURCES = ('.jpg', '.jpeg', '.png')
 # everyone else stops paying for pixels they cannot see.
 NARROW_WIDTH = 760
 CONTENT_SIZES = '(max-width: 800px) 100vw, 760px'
+# The portrait is a circular hero on the home page and a small fixed avatar on /about/, so it is
+# never the width of the content column. Telling the browser that is the whole point of sizes:
+# without it a srcset is guesswork and it assumes the full viewport.
+PORTRAIT_SIZES = '(max-width: 700px) 40vw, 374px'
 
 
 def write_webp(image_path: Path, narrow: bool = False) -> str | None:
@@ -725,8 +761,12 @@ def write_webp(image_path: Path, narrow: bool = False) -> str | None:
     """
     if image_path.suffix.lower() not in WEBP_SOURCES:
         return None
-    if image_path.stat().st_size < WEBP_MIN_BYTES:
-        return None
+    # Whether a WebP is worth writing and whether a 760w variant is worth writing are different
+    # questions, and this threshold used to answer both. An image can be large in pixels and small
+    # in bytes — which is exactly what a flat screenshot is. 10-policy-live.jpg is 1502x818 at
+    # 11,702 B and was the only one of that post's screenshots with no WebP, no -760 sibling and no
+    # srcset at all, so a reader on a 760px column downloaded 1502px of it.
+    worth_full = image_path.stat().st_size >= WEBP_MIN_BYTES
 
     # PNG is encoded LOSSLESSLY, JPEG lossily, and that split is measured rather than assumed.
     # A PNG is here because someone needed flat colour, hard edges, text or transparency — a
@@ -746,7 +786,11 @@ def write_webp(image_path: Path, narrow: bool = False) -> str | None:
     try:
         from PIL import Image
         with Image.open(image_path) as im:
-            im.save(target, 'WEBP', **encode)
+            # The full-size WebP is gated on bytes; the responsive pair is gated on pixels, which
+            # is the measurement that decides whether a 760px column is being sent more image than
+            # it can use.
+            if worth_full:
+                im.save(target, 'WEBP', **encode)
             if narrow and im.width > NARROW_WIDTH * 1.2:
                 small = im.copy()
                 small.thumbnail((NARROW_WIDTH, im.height), Image.LANCZOS)
@@ -761,6 +805,13 @@ def write_webp(image_path: Path, narrow: bool = False) -> str | None:
         print(f'  ! {image_path.name}: WebP encode failed ({exc}) — JPEG only')
         return None
     # A WebP that is not smaller is a second file for nothing.
+    if not target.exists():
+        # Under the byte threshold, so only the responsive pair was written. offer_webp() needs a
+        # name to build a <source> from, and srcset_for() skips widths that were not written, so
+        # returning the name of a file that does not exist would produce a <source> pointing at
+        # nothing — which is the exact failure that blanked the About avatar.
+        return target.name if image_path.with_name(
+            f'{image_path.stem}-{NARROW_WIDTH}.webp').exists() else None
     if target.stat().st_size >= image_path.stat().st_size:
         target.unlink()
         return None
@@ -1395,9 +1446,21 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
 <!-- These pages are lifted out of the app and load none of it, so the enquiry
      forms they carry had no handlers: the Send button did nothing and threw
      nothing, and what someone typed went nowhere. This is the one script they
-     need. -->
-<script src="/vendor/purify.min.js" defer></script>
-<script src="/js/trusted-types.js" defer></script>
+     need — and, since 2026-08-31, the only one.
+
+     purify.min.js and trusted-types.js used to be here too, directly above a
+     comment calling forms.js "the one script they need". forms.js has no sink:
+     no innerHTML, no insertAdjacentHTML, no document.write, no new Function. It
+     touches .value, .textContent, .style.display and location.href. So the
+     default policy was installed on /about, /consulting, /training, /speaking
+     and /security-policy and never once invoked — 10,706 bytes gzipped of
+     purify alone, and under vendor/ so minify.py never shrinks it, on the five
+     pages a prospective client lands on.
+
+     Dropping it fails CLOSED rather than opening a hole: these pages still send
+     require-trusted-types-for 'script', so if a sink ever appears here it
+     throws instead of running unsanitised. The sanitiser has to come back with
+     the sink, not before it. -->
 <script src="/js/forms.js" defer></script>
 </body>
 </html>

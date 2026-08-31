@@ -45,6 +45,26 @@ function wireDelegatedHandlers() {
 }
 
 // ── PAGE ROUTING ───────────────────────────────────────
+// marked has exactly one call site — showPost, reached only on a #post route — but the tag was
+// <script defer> on the home page, so 36,054 bytes raw / 10,919 gzipped were parsed and compiled
+// before DOMContentLoaded for a code path most visitors never take. minify.py skips vendor/, so
+// that was the final size. Loaded on demand instead, the way post-enhance.js already fetches
+// highlight.js and Mermaid; trusted-types.js allowlists /vendor/ so an injected script passes.
+let markedPending = null;
+function loadMarked() {
+  if (window.marked) return Promise.resolve();
+  if (!markedPending) {
+    markedPending = new Promise(resolve => {
+      const el = document.createElement('script');
+      el.src = '/vendor/marked.min.js';
+      el.onload = resolve;
+      el.onerror = resolve;   // showPost checks for marked before using it
+      document.head.appendChild(el);
+    });
+  }
+  return markedPending;
+}
+
 function showPage(name, updateHash = true) {
   const page = document.getElementById('page-' + name) || document.getElementById('page-home');
   if (!page) return;
@@ -231,6 +251,8 @@ async function showPost(id, postObj, updateHash = true) {
   renderSeriesNav(post);
 
   // Render markdown
+  await loadMarked();
+  if (!window.marked) return;   // the vendor script did not arrive; better blank than a crash
   document.getElementById('post-content').innerHTML = marked.parse(post.markdown);
   resolvePostAssets(document.getElementById('post-content'), post);
   if (window.JeffOpsPost) JeffOpsPost.renderCallouts(document.getElementById('post-content'));

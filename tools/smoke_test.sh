@@ -95,6 +95,47 @@ if [ -s "$workdir/__well_known_security_txt" ] && [ -s "$workdir/_security_txt" 
     fi
 fi
 
+# The artifact that deploys is not the artifact that was verified. deploy.yml runs verify_build.py,
+# then minify.py rewrites 29 files (23 HTML, 1 CSS, 5 JS), and only then does the upload happen. The
+# workflow comment says "that gap is what the post-deploy smoke test covers" — it did not. Of those
+# 29 files this test fetched two, and both needles ("JeffOps", "Blog") are ordinary page prose that
+# survives any minifier. A corrupted styles.css left an unstyled site that passed; a broken app.js
+# left the blog index and the tag filters dead and passed.
+printf '\n'
+
+# The assets, each by a token that only exists if the file is intact.
+check /css/styles.css '.post-content'
+check /js/app.js      'showPage'
+check /js/forms.js    'submitEnquiry'
+
+# Every indexable page, asserted on having its own <title> rather than on a word that appears on
+# all of them. Read from the deployed sitemap, so a page added tomorrow is covered without anyone
+# remembering to list it here.
+if fetch /sitemap.xml "$workdir/sm.xml"; then
+    grep -o '<loc>[^<]*</loc>' "$workdir/sm.xml" \
+        | sed -e 's|<loc>||' -e 's|</loc>||' > "$workdir/urls.txt"
+    while read -r url; do
+        [ -z "$url" ] && continue
+        path="${url#https://jeffops.com}"
+        [ -z "$path" ] && path=/
+        dest="$workdir/page$(printf '%s' "$path" | tr -c 'a-zA-Z0-9' '_')"
+        if ! fetch "$path" "$dest"; then
+            printf '  FAIL  %s is in the sitemap but is not served\n' "$path"
+            failures=$((failures + 1))
+            continue
+        fi
+        if ! grep -qi '<title>' "$dest"; then
+            printf '  FAIL  %s is served but has no <title>; it is not the page that was built\n' "$path"
+            failures=$((failures + 1))
+            continue
+        fi
+        printf '  ok    %s\n' "$path"
+    done < "$workdir/urls.txt"
+else
+    printf '  FAIL  /sitemap.xml is not served, so page coverage could not be checked\n'
+    failures=$((failures + 1))
+fi
+
 printf '\n'
 if [ "$failures" -gt 0 ]; then
     printf '%s check(s) failed. The deploy reported success but the site is not serving what was built.\n' "$failures"

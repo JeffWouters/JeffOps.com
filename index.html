@@ -654,7 +654,9 @@
        innerHTML during parsing, so the policy is always in place first. -->
   <script src="vendor/purify.min.js" defer></script>
   <script src="js/trusted-types.js" defer></script>
-  <script src="vendor/marked.min.js" defer></script>
+  <!-- marked is NOT loaded here. It has one call site, showPost, reached only on a #post route,
+       and defer still ordered its parse and compile before DOMContentLoaded for a path most
+       visitors never take. js/app.js fetches it on demand instead. -->
   <script src="blog/index.js" defer></script>
   <script src="js/post-enhance.js" defer></script>
   <script src="js/forms.js" defer></script>

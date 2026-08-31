@@ -110,6 +110,12 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,15,0.94);backdrop-fi
   border-color:#ff8a8a;
 }
 
+/* A scrollable region is now a focus stop, so it needs to look like one. Without a visible ring a
+   keyboard user tabs into a code block and nothing on screen says where they are. */
+.post-content pre:focus-visible, .figure-scroll:focus-visible{
+  outline:2px solid var(--cyan);outline-offset:3px;
+}
+
 /* ── DROPDOWN PANEL ── */
 .nav-dropdown{
   display:none;
