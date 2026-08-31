@@ -493,7 +493,15 @@ def _absolutise(fragment: str) -> str:
     /posts/2023/slug/ both break: the first 404s, the second just changes that
     page's own hash. Both become root-absolute.
     """
-    fragment = re.sub(r'(href|src)="(?!https?://|//|/|#|mailto:|data:)', r'\1="/', fragment)
+    # srcset belongs in this alternation. It was missing, and the omission was invisible until the
+    # portrait gained a WebP sibling: choose_portrait() wraps the avatar in
+    # <picture><source srcset="JeffOps_Finger.webp">, and on /about/ the <img src> was absolutised
+    # while the <source srcset> stayed bare, resolving to /about/JeffOps_Finger.webp — a 404, while
+    # the file sits at the root. A browser that has already MATCHED a <source> does not fall back to
+    # the <img> when its resource fails, so the avatar painted nothing for every WebP-capable
+    # visitor. verify_build.py states that exact rule in its own comments, but only applied it
+    # inside the post loop, so this shipped green.
+    fragment = re.sub(r'(href|src|srcset)="(?!https?://|//|/|#|mailto:|data:)', r'\1="/', fragment)
     fragment = re.sub(r'href="#(?!")', 'href="/#', fragment)
     return fragment
 
@@ -1113,7 +1121,12 @@ HIGHLIGHT_SCRIPT = '<script src="/vendor/highlight.min.js" defer></script>'
 
 def code_assets(content: str) -> tuple[str, str]:
     """(stylesheet, script) tags this page's content actually needs."""
-    has_code = '<code' in content
+    # '<pre><code', not '<code'. The looser test also matched the <code> a single inline backtick
+    # produces, so a page whose only code was `like this` mid-sentence pulled in highlight.min.js
+    # (121,727 B) and a render-blocking theme to highlight nothing — both consumers select
+    # `pre code`. On the two pages affected that was 57% of their CSS and JS, and none of it is
+    # recoverable by minify.py, which skips vendor/.
+    has_code = '<pre><code' in content
     has_diagram = 'language-mermaid' in content
     theme = HIGHLIGHT_THEME if has_code else ''
     script = HIGHLIGHT_SCRIPT if has_code else ''
@@ -1576,10 +1589,29 @@ def _rfc822(iso: str) -> str:
     return format_datetime(dt)
 
 
+def _absolutise_feed_images(body: str, post: dict) -> str:
+    """Make every image in a feed body absolute.
+
+    A post writes ![alt](01-record-types.jpg), which is correct beside its own index.html and wrong
+    everywhere else. There is no xml:base here, so a reader resolves that against the feed document
+    itself — https://jeffops.com/rss.xml — and asks for https://jeffops.com/01-record-types.jpg,
+    which 404s. All 17 images in the feed were doing this. Readers that rebase against the item
+    <link> happen to survive; strict consumers and RSS-to-email, which is what a Dispatch gets
+    plugged into, do not.
+
+    Scoped to img src on purpose: every <a href> in the same bodies is already absolute, because
+    render_markdown is given absolute link targets and only image paths stay relative.
+    """
+    prefix = SITE['base_url'] + post['url']
+    return re.sub(r'(<img\b[^>]*?\bsrc=")(?!https?://|//|/|data:)',
+                  lambda m: m.group(1) + prefix, body)
+
+
 def build_rss(posts: list[dict]) -> str:
     items = []
     for post in posts:
         body, _ = render_markdown(post['body_markdown'])
+        body = _absolutise_feed_images(body, post)
         items.append(f"""  <item>
     <title>{html.escape(post['title'])}</title>
     <link>{canonical_for(post)}</link>

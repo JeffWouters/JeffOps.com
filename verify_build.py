@@ -683,6 +683,72 @@ def check_speaking(out: Path, fail) -> None:
              'empty page')
 
 
+def check_picture_sources(out: "Path", fail) -> None:
+    """Every <picture> source in the WHOLE build resolves to a file.
+
+    This rule already existed, but only inside the post loop — so it saw posts and newsletter
+    editions and never the pages build_promoted_pages() lifts out of index.html. /about/ shipped
+    <source srcset="JeffOps_Finger.webp"> for months, resolving to /about/JeffOps_Finger.webp,
+    a 404, while the file sat at the build root. A browser that has matched a <source> does not
+    fall back to the <img> when its resource fails: it paints nothing. So the avatar was blank for
+    every WebP-capable visitor, and CI called it green on every single run.
+
+    Checking every *.html rather than a curated list is the point. The bug was not that the rule
+    was wrong, it was that the rule was applied to a subset nobody re-examined when a new page
+    type appeared.
+    """
+    for page in sorted(out.rglob('*.html')):
+        label = page.relative_to(out).as_posix()
+        source = page.read_text(encoding='utf-8', errors='replace')
+        for block in re.findall(r'<picture>.*?</picture>', source, re.S):
+            for attr, value in re.findall(r'\b(srcset|src)="([^"]+)"', block):
+                for candidate in (value.split(',') if attr == 'srcset' else [value]):
+                    url = candidate.strip().split()[0] if candidate.strip() else ''
+                    if not url or url.startswith(('http', 'data:', '//')):
+                        continue
+                    target = (out / url.lstrip('/')) if url.startswith('/') \
+                        else (page.parent / url)
+                    if not target.exists():
+                        fail(f'{label} — <picture> {attr} candidate "{url}" does not resolve')
+
+
+def check_highlighter_is_earned(out: "Path", fail) -> None:
+    """A page that loads the syntax highlighter has something for it to highlight.
+
+    The build used to decide with `'<code' in content`, which also matches the <code> a single
+    inline backtick produces. Two pages with no code block at all pulled in highlight.min.js
+    (121,727 B) and a render-blocking theme to highlight nothing, because both consumers select
+    `pre code`. That was 57% of those pages' CSS and JS, and minify.py skips vendor/, so none of
+    it came back.
+    """
+    for page in sorted(out.rglob('*.html')):
+        source = page.read_text(encoding='utf-8', errors='replace')
+        if 'highlight.min.js' in source and '<pre><code' not in source:
+            fail(f'{page.relative_to(out).as_posix()} — loads the syntax highlighter but has no '
+                 f'<pre><code> block for it to act on')
+
+
+def check_feed_images_absolute(out: "Path", fail) -> None:
+    """No relative image src survives into a feed body.
+
+    There is no xml:base in the feed, so a reader resolves a relative src against the feed
+    document itself — https://jeffops.com/rss.xml — and asks for https://jeffops.com/<filename>,
+    which 404s. All 17 images in <content:encoded> were doing this: the MTA-STS post is a
+    13-screenshot walkthrough that is unfollowable without them, and a full-text feed body cannot
+    be recalled once a subscriber has pulled it.
+    """
+    for name in ('rss.xml', 'index.xml'):
+        feed = out / name
+        if not feed.is_file():
+            continue
+        text = feed.read_text(encoding='utf-8', errors='replace')
+        for block in re.findall(r'<content:encoded>.*?</content:encoded>', text, re.S):
+            for src in re.findall(r'<img\b[^>]*?\bsrc="([^"]+)"', block):
+                if not src.startswith(('http://', 'https://', 'data:')):
+                    fail(f'{name} — feed body image "{src}" is relative and will 404 for '
+                         f'subscribers; it must be absolute')
+
+
 def main() -> int:
     out = Path(sys.argv[1] if len(sys.argv) > 1 else '_site')
     if not out.is_absolute():
@@ -908,6 +974,9 @@ def main() -> int:
     check_live_urls(out, fail)
     check_home_page(out, fail)
     check_speaking(out, fail)
+    check_picture_sources(out, fail)
+    check_highlighter_is_earned(out, fail)
+    check_feed_images_absolute(out, fail)
 
     # 5. The subscribe path must not lie.
     #
