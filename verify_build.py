@@ -723,9 +723,23 @@ def check_highlighter_is_earned(out: "Path", fail) -> None:
     """
     for page in sorted(out.rglob('*.html')):
         source = page.read_text(encoding='utf-8', errors='replace')
-        if 'highlight.min.js' in source and '<pre><code' not in source:
-            fail(f'{page.relative_to(out).as_posix()} — loads the syntax highlighter but has no '
-                 f'<pre><code> block for it to act on')
+        # Matching the tag, not the byte sequence '<pre><code'. This check was written with the
+        # literal and then broke against its own subject: reachable_code_blocks() began emitting
+        # <pre tabindex="0" role="group" ...><code> for keyboard access, the literal stopped
+        # matching, and this guard reported that five pages loading the highlighter had no code.
+        has_block = re.search(r'<pre[^>]*><code', source) is not None
+        loads = 'highlight.min.js' in source
+        label = page.relative_to(out).as_posix()
+
+        if loads and not has_block:
+            fail(f'{label} — loads the syntax highlighter but has no code block for it to act on')
+        # The other direction, which is the one that actually shipped. The check used to test only
+        # the first, so when the build stopped emitting the highlighter entirely every code block on
+        # the site rendered unhighlighted and the build, this verifier and the smoke test all stayed
+        # green. A guard that only fires on the wasteful failure and not the broken one is half a
+        # guard.
+        if has_block and not loads and 'data-preview-build' not in source:
+            fail(f'{label} — has a code block but does not load the syntax highlighter')
 
 
 def check_feed_images_absolute(out: "Path", fail) -> None:

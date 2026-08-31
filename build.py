@@ -1207,7 +1207,16 @@ def code_assets(content: str) -> tuple[str, str]:
     # (121,727 B) and a render-blocking theme to highlight nothing — both consumers select
     # `pre code`. On the two pages affected that was 57% of their CSS and JS, and none of it is
     # recoverable by minify.py, which skips vendor/.
-    has_code = '<pre><code' in content
+    # A regex, not a substring, and the substring version has now been wrong in both directions.
+    # It began as `'<code' in content`, which also matched the <code> an inline backtick produces
+    # and pulled the highlighter onto two pages with no code block at all. Tightening it to
+    # '<pre><code' fixed that and then broke the moment reachable_code_blocks() started emitting
+    # <pre tabindex="0" role="group" ...><code> for keyboard access — the literal stopped matching
+    # anything, and every code block on the site rendered unhighlighted while the build, the
+    # verifier and the smoke test all stayed green.
+    #
+    # Matching the tag rather than a byte sequence is what makes it survive the next attribute.
+    has_code = re.search(r'<pre[^>]*><code', content) is not None
     has_diagram = 'language-mermaid' in content
     theme = HIGHLIGHT_THEME if has_code else ''
     script = HIGHLIGHT_SCRIPT if has_code else ''
