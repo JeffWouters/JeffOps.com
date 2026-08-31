@@ -1229,7 +1229,7 @@ def build_post_page(post: dict, by_folder: dict, nav: str, footer: str,
     )
 
 
-def render_post_items(posts: list[dict]) -> list[str]:
+def render_post_items(posts: list[dict], compact: bool = False) -> list[str]:
     """One <div class="post-item"> per post.
 
     Shared by /posts/ and by the home page's list, which used to ship
@@ -1244,12 +1244,20 @@ def render_post_items(posts: list[dict]) -> list[str]:
         chips = ''.join(f'<span class="tag">{html.escape(t)}</span>' for t in post.get('tags', []))
         chips_html = (f'<div style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;">{chips}</div>'
                       if chips else '')
+        # compact carries the links and nothing else. The home page's copy exists so a crawler can
+        # reach every post from the page holding the site's authority; it is not a second reading of
+        # the blog index, and rendering the excerpts there made the home page duplicate 86% of
+        # /posts/ by body text for prose nobody reads twice. js/app.js clears #post-list and
+        # re-renders from blog/index.json on load, so a visitor with scripts sees the full list
+        # either way — only crawlers and no-JS readers ever see what is written here.
+        excerpt_html = '' if compact else (
+            f'          <div class="post-excerpt">{html.escape(post.get("excerpt", ""))}</div>\n'
+            f'          {chips_html}\n')
         items.append(
             f'      <div class="post-item">\n'
             f'        <div>\n'
             f'          <a class="post-title" href="{post["url"]}">{html.escape(post["title"])}</a>\n'
-            f'          <div class="post-excerpt">{html.escape(post.get("excerpt", ""))}</div>\n'
-            f'          {chips_html}\n'
+            f'{excerpt_html}'
             f'          <div class="post-meta"><span>{post["date"]}</span><span>{post["readtime"]}</span></div>\n'
             f'        </div>\n'
             f'        <div class="post-read-time">→</div>\n'
@@ -1264,7 +1272,7 @@ POST_LIST_RE = re.compile(
 
 def inject_posts(index_html: str, posts: list[dict]) -> str:
     """Put the real post list into index.html, the way inject_editions does for the archive."""
-    markup = '\n'.join(render_post_items(posts))
+    markup = '\n'.join(render_post_items(posts, compact=True))
     result, count = POST_LIST_RE.subn(
         lambda m: f'{m.group(1)}\n{markup}\n        {m.group(2)}', index_html, count=1)
     if not count:
