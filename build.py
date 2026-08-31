@@ -161,7 +161,7 @@ REDIRECT_TEMPLATE = """<!DOCTYPE html>
      no such escape hatch. cdnjs is allowed for one reason: Mermaid, fetched
      on demand and only for a page that has a diagram. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; require-trusted-types-for 'script'">
-<title>Moved — {site_title}</title>
+<title>{site_title} — Moved</title>
 <link rel="canonical" href="{absolute}">
 <meta http-equiv="refresh" content="0; url={target}">
 <meta name="robots" content="noindex, follow">
@@ -939,7 +939,7 @@ POST_TEMPLATE = """<!DOCTYPE html>
      on demand and only for a page that has a diagram. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; require-trusted-types-for 'script'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{title} — {site_title}</title>
+<title>{site_title} — {title}</title>
 <meta name="description" content="{description}">
 <meta name="author" content="{author}">
 <link rel="canonical" href="{canonical}">
@@ -1062,12 +1062,12 @@ LIST_TEMPLATE = """<!DOCTYPE html>
      on demand and only for a page that has a diagram. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; require-trusted-types-for 'script'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Blog — {site_title}</title>
+<title>{site_title} — Blog</title>
 <meta name="description" content="{description}">
 <link rel="canonical" href="{base_url}/posts/">
 <meta property="og:type" content="website">
 <meta property="og:url" content="{base_url}/posts/">
-<meta property="og:title" content="Blog — {site_title}">
+<meta property="og:title" content="{site_title} — Blog">
 <meta property="og:description" content="{description}">
 <meta property="og:image" content="{base_url}{og_image}">
 <link rel="alternate" type="application/rss+xml" title="{site_title} Blog" href="{base_url}/rss.xml">
@@ -1229,7 +1229,16 @@ def build_post_page(post: dict, by_folder: dict, nav: str, footer: str,
     )
 
 
-def build_list_page(posts: list[dict], nav: str, footer: str) -> str:
+def render_post_items(posts: list[dict]) -> list[str]:
+    """One <div class="post-item"> per post.
+
+    Shared by /posts/ and by the home page's list, which used to ship
+    <div class="post-item">Loading posts...</div> and let JavaScript fill it in. That left the home
+    page with zero crawlable links to any post, on the page holding every internal link the site
+    has — while the newsletter archive one section over emitted real anchors for all five editions
+    and proved the correct shape. Rendering both from here means the two lists cannot drift into
+    disagreeing about what a post looks like.
+    """
     items = []
     for post in posts:
         chips = ''.join(f'<span class="tag">{html.escape(t)}</span>' for t in post.get('tags', []))
@@ -1246,6 +1255,26 @@ def build_list_page(posts: list[dict], nav: str, footer: str) -> str:
             f'        <div class="post-read-time">→</div>\n'
             f'      </div>'
         )
+    return items
+
+
+POST_LIST_RE = re.compile(
+    r'(<div class="post-list" id="post-list">).*?(</div>\s*</div>)', re.DOTALL)
+
+
+def inject_posts(index_html: str, posts: list[dict]) -> str:
+    """Put the real post list into index.html, the way inject_editions does for the archive."""
+    markup = '\n'.join(render_post_items(posts))
+    result, count = POST_LIST_RE.subn(
+        lambda m: f'{m.group(1)}\n{markup}\n        {m.group(2)}', index_html, count=1)
+    if not count:
+        raise SystemExit('Could not find <div class="post-list" id="post-list"> in index.html '
+                         '- the home page post list cannot be generated.')
+    return result
+
+
+def build_list_page(posts: list[dict], nav: str, footer: str) -> str:
+    items = render_post_items(posts)
     return LIST_TEMPLATE.format(
         lang=SITE['language'],
         site_title=SITE['title'],
@@ -1281,7 +1310,7 @@ PAGE_TEMPLATE = """<!DOCTYPE html>
      on demand and only for a page that has a diagram. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; manifest-src 'self'; require-trusted-types-for 'script'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{title} — {site_title}</title>
+<title>{site_title} — {title}</title>
 <meta name="description" content="{description}">
 <meta name="author" content="{author}">
 <link rel="canonical" href="{canonical}">
@@ -2176,6 +2205,7 @@ def main() -> None:
     print(f'Normalised {len(talks)} talk(s): {upcoming} upcoming, {len(talks) - upcoming} past')
 
     index_source = inject_editions(index_source, editions)
+    index_source = inject_posts(index_source, live)
 
     problems: list[str] = []
     cells, declared = build_stat_cells(live, talks, editions, problems.append)

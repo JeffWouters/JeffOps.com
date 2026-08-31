@@ -792,6 +792,42 @@ def check_accessible_controls(out: "Path", fail) -> None:
                  f'click-only; it needs to be an <a href> or carry role and tabindex')
 
 
+def check_pages_are_linked(out: "Path", fail) -> None:
+    """Every page the build promotes is reachable from somewhere other than itself.
+
+    /consulting/, /training/, /speaking/ and /about/ each had ZERO inbound internal links while the
+    home page had 417, because the nav pointed at fragments — and the home page carries a near
+    verbatim copy of each of those pages' text. Both copies were indexable and each canonicalised
+    to itself, so nothing told a search engine which was the real one; it picked the one with the
+    links. A page titled "JeffOps - Training" existed and was the one least likely to be shown.
+
+    A page with no inbound link is not necessarily wrong, but for these four it meant the
+    commercial pages were invisible as themselves. Checking the link graph is the only way to
+    notice: nothing about the page itself looks broken.
+    """
+    counts: dict[str, int] = {}
+    for page in sorted(out.rglob('*.html')):
+        rel = page.relative_to(out).as_posix()
+        own = '/' + (rel.rsplit('/', 1)[0] + '/' if '/' in rel else '')
+        source = page.read_text(encoding='utf-8', errors='replace')
+        if 'noindex' in source:
+            continue          # a redirect stub's links are not endorsements
+        for href in re.findall(r'href="([^"]+)"', source):
+            if href.startswith(('http', 'mailto:', '//')):
+                continue
+            target = href.split('#')[0] or '/'
+            if target.startswith('/') and target != own:
+                counts[target] = counts.get(target, 0) + 1
+
+    for section in ('consulting', 'training', 'speaking', 'about'):
+        url = f'/{section}/'
+        if not (out / section / 'index.html').is_file():
+            continue
+        if not counts.get(url):
+            fail(f'{url} is built but nothing links to it — it competes with the copy of the same '
+                 f'text on the home page and loses')
+
+
 def main() -> int:
     out = Path(sys.argv[1] if len(sys.argv) > 1 else '_site')
     if not out.is_absolute():
@@ -1021,6 +1057,7 @@ def main() -> int:
     check_highlighter_is_earned(out, fail)
     check_feed_images_absolute(out, fail)
     check_accessible_controls(out, fail)
+    check_pages_are_linked(out, fail)
 
     # 5. The subscribe path must not lie.
     #
