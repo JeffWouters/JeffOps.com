@@ -694,6 +694,11 @@ def wrap_figures(html: str) -> str:
 # bytes. Lower starts to show on the flat backgrounds in the newsletter art.
 WEBP_QUALITY = 86
 WEBP_MIN_BYTES = 20_000
+# What write_webp will convert. PNG was absent until 2026-08-31, so no PNG on the site had ever
+# been given a WebP sibling while every JPEG had — the gap was invisible because the four earlier
+# newsletter editions all led with a JPEG cover. The fifth used three PNG diagrams instead and
+# shipped 629 KB with no WebP at all.
+WEBP_SOURCES = ('.jpg', '.jpeg', '.png')
 
 # The article column is 760px wide, so a 1200px cover is nearly twice what a
 # non-retina screen renders. This is the second width offered; the browser picks
@@ -710,20 +715,38 @@ def write_webp(image_path: Path, narrow: bool = False) -> str | None:
     the image is wide enough to be worth halving, `<stem>-760.webp` and
     `<stem>-760.jpg` are written too, for the srcset the page will offer.
     """
-    if image_path.suffix.lower() not in ('.jpg', '.jpeg'):
+    if image_path.suffix.lower() not in WEBP_SOURCES:
         return None
     if image_path.stat().st_size < WEBP_MIN_BYTES:
         return None
+
+    # PNG is encoded LOSSLESSLY, JPEG lossily, and that split is measured rather than assumed.
+    # A PNG is here because someone needed flat colour, hard edges, text or transparency — a
+    # diagram, a screenshot, a logo — which is the content lossy WebP handles worst. On the
+    # newsletter diagrams that prompted this, quality 82 was 68% smaller but put a peak error of
+    # 32/255 on text edges, which is visible ringing on small anti-aliased type; quality 90 was
+    # dominated outright, nearly the same error for 28% more bytes. Lossless is 45% smaller than
+    # the PNG and pixel-identical, and these images exist to be read.
+    #
+    # A photograph saved as PNG would be better served lossily, but the site has none: PNG here
+    # means diagram, and guessing per image would be a worse rule than the one the file extension
+    # already states.
+    lossless = image_path.suffix.lower() == '.png'
+    encode = dict(lossless=True, method=6) if lossless else dict(quality=WEBP_QUALITY, method=6)
+
     target = image_path.with_suffix('.webp')
     try:
         from PIL import Image
         with Image.open(image_path) as im:
-            im.save(target, 'WEBP', quality=WEBP_QUALITY, method=6)
+            im.save(target, 'WEBP', **encode)
             if narrow and im.width > NARROW_WIDTH * 1.2:
                 small = im.copy()
                 small.thumbnail((NARROW_WIDTH, im.height), Image.LANCZOS)
                 small.save(image_path.with_name(f'{image_path.stem}-{NARROW_WIDTH}.webp'),
-                           'WEBP', quality=WEBP_QUALITY, method=6)
+                           'WEBP', **encode)
+                # The narrow fallback keeps the source's own format, which matters for PNG: these
+                # diagrams have transparent rounded corners, and a JPEG fallback would put black
+                # ones on the page. Pillow ignores quality and progressive when writing PNG.
                 small.save(image_path.with_name(f'{image_path.stem}-{NARROW_WIDTH}{image_path.suffix}'),
                            quality=WEBP_QUALITY, optimize=True, progressive=True)
     except Exception as exc:                          # noqa: BLE001
