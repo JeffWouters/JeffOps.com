@@ -34,7 +34,7 @@ import markdown
 
 from generate_blog_index import (ROOT, collect_posts, estimate_readtime, find_markdown_file,
                                  in_site_tz,
-                                 parse_excerpt, parse_frontmatter, parse_title, slugify,
+                                 is_draft, parse_excerpt, parse_frontmatter, parse_title, slugify,
                                  strip_frontmatter, strip_leading_h1, unpublished_posts,
                                  utc_now, write_index_files)
 
@@ -797,22 +797,47 @@ def size_images(markup: str, page_dir: Path) -> str:
     never have, which is where the 0.06 of layout shift on a post page was
     coming from.
     """
+    # Loading priority is decided here too, because this is the only pass that sees the images of a
+    # page in document order. Every image was eager: on the MTA-STS post that is 211 KB at DPR1 and
+    # 605 KB at DPR2 fetched before the reader has left the first paragraph, for pictures that begin
+    # 1,116 words into a 2,419-word body. js/trusted-types.js already allowlists `loading` and
+    # `fetchpriority` in its DOMPurify config, so the sanitiser was expecting attributes the build
+    # never emitted.
+    #
+    # The FIRST image on a page stays eager and is marked high priority: on the reMarkable post the
+    # featured image is the first body element and is the LCP, and lazy-loading the LCP is the
+    # classic way to make this change a regression instead of a fix.
+    seen = 0
+
     def add(match: re.Match) -> str:
+        nonlocal seen
         tag, src = match.group(0), match.group(1)
-        if 'width=' in tag or src.startswith(('http', 'data:', '//')):
+        if src.startswith(('http', 'data:', '//')):
             return tag
         path = (page_dir / src.lstrip('/')) if src.startswith('/') else (page_dir / src)
         if not path.is_file():
             return tag
-        try:
-            from PIL import Image
-            with Image.open(path) as im:
-                w, h = im.size
-        except Exception:                                 # noqa: BLE001
+
+        extra = ''
+        if 'width=' not in tag:
+            try:
+                from PIL import Image
+                with Image.open(path) as im:
+                    w, h = im.size
+                extra += f' width="{w}" height="{h}"'
+            except Exception:                             # noqa: BLE001
+                pass
+
+        seen += 1
+        if 'loading=' not in tag and 'fetchpriority=' not in tag:
+            extra += ' fetchpriority="high"' if seen == 1 else ' loading="lazy"'
+        if 'decoding=' not in tag:
+            extra += ' decoding="async"'
+        if not extra:
             return tag
         # python-markdown closes img tags XHTML-style, so the trailing slash has
         # to come off before anything is appended or it lands mid-attribute.
-        return tag[:-1].rstrip().rstrip('/').rstrip() + f' width="{w}" height="{h}">'
+        return tag[:-1].rstrip().rstrip('/').rstrip() + extra + '>'
 
     return _IMG_RE.sub(add, markup)
 
@@ -888,9 +913,14 @@ def json_ld(post: dict) -> str:
     if post.get('tags'):
         data['keywords'] = ', '.join(post['tags'])
     # Google reads this for article rich results, and it is a separate field
-    # from og:image. Setting one and not the other is the usual half-done job.
-    if post.get('cover_url'):
-        data['image'] = SITE['base_url'] + post['cover_url']
+    # from og:image. Setting one and not the other is the usual half-done job —
+    # which is exactly what the guard here used to produce. cover_url is only ever populated for
+    # newsletter editions, so all eight blog posts shipped a BlogPosting with no image at all while
+    # og:image fell back to the site card for every one of them. Four editions got article rich
+    # results and nine article pages were eligible only for a plain text listing.
+    #
+    # Same fallback as og:image, so the two cannot disagree again.
+    data['image'] = SITE['base_url'] + (post.get('cover_url') or SITE['og_image'])
     return json.dumps(data, ensure_ascii=False, indent=2)
 
 
@@ -1724,6 +1754,16 @@ EDITION_DIR = ROOT / 'newsletter'
 EDITION_PLACEHOLDER = 'TODO(jeff)'
 
 
+def _today_iso() -> str:
+    """Today in the site's own timezone.
+
+    A post dated the 17th should appear on the 17th where it was written, not wherever the runner
+    happens to be. The daily build is the publishing mechanism, so this is the line that decides
+    whether an edition is out yet.
+    """
+    return in_site_tz(utc_now()).date().isoformat()
+
+
 def load_editions() -> list[dict]:
     """One folder per edition: the markdown, and the images it references.
 
@@ -1739,7 +1779,7 @@ def load_editions() -> list[dict]:
         print('  ! newsletter/ not found — archive will be empty')
         return []
 
-    editions = []
+    editions, withheld = [], []
     for folder in sorted(p for p in EDITION_DIR.iterdir() if p.is_dir()):
         # A leading underscore marks a folder that is not an edition.
         if folder.name.startswith('_'):
@@ -1783,7 +1823,7 @@ def load_editions() -> list[dict]:
             'folder_name': folder.name,
             'folder': f'newsletter/{slug}',
             'is_newsletter': True,
-            'is_published': True,
+            'is_published': False,
             'tags': front.get('tags') or ['Newsletter'],
             'readtime': estimate_readtime(body) if has_body else '',
             'body_markdown': strip_leading_h1(body).strip() if has_body else '',
@@ -1793,7 +1833,27 @@ def load_editions() -> list[dict]:
         }
         edition['excerpt'] = edition['description']
         attach_cover(edition, front, source)
+
+        # An edition obeys the same two gates a post does. is_published was hardcoded True here, so
+        # `draft: true` on an edition did nothing at all and a future date published immediately —
+        # into the page, both feeds, the sitemap and the home-page archive. The feed carries the
+        # full body, so a subscriber pull cannot be recalled; of everything on this site that could
+        # go wrong, an embargo breaking is the one that cannot be taken back.
+        #
+        # The identical mistake on a blog post has always been caught. Editions were simply never
+        # run past the same gate.
+        if is_draft(front):
+            withheld.append((edition['title'], 'draft'))
+            continue
+        if date_iso and date_iso > _today_iso():
+            withheld.append((edition['title'], f'dated {date_iso}'))
+            continue
+
+        edition['is_published'] = True
         editions.append(edition)
+
+    for title, why in withheld:
+        print(f'  · withheld ({why}): {title[:56]}')
 
     editions.sort(key=lambda e: e.get('date_iso', ''), reverse=True)
     return editions

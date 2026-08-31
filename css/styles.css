@@ -23,6 +23,13 @@
   --cyan-glow-strong:rgba(0,217,255,0.22); --bg:#0a0c0f; --bg2:#0f1217;
   --bg3:#151920; --border:rgba(0,217,255,0.15);
   --border-dim:rgba(255,255,255,0.06); --text:#e8edf2;
+  /* The edge of a control is information, not decoration: WCAG 1.4.11 wants 3:1 for anything you
+     need in order to see where an input is. --border-dim composites to 1.17:1 over --bg3, so the
+     enquiry forms read as five stacked labels with no visible fields. 0.34 is the lowest alpha
+     that clears 3:1 on all three grounds these sit on (worst case 3.05:1). Dividers, card edges
+     and tag chips deliberately keep --border-dim: the criterion exempts decoration, and making
+     every hairline on the site three times louder would be a redesign, not a fix. */
+  --border-control:rgba(255,255,255,0.34);
   /* #6b7a8d measured between 3.81 and 4.47 against the five backgrounds
      it actually sits on — under the 4.5 WCAG AA wants for body text, on
      every one of them. This is the same hue and saturation, lifted until
@@ -193,7 +200,7 @@ footer{border-top:1px solid var(--border);padding:0 1rem;display:flex;align-item
 .blog-sidebar{position:sticky;top:80px;}
 .sidebar-section{margin-bottom:2rem;}
 .sidebar-label{font-family:var(--mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-dim);margin-bottom:0.75rem;}
-.search-input{width:100%;background:var(--bg2);border:1px solid var(--border-dim);color:var(--text);font-family:var(--mono);font-size:0.8rem;padding:8px 12px;outline:none;transition:border-color 0.2s;}
+.search-input{width:100%;background:var(--bg2);border:1px solid var(--border-control);color:var(--text);font-family:var(--mono);font-size:0.8rem;padding:8px 12px;outline:none;transition:border-color 0.2s;}
 .search-input:focus{border-color:var(--cyan);}
 .search-input::placeholder{color:var(--text-dim);}
 .tag-filter{display:flex;flex-direction:column;gap:4px;}
@@ -465,7 +472,7 @@ footer{border-top:1px solid var(--border);padding:0 1rem;display:flex;align-item
 .enquiry-form-title{font-family:var(--mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--cyan);margin-bottom:1rem;}
 .form-field{margin-bottom:0.75rem;}
 .form-label{font-family:var(--mono);font-size:0.65rem;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.08em;}
-.form-input,.form-select,.form-textarea{width:100%;background:var(--bg3);border:1px solid var(--border-dim);color:var(--text);font-family:var(--mono);font-size:0.78rem;padding:8px 10px;outline:none;transition:border-color 0.2s;}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--bg3);border:1px solid var(--border-control);color:var(--text);font-family:var(--mono);font-size:0.78rem;padding:8px 10px;outline:none;transition:border-color 0.2s;}
 .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--cyan);}
 .form-input::placeholder,.form-textarea::placeholder{color:var(--text-dim);}
 .form-textarea{resize:vertical;min-height:70px;}

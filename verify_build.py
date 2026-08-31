@@ -828,6 +828,74 @@ def check_pages_are_linked(out: "Path", fail) -> None:
                  f'text on the home page and loses')
 
 
+def withheld_editions() -> list[dict]:
+    """Newsletter editions the build must not publish: drafts, and anything dated ahead.
+
+    Read from the source tree rather than asked of build.py, for the same reason check_schedule
+    searches the output instead of trusting the render: a verifier that shares the build's idea of
+    what is published cannot catch the build being wrong about it.
+    """
+    out = []
+    folder_root = ROOT / 'newsletter'
+    if not folder_root.is_dir():
+        return out
+    today = datetime.now(timezone.utc).date().isoformat()
+    for folder in sorted(p for p in folder_root.iterdir() if p.is_dir()):
+        if folder.name.startswith('_'):
+            continue
+        sources = [f for f in sorted(folder.iterdir())
+                   if f.is_file() and f.suffix.lower() in ('.md', '.markdown')]
+        if not sources:
+            continue
+        text = sources[0].read_text(encoding='utf-8', errors='replace')
+        front = {}
+        m = re.match(r'^---\s*\n(.*?)\n---\s*\n', text, re.S)
+        if m:
+            for line in m.group(1).splitlines():
+                if ':' in line:
+                    k, v = line.split(':', 1)
+                    front[k.strip().lower()] = v.strip().strip('"\'')
+        draft = front.get('draft', '').strip().lower() in ('1', 'true', 'yes', 'on')
+        date = front.get('date', '')[:10]
+        if draft or (date and date > today):
+            out.append({'folder': folder.name,
+                        'slug': front.get('slug', '') or folder.name,
+                        'title': front.get('title', folder.name),
+                        'why': 'draft' if draft else f'dated {date}'})
+    return out
+
+
+def check_newsletter_schedule(out: "Path", fail) -> None:
+    """A withheld edition appears nowhere in the output.
+
+    load_editions() hardcoded 'is_published': True, so `draft: true` on an edition did nothing and a
+    future date published immediately - into the page, both feeds, the sitemap and the home-page
+    archive. check_schedule's docstring says "Nothing unpublished may appear anywhere in the
+    output", and it meant it, but it globs posts/ and blog/ and has never looked at newsletter/.
+
+    The feed carries the full body, so a subscriber pull cannot be recalled. That is why this checks
+    the built bytes rather than the build's intent.
+    """
+    pending = withheld_editions()
+    if not pending:
+        return
+
+    searchable = {}
+    for path in out.rglob('*'):
+        if path.is_file() and path.suffix in ('.html', '.xml', '.json', '.js', '.txt', '.md'):
+            searchable[path] = path.read_text(encoding='utf-8', errors='ignore')
+
+    for edition in pending:
+        needles = {edition['slug'], edition['folder']}
+        needles = {n for n in needles if len(n) > 3}
+        for path, text in searchable.items():
+            for needle in needles:
+                if needle in text:
+                    fail(f'withheld newsletter edition ({edition["why"]}) "{edition["title"][:40]}" '
+                         f'leaks into {path.relative_to(out).as_posix()} via "{needle}"')
+                    break
+
+
 def main() -> int:
     out = Path(sys.argv[1] if len(sys.argv) > 1 else '_site')
     if not out.is_absolute():
@@ -1058,6 +1126,7 @@ def main() -> int:
     check_feed_images_absolute(out, fail)
     check_accessible_controls(out, fail)
     check_pages_are_linked(out, fail)
+    check_newsletter_schedule(out, fail)
 
     # 5. The subscribe path must not lie.
     #
