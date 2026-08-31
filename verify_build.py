@@ -749,6 +749,49 @@ def check_feed_images_absolute(out: "Path", fail) -> None:
                          f'subscribers; it must be absolute')
 
 
+def check_accessible_controls(out: "Path", fail) -> None:
+    """Form controls are labelled, and anything that acts like a link is one.
+
+    Both halves of this shipped green for the life of the site. Twelve labels carried the visible
+    text and no `for`, so a screen reader announced "edit, blank", clicking a label focused nothing
+    and voice control could not say "click Email" — on the forms that compose the only mailto: into
+    the inbox. And the hero's eight navigation nodes were <div data-page="..."> wired from a
+    delegated click listener: the visually dominant navigation on the landing page, announced as
+    plain text and unreachable without a mouse.
+
+    Neither is the kind of thing a human notices by looking, which is why both need a check rather
+    than a resolution to be careful.
+    """
+    for page in sorted(out.rglob('*.html')):
+        label = page.relative_to(out).as_posix()
+        source = page.read_text(encoding='utf-8', errors='replace')
+
+        labelled = set(re.findall(r'<label[^>]*\bfor="([^"]+)"', source))
+        for match in re.finditer(r'<(input|select|textarea)\b([^>]*)>', source):
+            attrs = match.group(2)
+            if 'type="hidden"' in attrs:
+                continue
+            control_id = re.search(r'id="([^"]+)"', attrs)
+            if control_id and control_id.group(1) in labelled:
+                continue
+            if 'aria-label' in attrs or 'aria-labelledby' in attrs:
+                continue
+            named = control_id.group(1) if control_id else attrs.strip()[:40]
+            fail(f'{label} — <{match.group(1)}> "{named}" has no label, aria-label or '
+                 f'aria-labelledby')
+
+        # data-page is what the delegated router listens for. On a div it is a mouse-only control.
+        for match in re.finditer(r'<(\w+)([^>]*\bdata-page="[^"]*"[^>]*)>', source):
+            tag, attrs = match.group(1), match.group(2)
+            if tag in ('a', 'button'):
+                continue
+            if 'tabindex=' in attrs and 'role=' in attrs:
+                continue
+            page_name = re.search(r'data-page="([^"]*)"', attrs)
+            fail(f'{label} — <{tag} data-page="{page_name.group(1) if page_name else "?"}"> is '
+                 f'click-only; it needs to be an <a href> or carry role and tabindex')
+
+
 def main() -> int:
     out = Path(sys.argv[1] if len(sys.argv) > 1 else '_site')
     if not out.is_absolute():
@@ -977,6 +1020,7 @@ def main() -> int:
     check_picture_sources(out, fail)
     check_highlighter_is_earned(out, fail)
     check_feed_images_absolute(out, fail)
+    check_accessible_controls(out, fail)
 
     # 5. The subscribe path must not lie.
     #

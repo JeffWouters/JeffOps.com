@@ -86,6 +86,23 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,15,0.94);backdrop-fi
 /* Dropdown caret */
 .nav-has-sub > a::after{content:'▾';font-size:0.65rem;opacity:0.6;margin-left:2px;}
 
+/* The hero nodes are anchors now, not divs — see index.html. Anchors bring link styling with them
+   and these are drawn entirely by their own rules, so the inherited underline and colour are the
+   only things that need turning off. */
+.center-node, .orbit-node{text-decoration:none;color:inherit;}
+.center-node:focus-visible, .orbit-node:focus-visible{
+  outline:2px solid var(--cyan);outline-offset:4px;border-radius:8px;
+}
+
+/* Shown under a field that failed validation. Red alone would carry the meaning by colour only,
+   so the message is text and the field also gets aria-invalid. */
+.form-error{
+  margin:0.35rem 0 0;font-family:var(--mono);font-size:0.72rem;color:#ff8a8a;
+}
+.form-input[aria-invalid="true"], .form-textarea[aria-invalid="true"], .form-select[aria-invalid="true"]{
+  border-color:#ff8a8a;
+}
+
 /* ── DROPDOWN PANEL ── */
 .nav-dropdown{
   display:none;
@@ -99,7 +116,15 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,12,15,0.94);backdrop-fi
   padding:6px 0;
   box-shadow:0 12px 40px rgba(0,0,0,0.5);
 }
-.nav-has-sub:hover .nav-dropdown{display:block;}
+/* :hover was the ONLY thing that reversed the display:none above, which put the six destinations
+   inside these panels — Blog, Newsletter, Videos, Consulting, Speaking, Training — outside the tab
+   order entirely, while their parents are <a href="#"> that take focus and do nothing. Three of
+   those six have no keyboard-reachable link anywhere else on the site.
+   :focus-within is (0,3,0), the same specificity as the :hover rule and higher than the
+   max-width:900px rule that re-hides the panel, so it also gives a touch device a route that
+   :hover never reliably provides. */
+.nav-has-sub:hover .nav-dropdown,
+.nav-has-sub:focus-within .nav-dropdown{display:block;}
 .nav-dropdown a{
   display:block;
   font-family:var(--mono);font-size:0.74rem;color:var(--text-mid);

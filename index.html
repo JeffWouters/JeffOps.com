@@ -109,38 +109,38 @@
         <circle cx="280" cy="280" r="204" fill="none" stroke="#00D9FF" stroke-width="1" stroke-dasharray="4 8"/>
       </svg>
       <div id="connectors"></div>
-      <div class="center-node" data-page="about" title="About Jeff">
+      <a class="center-node" href="/#about" data-page="about" aria-label="About Jeff">
         <img class="center-image" src="JeffOps_Speaking.jpg" alt="Jeff Wouters"
              data-portraits="JeffOps_Speaking.jpg|Jeff Wouters speaking at a conference,JeffOps_Staring.jpeg|Jeff Wouters,JeffOps_Finger.jpg|Jeff Wouters">
-      </div>
-      <div class="orbit-node" data-angle="-90" data-r="170" data-page="blog">
-        <div class="orbit-pill"><span class="orbit-icon">&#x270D;&#xFE0F;</span><span class="orbit-label">Blog</span></div>
-        <div class="orbit-tooltip" data-count="posts">{posts} articles on DevOps, platform engineering and enterprise IT</div>
-      </div>
-      <div class="orbit-node" data-angle="-38.6" data-r="170" data-page="videos">
-        <div class="orbit-pill"><span class="orbit-icon">&#x25B6;&#xFE0F;</span><span class="orbit-label">Videos</span></div>
-        <div class="orbit-tooltip">YouTube deep dives</div>
-      </div>
-      <div class="orbit-node" data-angle="12.9" data-r="170" data-page="newsletter">
-        <div class="orbit-pill"><span class="orbit-icon">&#x1F4E1;</span><span class="orbit-label">Newsletter</span></div>
-        <div class="orbit-tooltip">The JeffOps Dispatch &mdash; published on LinkedIn</div>
-      </div>
-      <div class="orbit-node" data-angle="64.3" data-r="170" data-page="speaking">
-        <div class="orbit-pill"><span class="orbit-icon">&#x1F3A4;</span><span class="orbit-label">Speaking</span></div>
-        <div class="orbit-tooltip" data-count="talks">{talks} conference talks and workshops</div>
-      </div>
-      <div class="orbit-node" data-angle="115.7" data-r="170" data-page="consulting">
-        <div class="orbit-pill"><span class="orbit-icon">&#x1F9ED;</span><span class="orbit-label">Consulting</span></div>
-        <div class="orbit-tooltip">Fractional EM &middot; Team Assessments &middot; Tech Lead Coaching</div>
-      </div>
-      <div class="orbit-node" data-angle="167.1" data-r="170" data-page="training">
-        <div class="orbit-pill"><span class="orbit-icon">&#x1F3AF;</span><span class="orbit-label">Training</span></div>
-        <div class="orbit-tooltip">PowerShell &middot; Bicep &middot; Azure &middot; .NET Aspire</div>
-      </div>
-      <div class="orbit-node" data-angle="218.6" data-r="170" data-page="projects">
-        <div class="orbit-pill"><span class="orbit-icon">&#x1F9EA;</span><span class="orbit-label">Projects</span></div>
-        <div class="orbit-tooltip">Open source, side projects &amp; experiments</div>
-      </div>
+      </a>
+      <a class="orbit-node" data-angle="-90" data-r="170" data-page="blog" href="/#blog">
+        <div class="orbit-pill"><span class="orbit-icon" aria-hidden="true">&#x270D;&#xFE0F;</span><span class="orbit-label">Blog</span></div>
+        <div class="orbit-tooltip" aria-hidden="true" data-count="posts">{posts} articles on DevOps, platform engineering and enterprise IT</div>
+      </a>
+      <a class="orbit-node" data-angle="-38.6" data-r="170" data-page="videos" href="/#videos">
+        <div class="orbit-pill"><span class="orbit-icon" aria-hidden="true">&#x25B6;&#xFE0F;</span><span class="orbit-label">Videos</span></div>
+        <div class="orbit-tooltip" aria-hidden="true">YouTube deep dives</div>
+      </a>
+      <a class="orbit-node" data-angle="12.9" data-r="170" data-page="newsletter" href="/#newsletter">
+        <div class="orbit-pill"><span class="orbit-icon" aria-hidden="true">&#x1F4E1;</span><span class="orbit-label">Newsletter</span></div>
+        <div class="orbit-tooltip" aria-hidden="true">The JeffOps Dispatch &mdash; published on LinkedIn</div>
+      </a>
+      <a class="orbit-node" data-angle="64.3" data-r="170" data-page="speaking" href="/#speaking">
+        <div class="orbit-pill"><span class="orbit-icon" aria-hidden="true">&#x1F3A4;</span><span class="orbit-label">Speaking</span></div>
+        <div class="orbit-tooltip" aria-hidden="true" data-count="talks">{talks} conference talks and workshops</div>
+      </a>
+      <a class="orbit-node" data-angle="115.7" data-r="170" data-page="consulting" href="/#consulting">
+        <div class="orbit-pill"><span class="orbit-icon" aria-hidden="true">&#x1F9ED;</span><span class="orbit-label">Consulting</span></div>
+        <div class="orbit-tooltip" aria-hidden="true">Fractional EM &middot; Team Assessments &middot; Tech Lead Coaching</div>
+      </a>
+      <a class="orbit-node" data-angle="167.1" data-r="170" data-page="training" href="/#training">
+        <div class="orbit-pill"><span class="orbit-icon" aria-hidden="true">&#x1F3AF;</span><span class="orbit-label">Training</span></div>
+        <div class="orbit-tooltip" aria-hidden="true">PowerShell &middot; Bicep &middot; Azure &middot; .NET Aspire</div>
+      </a>
+      <a class="orbit-node" data-angle="218.6" data-r="170" data-page="projects" href="/#projects">
+        <div class="orbit-pill"><span class="orbit-icon" aria-hidden="true">&#x1F9EA;</span><span class="orbit-label">Projects</span></div>
+        <div class="orbit-tooltip" aria-hidden="true">Open source, side projects &amp; experiments</div>
+      </a>
     </div>
     <div class="orbital-tagline">
       <h1>Engineering <em>Leadership</em><br>meets Platform Engineering</h1>
@@ -172,7 +172,7 @@
     <div class="section-header"><span class="section-tag">// writing</span><h2 class="section-title">Blog</h2><div class="section-line"></div></div>
     <div class="blog-layout">
       <aside class="blog-sidebar">
-        <div class="sidebar-section"><div class="sidebar-label">Search</div><input class="search-input" type="text" placeholder="search posts..." data-filter="posts"></div>
+        <div class="sidebar-section"><label class="sidebar-label" for="post-search">Search</label><input class="search-input" type="text" id="post-search" placeholder="search posts..." data-filter="posts"></div>
         <div class="sidebar-section">
           <div class="sidebar-label">Filter by topic</div>
           <div class="tag-filter" id="topic-filter-buttons">
@@ -307,23 +307,23 @@
           </ul>
           <div class="enquiry-form">
             <div class="enquiry-form-title">// Send an enquiry</div>
-            <div class="form-field"><label class="form-label">Your name</label><input class="form-input" type="text" id="eq-name" placeholder="Jane Smith"></div>
-            <div class="form-field"><label class="form-label">Email</label><input class="form-input" type="email" id="eq-email" placeholder="jane@company.com"></div>
-            <div class="form-field"><label class="form-label">Event / Organisation</label><input class="form-input" type="text" id="eq-event" placeholder="KubeCon / Acme Corp"></div>
-            <div class="form-field"><label class="form-label">Approximate date</label><input class="form-input" type="text" id="eq-date" placeholder="Q1 2025 / March 15"></div>
+            <div class="form-field"><label class="form-label" for="eq-name">Your name</label><input class="form-input" type="text" id="eq-name" placeholder="Jane Smith"></div>
+            <div class="form-field"><label class="form-label" for="eq-email">Email</label><input class="form-input" type="email" id="eq-email" placeholder="jane@company.com"></div>
+            <div class="form-field"><label class="form-label" for="eq-event">Event / Organisation</label><input class="form-input" type="text" id="eq-event" placeholder="KubeCon / Acme Corp"></div>
+            <div class="form-field"><label class="form-label" for="eq-date">Approximate date</label><input class="form-input" type="text" id="eq-date" placeholder="Q1 2025 / March 15"></div>
             <div class="form-field">
-              <label class="form-label">Topic area</label>
+              <label class="form-label" for="eq-topic">Topic area</label>
               <select class="form-select" id="eq-topic" data-action="topic-change">
                 <option value="">— Select —</option>
               </select>
             </div>
             <div class="form-field" id="eq-topic-other-field" style="display:none;">
-              <label class="form-label">Other topic</label>
+              <label class="form-label" for="eq-topic-other">Other topic</label>
               <input class="form-input" type="text" id="eq-topic-other" placeholder="Describe the topic you have in mind">
             </div>
-            <div class="form-field"><label class="form-label">Message (optional)</label><textarea class="form-textarea" id="eq-msg" placeholder="Tell Jeff about the event, audience size, format..."></textarea></div>
+            <div class="form-field"><label class="form-label" for="eq-msg">Message (optional)</label><textarea class="form-textarea" id="eq-msg" placeholder="Tell Jeff about the event, audience size, format..."></textarea></div>
             <button class="form-submit" data-action="submit-enquiry">Send Enquiry →</button>
-            <div class="form-success" id="eq-success">✓ Opening your email client to jeff@jeffops.com</div>
+            <div class="form-success" id="eq-success" role="status">✓ Opening your email client to jeff@jeffops.com</div>
           </div>
         </div>
       </aside>
@@ -541,11 +541,11 @@
         <div class="booking-card" style="position:sticky;top:80px;">
           <div class="booking-title">Let's Talk</div>
           <p class="booking-sub">Tell me what you're working on. I'll respond within 48 hours.</p>
-          <div class="form-field"><label class="form-label">Your name</label><input class="form-input" type="text" id="con-name" placeholder="Alex de Vries"></div>
-          <div class="form-field"><label class="form-label">Email</label><input class="form-input" type="email" id="con-email" placeholder="alex@company.com"></div>
-          <div class="form-field"><label class="form-label">Company &amp; role</label><input class="form-input" type="text" id="con-role" placeholder="CTO @ Acme"></div>
+          <div class="form-field"><label class="form-label" for="con-name">Your name</label><input class="form-input" type="text" id="con-name" placeholder="Alex de Vries"></div>
+          <div class="form-field"><label class="form-label" for="con-email">Email</label><input class="form-input" type="email" id="con-email" placeholder="alex@company.com"></div>
+          <div class="form-field"><label class="form-label" for="con-role">Company &amp; role</label><input class="form-input" type="text" id="con-role" placeholder="CTO @ Acme"></div>
           <div class="form-field">
-            <label class="form-label">Service</label>
+            <label class="form-label" for="con-service">Service</label>
             <select class="form-select" id="con-service">
               <option value="">-- Select --</option>
               <option>Fractional Engineering Manager</option>
@@ -557,9 +557,9 @@
               <option>Not sure yet</option>
             </select>
           </div>
-          <div class="form-field"><label class="form-label">Message</label><textarea class="form-textarea" id="con-msg" placeholder="What's the challenge?"></textarea></div>
+          <div class="form-field"><label class="form-label" for="con-msg">Message</label><textarea class="form-textarea" id="con-msg" placeholder="What's the challenge?"></textarea></div>
           <button class="form-submit" data-action="submit-consulting">Send Message &rarr;</button>
-          <div class="form-success" id="con-success">&#x2713; Opening email to jeff@jeffops.com</div>
+          <div class="form-success" id="con-success" role="status">&#x2713; Opening email to jeff@jeffops.com</div>
         </div>
       </div>
     </div>
