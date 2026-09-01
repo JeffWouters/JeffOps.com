@@ -3,6 +3,11 @@ name: Build and deploy JeffOps.com
 on:
   push:
     branches: [main]
+  # A pull request is built and verified, never published. The repository uses PRs — a post with
+  # thirteen images was merged through one — and until now nothing ran on them at all: the first
+  # validation any change got was the push to main that also deployed it.
+  pull_request:
+    branches: [main]
   workflow_dispatch:
   # A static site has no clock. A post dated next Tuesday only appears if a build
   # runs on or after next Tuesday, so this daily run is the publishing mechanism,
@@ -21,12 +26,12 @@ on:
   schedule:
     - cron: '17 5 * * *'
 
+# Read-only by default. pages: write and id-token: write are granted on the deploy job alone,
+# because that is the only job that needs them — and because with a pull_request trigger the build
+# job now runs against a contributor's branch. A public repository already hands a fork PR a
+# read-only token, so this closes nothing that was open; it stops the question arising.
 permissions:
   contents: read
-  pages: write
-  id-token: write
-  # deploy-pages v4 and later fetch the artifact by ID and need this.
-  actions: read
 
 # One deploy at a time. Queued runs wait rather than racing each other, but a
 # run already in progress is allowed to finish so a deploy is never half-applied.
@@ -37,10 +42,13 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # A hung step otherwise holds a runner for six hours. Every job here finishes in under two
+    # minutes; ten is generous enough that a slow pip mirror does not trip it.
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
           cache: pip
@@ -50,6 +58,21 @@ jobs:
 
       - name: Build site
         run: python build.py --out _site
+
+      # build.py calls write_index_files(), which regenerates blog/index.json, topics.json,
+      # series.json and index.js into the SOURCE tree — and those four are tracked. So the build
+      # just told us what they should contain, and git can say whether the committed copies agree.
+      #
+      # The failure this catches is a stale index: a post edited without re-running the generator,
+      # so the site's own JSON disagrees with the markdown it came from. The single-page app reads
+      # that JSON, so the blog list, the tag filters and the search box would all be serving the
+      # previous version of the truth while every page rendered correctly.
+      #
+      # This could not have been a reliable check until recently. The writes used Path.write_text,
+      # which on Windows produced CRLF against a repository holding LF, so a local build dirtied
+      # these files every single time and the diff was always non-empty. They are pinned to LF now.
+      - name: The committed blog index is what the build produces
+        run: git diff --exit-code -- blog/
 
       - name: Check every post rendered, and security.txt is still valid
         run: python verify_build.py _site
@@ -84,7 +107,15 @@ jobs:
 
   deploy:
     needs: build
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+      # deploy-pages v4 and later fetch the artifact by ID and need this.
+      actions: read
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -102,8 +133,10 @@ jobs:
   # is actually serving.
   smoke:
     needs: deploy
+    if: github.event_name != 'pull_request'
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Check the live site serves what was built
         run: bash tools/smoke_test.sh https://jeffops.com
