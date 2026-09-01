@@ -1760,6 +1760,51 @@ def render_topic_options(content: str) -> str:
                            f'<option value="">— Select —</option>{options}', 1)
 
 
+# ── One source, two views ─────────────────────────────────────────────
+#
+# /training/, /consulting/ and /about/ are lifted out of index.html by
+# build_promoted_pages, and until now the home page kept its copy too. Measured with nav and footer
+# stripped so shared chrome does not flatter the number, the standalone pages reproduced 95%, 88%
+# and 82% of their own text from the home page. Both copies indexable, each canonicalising to
+# itself, so nothing told a search engine which was real — and it picked the one with the links.
+#
+# The fix is not a second file to keep in sync. Mark the parts of a section that are DETAIL, and the
+# home page drops them while the standalone page keeps everything:
+#
+#     <div class="page" id="page-consulting">
+#       <h2>Consulting &amp; Advisory</h2>
+#       <p>The pitch…</p>                      <- both
+#       <ul class="service-names">…</ul>       <- both
+#       <div data-detail>                      <- standalone only
+#         <h2>What I Offer</h2> …
+#         <h2>How I Work</h2> …
+#       </div>
+#     </div>
+#
+# The test for a block: does a reader need it to decide whether to CLICK, or to decide whether to
+# HIRE? Deciding-to-click belongs on the home page; deciding-to-hire belongs on the page.
+#
+# #speaking already works this way and shows the shape: 540 characters on the home page against
+# 6,515 on the standalone, zero overlap, because render_talks injects the talks list into the
+# standalone only. It got there by accident. This makes it a choice.
+#
+# Marking nothing is a valid state and is what ships today: strip_detail is a no-op until somebody
+# writes the first data-detail, so this commit changes no rendered byte.
+_DETAIL_RE = re.compile(r'[ \t]*<div\b[^>]*\bdata-detail\b[^>]*>.*?</div>\s*\n?', re.S)
+
+
+def strip_detail(index_html: str) -> tuple[str, int]:
+    """Remove [data-detail] blocks from the home page. Returns (html, blocks removed).
+
+    Deliberately not nesting-aware: a data-detail block must not contain a bare <div> that closes
+    before it does, because this stops at the first </div>. That is a real constraint, so
+    check_detail_blocks in verify_build.py enforces it rather than leaving it to be discovered by a
+    half-deleted page. Keeping the matcher simple and the rule checked beats a clever matcher that
+    fails quietly on markup nobody expected.
+    """
+    return _DETAIL_RE.subn('', index_html)
+
+
 def build_promoted_pages(out: Path, index_html: str, nav: str, footer: str,
                          talks: list[dict] | None = None) -> list[str]:
     # The app hides every .page that is not active, so a lifted section would
@@ -2453,7 +2498,12 @@ def main() -> None:
     print(f'Injected {total} home page statistic(s): {total - declared} derived, '
           f'{declared} declared in stats.json')
 
-    (out / 'index.html').write_text(index_source, encoding='utf-8')
+    # The home page gets the summary; build_promoted_pages below is handed the FULL source and
+    # keeps everything. One copy of the text, two views of it — see strip_detail.
+    home_html, detail_removed = strip_detail(index_source)
+    (out / 'index.html').write_text(home_html, encoding='utf-8')
+    if detail_removed:
+        print(f'Home page: {detail_removed} detail block(s) left to the standalone pages')
     print(f'Injected {len(editions)} newsletter edition(s) into index.html')
 
     page_urls = build_standalone_pages(out, nav, footer)

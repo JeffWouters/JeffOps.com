@@ -712,6 +712,97 @@ def check_picture_sources(out: "Path", fail) -> None:
                         fail(f'{label} — <picture> {attr} candidate "{url}" does not resolve')
 
 
+# Chrome appears on every page, so counting it as shared text makes any two pages look like
+# duplicates of each other. Stripped before comparing.
+_CHROME_RE = re.compile(r'<(script|style|nav|footer)\b.*?</\1>', re.S)
+_TAG_RE = re.compile(r'<[^>]+>')
+
+# How much of a page's own body may also appear on another page before it stops being its own page.
+# The three promoted pages measured 95%, 88% and 82% against the home page while /speaking/ measured
+# 0%, so the gap between "duplicated" and "not" is not a close call anywhere on this site.
+DUPLICATE_LIMIT = 0.40
+
+# The three that exist today, recorded rather than waived. Each is a section lifted out of
+# index.html by build_promoted_pages while the home page kept its copy, and the fix is editorial:
+# mark the deep half with data-detail so the home page carries a teaser and the standalone page
+# carries the substance. That is a decision about positioning, not a refactor, so it is not
+# something the build should make on anyone's behalf.
+#
+# Listing them explicitly is the point. A bare threshold would have gone green the moment the
+# numbers dipped under it and told nobody anything; this reports them on every run and fails the
+# build the moment a FOURTH pair appears. Delete a line as each one is fixed — check_pages_are_distinct
+# fails if an entry here no longer duplicates, so the list cannot rot into a permanent excuse.
+KNOWN_DUPLICATES = {
+    ('about/index.html', 'index.html'),
+    ('consulting/index.html', 'index.html'),
+    ('index.html', 'training/index.html'),
+}
+
+
+# Eight-word shingles, not sentences. Sentences were the obvious unit and they missed the case that
+# matters most: /speaking/ is a list of talks — dates, titles, venues — with only two strings longer
+# than 45 characters in the whole body, so a page duplicated from it was invisible to a check that
+# needed five. Shingles measure prose and lists alike. Eight words is long enough that ordinary
+# phrasing does not collide by accident and short enough to catch a paragraph that was reworded at
+# the edges.
+SHINGLE = 8
+
+
+def _body_shingles(source: str) -> set:
+    text = _CHROME_RE.sub(' ', source)
+    text = _TAG_RE.sub(' ', text)
+    words = re.sub(r'\s+', ' ', text).lower().split()
+    return {' '.join(words[i:i + SHINGLE]) for i in range(len(words) - SHINGLE + 1)}
+
+
+def check_pages_are_distinct(out: "Path", fail) -> None:
+    """No page is mostly a copy of another page.
+
+    build_promoted_pages lifts a section out of index.html and republishes it, and the home page
+    kept its copy — so /training/ reproduced 95% of its own body from the home page, /consulting/
+    88%, /about/ 82%. Both copies were indexable and each canonicalised to itself, so nothing said
+    which was real; the one with the links won, and it was the one titled
+    "JeffOps - Jeff. Tech. Dev. Ops." rather than the one titled "JeffOps - Training".
+
+    Nothing about either page looks wrong on its own, which is why this has to compare pages rather
+    than check them. Mark the deep parts of a section with data-detail and the home page drops them
+    — see strip_detail in build.py.
+    """
+    pages = {}
+    for page in sorted(out.rglob('*.html')):
+        source = page.read_text(encoding='utf-8', errors='replace')
+        if 'noindex' in source:
+            continue          # a redirect stub is meant to be thin
+        shingles = _body_shingles(source)
+        # 40 shingles is roughly a short paragraph; below that a ratio is noise.
+        if len(shingles) >= 40:
+            pages[page.relative_to(out).as_posix()] = shingles
+
+    reported = set()
+    for a, sa in pages.items():
+        for b, sb in pages.items():
+            if a >= b or (a, b) in reported:
+                continue
+            shared = len(sa & sb)
+            if not shared:
+                continue
+            smaller = min(len(sa), len(sb))
+            ratio = shared / smaller
+            if ratio > DUPLICATE_LIMIT:
+                reported.add((a, b))
+                if (a, b) in KNOWN_DUPLICATES:
+                    print(f'  note  {a} and {b} still share {shared} of {smaller} '
+                          f'phrases ({ratio:.0%}) — known, see KNOWN_DUPLICATES')
+                    continue
+                fail(f'{a} and {b} share {shared} of {smaller} phrases'
+                     f'({ratio:.0%}); one of them is a copy of the other')
+
+    # An entry that no longer duplicates has been fixed, and leaving it here would let the next
+    # duplicate slip in under its name.
+    for pair in sorted(KNOWN_DUPLICATES - reported):
+        fail(f'{pair[0]} and {pair[1]} no longer duplicate — remove them from KNOWN_DUPLICATES')
+
+
 def check_highlighter_is_earned(out: "Path", fail) -> None:
     """Code blocks arrive highlighted, and no static page pays for a runtime highlighter.
 
@@ -1208,6 +1299,7 @@ def main() -> int:
     check_feed_images_absolute(out, fail)
     check_accessible_controls(out, fail)
     check_pages_are_linked(out, fail)
+    check_pages_are_distinct(out, fail)
     check_newsletter_schedule(out, fail)
 
     # One policy, everywhere. It is written out four times in build.py and nothing has ever asserted
