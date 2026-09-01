@@ -722,20 +722,22 @@ _TAG_RE = re.compile(r'<[^>]+>')
 # 0%, so the gap between "duplicated" and "not" is not a close call anywhere on this site.
 DUPLICATE_LIMIT = 0.40
 
-# The three that exist today, recorded rather than waived. Each is a section lifted out of
-# index.html by build_promoted_pages while the home page kept its copy, and the fix is editorial:
-# mark the deep half with data-detail so the home page carries a teaser and the standalone page
-# carries the substance. That is a decision about positioning, not a refactor, so it is not
-# something the build should make on anyone's behalf.
+# Pairs that overlap on purpose, each with its reason. Not a waiver list and not a threshold: a
+# bare threshold goes quiet the moment a number dips under it and tells nobody anything. These are
+# reported on every run, a pair that is NOT listed fails the build, and a listed pair that stops
+# overlapping also fails — so the list cannot rot into a permanent excuse in either direction.
 #
-# Listing them explicitly is the point. A bare threshold would have gone green the moment the
-# numbers dipped under it and told nobody anything; this reports them on every run and fails the
-# build the moment a FOURTH pair appears. Delete a line as each one is fixed — check_pages_are_distinct
-# fails if an entry here no longer duplicates, so the list cannot rot into a permanent excuse.
+# /training/ and /consulting/ were here at 95% and 88%. Both are fixed: the home page now carries a
+# teaser and the standalone page carries the substance, via data-detail in index.html.
 KNOWN_DUPLICATES = {
+    # About is the one that stays. What it shares with the home page is the two-paragraph
+    # introduction, which is deliberately on both because it IS the teaser, plus the aside holding
+    # the avatar and the X / LinkedIn / GitHub / YouTube links. The footer carries no social links
+    # at all, so that aside is the home page's only route to them, and they are rel="me" identity
+    # links besides. Dropping them would buy a lower number and cost the thing the number is a proxy
+    # for. 45% of a short page, where the overlap is a sidebar of links, is not the failure this
+    # check exists to catch.
     ('about/index.html', 'index.html'),
-    ('consulting/index.html', 'index.html'),
-    ('index.html', 'training/index.html'),
 }
 
 

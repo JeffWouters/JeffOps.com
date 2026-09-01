@@ -1790,19 +1790,50 @@ def render_topic_options(content: str) -> str:
 #
 # Marking nothing is a valid state and is what ships today: strip_detail is a no-op until somebody
 # writes the first data-detail, so this commit changes no rendered byte.
-_DETAIL_RE = re.compile(r'[ \t]*<div\b[^>]*\bdata-detail\b[^>]*>.*?</div>\s*\n?', re.S)
+_DETAIL_OPEN_RE = re.compile(r'[ \t]*<div\b[^>]*\bdata-detail\b[^>]*>')
+_DIV_RE = re.compile(r'<div\b|</div>')
 
 
 def strip_detail(index_html: str) -> tuple[str, int]:
     """Remove [data-detail] blocks from the home page. Returns (html, blocks removed).
 
-    Deliberately not nesting-aware: a data-detail block must not contain a bare <div> that closes
-    before it does, because this stops at the first </div>. That is a real constraint, so
-    check_detail_blocks in verify_build.py enforces it rather than leaving it to be discovered by a
-    half-deleted page. Keeping the matcher simple and the rule checked beats a clever matcher that
-    fails quietly on markup nobody expected.
+    Depth-counted rather than matched with a regex. The first version of this used a non-greedy
+    .*?</div>, which is fine for a block of paragraphs and wrong for every block anyone would
+    actually mark: all three sections that need it contain grids, cards and an aside. On nested
+    markup it stopped at the first inner </div>, so the page kept the tail of the block AND gained
+    an orphaned closing tag — it lost the structure while keeping the content, which is the exact
+    opposite of the intent.
+
+    Marking nothing is a valid state; this is a no-op until the first data-detail exists.
     """
-    return _DETAIL_RE.subn('', index_html)
+    out: list[str] = []
+    removed = 0
+    pos = 0
+    while True:
+        match = _DETAIL_OPEN_RE.search(index_html, pos)
+        if not match:
+            out.append(index_html[pos:])
+            break
+        out.append(index_html[pos:match.start()])
+        depth = 1
+        cursor = None
+        for tag in _DIV_RE.finditer(index_html, match.end()):
+            depth += 1 if tag.group(0) == '<div' else -1
+            if depth == 0:
+                cursor = tag.end()
+                break
+        if cursor is None:
+            # An unclosed block would otherwise swallow the rest of the document in silence.
+            raise SystemExit('build: a data-detail block is never closed; the home page would lose '
+                             'everything after it')
+        # Take the trailing newline with it, so removing a block does not leave a blank line behind.
+        while cursor < len(index_html) and index_html[cursor] in ' \t':
+            cursor += 1
+        if cursor < len(index_html) and index_html[cursor] == '\n':
+            cursor += 1
+        removed += 1
+        pos = cursor
+    return ''.join(out), removed
 
 
 def build_promoted_pages(out: Path, index_html: str, nav: str, footer: str,
