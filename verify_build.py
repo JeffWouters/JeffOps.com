@@ -757,6 +757,43 @@ def _body_shingles(source: str) -> set:
     return {' '.join(words[i:i + SHINGLE]) for i in range(len(words) - SHINGLE + 1)}
 
 
+def check_promoted_links_navigate(out: "Path", fail) -> None:
+    """A link to a promoted page must actually go there.
+
+    data-page makes the delegated router in app.js call preventDefault() and show the in-page
+    section instead of following the href. That was right while the home page carried each section
+    in full. It stopped being right the moment those sections became teasers: clicking Consulting
+    showed 611 characters of summary and looked, correctly, like the page did not exist.
+
+    /speaking/ had this from the beginning for the same reason — render_talks injects the talks list
+    into the standalone page only, so the in-page section has always been a stub — and nobody
+    noticed, which is the argument for checking it rather than remembering it.
+
+    The test is whether the href resolves to a page that exists, not whether the name is on a list.
+    /posts/ had the same defect and is not a promoted page; a list of the four I happened to know
+    about would have missed it, and would go stale the next time a section is promoted.
+
+    Only <a> is checked. The two buttons carrying data-page have no href, so interception is the
+    only thing that makes them do anything, and the three orbit nodes point at /#fragments that
+    have no page of their own — both are the case this attribute was built for.
+    """
+    for page in sorted(out.rglob('*.html')):
+        source = page.read_text(encoding='utf-8', errors='replace')
+        label = page.relative_to(out).as_posix()
+        for tag in re.findall(r'<a\b[^>]*>', source):
+            if 'data-page=' not in tag:
+                continue
+            href = re.search(r"""href=["'](/[^"'#]*)["']""", tag)
+            if not href:
+                continue
+            target = out / href.group(1).strip('/') / 'index.html'
+            if href.group(1) == '/':
+                continue
+            if target.is_file():
+                fail(f'{label} — a link to {href.group(1)} carries data-page, so the router '
+                     f'intercepts it and shows the in-page section instead of the real page')
+
+
 def check_pages_are_distinct(out: "Path", fail) -> None:
     """No page is mostly a copy of another page.
 
@@ -1302,6 +1339,7 @@ def main() -> int:
     check_accessible_controls(out, fail)
     check_pages_are_linked(out, fail)
     check_pages_are_distinct(out, fail)
+    check_promoted_links_navigate(out, fail)
     check_newsletter_schedule(out, fail)
 
     # One policy, everywhere. It is written out four times in build.py and nothing has ever asserted

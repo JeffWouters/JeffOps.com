@@ -74,7 +74,7 @@
     <li class="nav-has-sub">
       <a href="#" id="nav-content" data-noop>Content</a>
       <div class="nav-dropdown">
-        <a href="/posts/" data-page="blog"       id="nav-blog">Blog</a>
+        <a href="/posts/"       id="nav-blog">Blog</a>
         <a href="#newsletter" id="nav-newsletter">Newsletter</a>
         <a href="#videos"     id="nav-videos">Videos</a>
       </div>
@@ -84,16 +84,16 @@
     <li class="nav-has-sub">
       <a href="#" id="nav-services" data-noop>Services</a>
       <div class="nav-dropdown">
-        <a href="/consulting/" data-page="consulting" id="nav-consulting">Consulting</a>
-        <a href="/speaking/" data-page="speaking" id="nav-speaking">Speaking</a>
-        <a href="/training/" data-page="training" id="nav-training">Training</a>
+        <a href="/consulting/" id="nav-consulting">Consulting</a>
+        <a href="/speaking/" id="nav-speaking">Speaking</a>
+        <a href="/training/" id="nav-training">Training</a>
       </div>
     </li>
     <li><a href="#projects"   id="nav-projects">Projects</a></li>
-    <li><a href="/about/" data-page="about"      id="nav-about">About</a></li>
+    <li><a href="/about/"      id="nav-about">About</a></li>
 
   </ul>
-  <a class="nav-cta" href="/consulting/" data-page="consulting">Work with Jeff</a>
+  <a class="nav-cta" href="/consulting/">Work with Jeff</a>
 </nav>
 <!-- The document's main landmark. Screen readers offer a jump-to-main
      command, and without one the only way past the navigation is to tab
@@ -109,11 +109,11 @@
         <circle cx="280" cy="280" r="204" fill="none" stroke="#00D9FF" stroke-width="1" stroke-dasharray="4 8"/>
       </svg>
       <div id="connectors"></div>
-      <a class="center-node" href="/about/" data-page="about" aria-label="About Jeff">
+      <a class="center-node" href="/about/" aria-label="About Jeff">
         <img class="center-image" src="JeffOps_Speaking.jpg" alt="Jeff Wouters"
              data-portraits="JeffOps_Speaking.jpg|Jeff Wouters speaking at a conference,JeffOps_Staring.jpeg|Jeff Wouters,JeffOps_Finger.jpg|Jeff Wouters">
       </a>
-      <a class="orbit-node" data-angle="-90" data-r="170" data-page="blog" href="/posts/">
+      <a class="orbit-node" data-angle="-90" data-r="170" href="/posts/">
         <div class="orbit-pill"><span class="orbit-icon" aria-hidden="true">&#x270D;&#xFE0F;</span><span class="orbit-label">Blog</span></div>
         <div class="orbit-tooltip" aria-hidden="true" data-count="posts">{posts} articles on DevOps, platform engineering and enterprise IT</div>
       </a>
@@ -125,15 +125,15 @@
         <div class="orbit-pill"><span class="orbit-icon" aria-hidden="true">&#x1F4E1;</span><span class="orbit-label">Newsletter</span></div>
         <div class="orbit-tooltip" aria-hidden="true">The JeffOps Dispatch &mdash; published on LinkedIn</div>
       </a>
-      <a class="orbit-node" data-angle="64.3" data-r="170" data-page="speaking" href="/speaking/">
+      <a class="orbit-node" data-angle="64.3" data-r="170" href="/speaking/">
         <div class="orbit-pill"><span class="orbit-icon" aria-hidden="true">&#x1F3A4;</span><span class="orbit-label">Speaking</span></div>
         <div class="orbit-tooltip" aria-hidden="true" data-count="talks">{talks} conference talks and workshops</div>
       </a>
-      <a class="orbit-node" data-angle="115.7" data-r="170" data-page="consulting" href="/consulting/">
+      <a class="orbit-node" data-angle="115.7" data-r="170" href="/consulting/">
         <div class="orbit-pill"><span class="orbit-icon" aria-hidden="true">&#x1F9ED;</span><span class="orbit-label">Consulting</span></div>
         <div class="orbit-tooltip" aria-hidden="true">Fractional EM &middot; Team Assessments &middot; Tech Lead Coaching</div>
       </a>
-      <a class="orbit-node" data-angle="167.1" data-r="170" data-page="training" href="/training/">
+      <a class="orbit-node" data-angle="167.1" data-r="170" href="/training/">
         <div class="orbit-pill"><span class="orbit-icon" aria-hidden="true">&#x1F3AF;</span><span class="orbit-label">Training</span></div>
         <div class="orbit-tooltip" aria-hidden="true">PowerShell &middot; Bicep &middot; Azure &middot; .NET Aspire</div>
       </a>
@@ -146,8 +146,8 @@
       <h1>Engineering <em>Leadership</em><br>meets Platform Engineering</h1>
       <p>I help engineering teams ship faster by fixing the system around them... not just the code.<br>Technical leader, platform engineer, writer, and speaker.</p>
       <div class="orbital-actions">
-        <a class="btn-primary" href="/consulting/" data-page="consulting">Work with Jeff</a>
-        <a class="btn-ghost" href="/posts/" data-page="blog">Read the Blog</a>
+        <a class="btn-primary" href="/consulting/">Work with Jeff</a>
+        <a class="btn-ghost" href="/posts/">Read the Blog</a>
         <a class="btn-ghost" href="#newsletter">Newsletter</a>
       </div>
       <div class="stats-bar">
@@ -354,7 +354,7 @@
           <div class="stack-item">OpenTelemetry</div><div class="stack-item">Entra</div>
         </div>
         <h2>Get in Touch</h2>
-        <p>For speaking enquiries, collaboration, or consulting — reach out via the links on the right or use the <a href="/speaking/" data-page="speaking" style="color:var(--cyan)">speaking enquiry form</a>. Response within 48 hours.</p>
+        <p>For speaking enquiries, collaboration, or consulting — reach out via the links on the right or use the <a href="/speaking/" style="color:var(--cyan)">speaking enquiry form</a>. Response within 48 hours.</p>
             </div>
 </div>
       <aside class="about-aside">
@@ -475,7 +475,7 @@
         <div style="font-size:2rem;">&#x1F3AF;</div>
         <div style="font-size:0.95rem;font-weight:600;">Custom course?</div>
         <div style="font-size:0.82rem;color:var(--text-dim);line-height:1.6;">Need a tailored curriculum? Jeff builds bespoke training for specific tools, stacks, or team maturity levels.</div>
-        <button class="btn-primary" data-page="consulting" style="font-size:0.72rem;padding:8px 18px;">Get in touch &rarr;</button>
+        <a class="btn-primary" href="/consulting/" style="font-size:0.72rem;padding:8px 18px;">Get in touch &rarr;</a>
       </div>
     </div>
     <div class="section-header"><span class="section-tag">// delivery</span><h2 class="section-title">How Training is Delivered</h2><div class="section-line"></div></div>
@@ -488,7 +488,7 @@
       <h2>Ready to upskill your team?</h2>
       <p>All courses available in Dutch and English. Group pricing for 5+ participants. Jeff can combine multiple courses into a multi-day programme.</p>
       <div class="training-cta-btns">
-        <a class="btn-primary" href="/consulting/" data-page="consulting">Enquire Now</a>
+        <a class="btn-primary" href="/consulting/">Enquire Now</a>
         <a class="btn-ghost" href="mailto:jeff@jeffops.com">jeff@jeffops.com</a>
       </div>
     </div>
