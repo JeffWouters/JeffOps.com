@@ -555,6 +555,7 @@ def render_markdown(text: str) -> tuple[str, list[dict]]:
             walk(token.get('children', []))
 
     walk(getattr(md, 'toc_tokens', []))
+    body = highlight_code_blocks(body)
     return render_callouts(wrap_figures(reachable_code_blocks(body))), toc
 
 
@@ -694,6 +695,79 @@ def reachable_code_blocks(html: str) -> str:
     return re.sub(r'<pre(?![^>]*\btabindex=)',
                   '<pre tabindex="0" role="group" aria-label="Code, scrollable"',
                   html)
+
+
+# ── Syntax highlighting, at build time ────────────────────────────────
+#
+# Deliberately NOT Python-Markdown's codehilite extension, which is the obvious way to do this and
+# is wrong here: codehilite discards the language class, rewriting
+#     <pre><code class="language-mermaid">
+# as
+#     <div class="codehilite"><pre><span></span><code>
+# and mermaid detection is exactly that class — build.py looks for 'language-mermaid' in the
+# rendered HTML and post-enhance.js reads el.className. Adding codehilite would have silently
+# disabled every diagram on the site. There are none today, which is what makes it the kind of
+# breakage nobody notices until the post that needs it.
+#
+# So the markup fenced_code already produces is kept exactly, and only the CONTENTS of each block
+# are replaced with Pygments' spans. Every existing contract survives: the language class, the
+# copy-button selector, the tabindex pass, and mermaid.
+#
+# What this buys: highlight.js was 121,727 B of script plus a stylesheet, fetched and executed on
+# every post page to do work a static site generator can do once. It also could not highlight two
+# of the languages actually in use — hljs's vendored bundle has no promql and no kusto, so those
+# blocks rendered as plain text plus a console error. Pygments resolves both.
+#
+# The single-page app still needs the runtime highlighter, because it parses markdown in the
+# browser and there is no build step to do this for it. post-enhance.js loads it on demand, so a
+# visitor who never opens a post in the app never pays for it.
+HIGHLIGHT_SKIP = ('mermaid',)
+
+_CODE_BLOCK_RE = re.compile(
+    r'(<pre[^>]*>)<code class="language-([A-Za-z0-9_+-]+)">(.*?)</code></pre>', re.S)
+
+
+def highlight_code_blocks(html_text: str) -> str:
+    """Replace each fenced block's contents with Pygments output, leaving the markup alone."""
+    try:
+        from pygments import highlight
+        from pygments.formatters import HtmlFormatter
+        from pygments.lexers import get_lexer_by_name
+        from pygments.util import ClassNotFound
+    except ImportError:                                   # pragma: no cover
+        print('  ! Pygments not installed — code blocks ship unhighlighted')
+        return html_text
+
+    formatter = HtmlFormatter(nowrap=True)
+
+    def one(match: re.Match) -> str:
+        pre_tag, language, body = match.group(1), match.group(2), match.group(3)
+        if language.lower() in HIGHLIGHT_SKIP:
+            return match.group(0)
+        try:
+            lexer = get_lexer_by_name(language, stripnl=False)
+        except ClassNotFound:
+            # An unknown language is not an error. The block keeps its class and renders as plain
+            # text, which is what it did before, and the name stays visible in the markup for
+            # whoever wonders why it is not coloured.
+            print(f'  ! no lexer for "{language}" — that block ships unhighlighted')
+            return match.group(0)
+        # fenced_code escapes the source; Pygments needs it back.
+        source = html.unescape(body)
+        marked_up = highlight(source, lexer, formatter)
+        return f'{pre_tag}<code class="language-{language}">{marked_up.rstrip()}</code></pre>'
+
+    return _CODE_BLOCK_RE.sub(one, html_text)
+
+
+def highlight_css() -> str:
+    """Pygments' stylesheet for the style that matches what the site already shipped.
+
+    github-dark is the same theme name as the vendored hljs stylesheet this replaces, so the
+    colours a reader sees do not move.
+    """
+    from pygments.formatters import HtmlFormatter
+    return HtmlFormatter(style='github-dark').get_style_defs('.post-content pre code')
 
 
 def wrap_figures(html: str) -> str:
@@ -1189,8 +1263,19 @@ LIST_TEMPLATE = """<!DOCTYPE html>
 # pieces on this site contain no code block at all, and sending it to them is
 # the same mistake as sending Mermaid to a page with no diagram — just smaller.
 # Both are decided per page, from what the rendered HTML actually contains.
-HIGHLIGHT_THEME = '<link rel="stylesheet" href="/vendor/github-dark.min.css">'
-HIGHLIGHT_SCRIPT = '<script src="/vendor/highlight.min.js" defer></script>'
+# Pygments' stylesheet, written by the build. Same theme name as the hljs stylesheet it replaces,
+# so the colours do not move. It is a link rather than an inline <style> because minify.py handles
+# .css files and a browser caches it across every post.
+HIGHLIGHT_THEME = '<link rel="stylesheet" href="/css/code.css">'
+
+# Nothing. Highlighting happens at build time now — see highlight_code_blocks. The constant stays so
+# the template's {code_script} placeholder does not have to change shape, and so the reason is
+# written where somebody looking for the missing <script> will find it.
+#
+# The single-page app is a different case and still loads the runtime highlighter on demand from
+# post-enhance.js: it parses markdown in the browser, so there is no build step to do this for it.
+# That is why vendor/highlight.min.js is still in the repository.
+HIGHLIGHT_SCRIPT = ''
 
 # Mermaid is 2.9MB — 875KB gzipped, more than everything else on the site put
 # together — and it was being loaded by every post page, every edition and the
@@ -2268,6 +2353,14 @@ def main() -> None:
             shutil.copytree(src, out / name, dirs_exist_ok=True)
         else:
             shutil.copy2(src, out / name)
+
+    # Written rather than committed, because it is derived: Pygments owns these colours, and a
+    # committed copy would be one more generated file to drift from its generator. It lands in css/
+    # after the copy above so minify.py picks it up with the rest.
+    code_css = out / 'css' / 'code.css'
+    code_css.parent.mkdir(parents=True, exist_ok=True)
+    code_css.write_text(highlight_css(), encoding='utf-8', newline='\n')
+    print(f'  → css/code.css ({code_css.stat().st_size} bytes)')
 
     for pattern in ROOT_ASSET_PATTERNS:
         for item in sorted(ROOT.glob(pattern)):

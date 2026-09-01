@@ -713,33 +713,47 @@ def check_picture_sources(out: "Path", fail) -> None:
 
 
 def check_highlighter_is_earned(out: "Path", fail) -> None:
-    """A page that loads the syntax highlighter has something for it to highlight.
+    """Code blocks arrive highlighted, and no static page pays for a runtime highlighter.
 
-    The build used to decide with `'<code' in content`, which also matches the <code> a single
-    inline backtick produces. Two pages with no code block at all pulled in highlight.min.js
-    (121,727 B) and a render-blocking theme to highlight nothing, because both consumers select
-    `pre code`. That was 57% of those pages' CSS and JS, and minify.py skips vendor/, so none of
-    it came back.
+    Highlighting moved to build time on 2026-08-31. Before that this checked whether a page loaded
+    highlight.min.js, in both directions, and both directions had already caught a real bug — a page
+    pulling in 121 KB to highlight nothing, and later every page on the site silently losing
+    highlighting when the markup changed shape. The premise is what changed, not the need.
+
+    What it asserts now:
+      a page with a tagged code block carries Pygments markup, so highlighting actually ran;
+      a page with any code block links the stylesheet, or those spans are colourless;
+      no static page loads highlight.min.js at all, which is the whole saving.
+
+    The single-page app is exempt and deliberately so: it parses markdown in the browser, so
+    post-enhance.js fetches the runtime highlighter on demand. That reference lives in a .js file,
+    not in any page's markup, so it does not trip the last rule.
     """
     for page in sorted(out.rglob('*.html')):
         source = page.read_text(encoding='utf-8', errors='replace')
-        # Matching the tag, not the byte sequence '<pre><code'. This check was written with the
-        # literal and then broke against its own subject: reachable_code_blocks() began emitting
-        # <pre tabindex="0" role="group" ...><code> for keyboard access, the literal stopped
-        # matching, and this guard reported that five pages loading the highlighter had no code.
-        has_block = re.search(r'<pre[^>]*><code', source) is not None
-        loads = 'highlight.min.js' in source
         label = page.relative_to(out).as_posix()
+        if 'data-preview-build' in source:
+            continue
 
-        if loads and not has_block:
-            fail(f'{label} — loads the syntax highlighter but has no code block for it to act on')
-        # The other direction, which is the one that actually shipped. The check used to test only
-        # the first, so when the build stopped emitting the highlighter entirely every code block on
-        # the site rendered unhighlighted and the build, this verifier and the smoke test all stayed
-        # green. A guard that only fires on the wasteful failure and not the broken one is half a
-        # guard.
-        if has_block and not loads and 'data-preview-build' not in source:
-            fail(f'{label} — has a code block but does not load the syntax highlighter')
+        has_block = re.search(r'<pre[^>]*><code', source) is not None
+        # A block that named its language is one Pygments should have been able to colour. An
+        # untagged block has no lexer to pick and is left as plain text on purpose.
+        tagged = re.findall(r'<pre[^>]*><code class="language-([\w+-]+)">(.*?)</code></pre>',
+                            source, re.S)
+        highlightable = [(lang, body) for lang, body in tagged if lang.lower() != 'mermaid']
+
+        if 'highlight.min.js' in source:
+            fail(f'{label} — loads the runtime syntax highlighter; highlighting is done at build '
+                 f'time and this is 121 KB for nothing')
+
+        for lang, body in highlightable:
+            if '<span class=' not in body:
+                fail(f'{label} — the {lang} block shipped unhighlighted; either Pygments has no '
+                     f'lexer for it or highlight_code_blocks did not run')
+
+        if has_block and '/css/code.css' not in source:
+            fail(f'{label} — has a code block but does not link the highlighting stylesheet, so '
+                 f'its spans have no colours')
 
 
 def check_feed_images_absolute(out: "Path", fail) -> None:

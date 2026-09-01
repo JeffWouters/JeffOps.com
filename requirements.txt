@@ -1,4 +1,7 @@
 Markdown==3.7
+# Syntax highlighting, done once at build time instead of 121 KB of JavaScript on every post
+# page. Pinned like the rest: a highlighter changing its token classes is a silent visual change.
+Pygments==2.20.0
 Pillow==11.0.0
 tzdata==2025.2
 
