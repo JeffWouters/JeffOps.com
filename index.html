@@ -596,18 +596,30 @@
   <div class="section">
     <div class="section-header"><span class="section-tag">// open source &amp; experiments</span><h2 class="section-title">Projects</h2><div class="section-line"></div></div>
 
-    <!-- Nine project cards were here, across Active and Archived. They were
-         placeholders: invented names and descriptions, every link pointing at
-         the GitHub profile root rather than a repository, and at least one
-         attributing someone else's well-known module. Replaced with an empty
-         state until there are real repositories to list. -->
+    <!-- Only real repositories go here. An earlier set of nine cards was
+         placeholders with invented names and every link pointing at the
+         GitHub profile root, so each card must link to its own repository. -->
     <div style="max-width:720px;margin-bottom:2.5rem;">
       <p style="font-size:1.05rem;color:var(--text-mid);line-height:1.8;">Side projects, open source tools, and experiments. Things I build to scratch an itch, explore an idea, or give something back.</p>
     </div>
 
-    <div class="empty-state">
-      <div class="empty-state-icon"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7.5 12 3l9 4.5-9 4.5z"/><path d="M3 12.5 12 17l9-4.5"/><path d="M3 17 12 21.5 21 17"/></svg></div>
-      <p class="empty-state-title">More to come soon...</p>
+    <div class="projects-grid">
+
+      <div class="project-card">
+        <div class="project-header">
+          <span class="project-icon" aria-hidden="true">&#x270D;&#xFE0F;</span>
+          <div class="project-badges"><span class="project-badge active">Active</span></div>
+        </div>
+        <h3 class="project-title">Idiolect</h3>
+        <p class="project-desc">A Claude skill that learns a writer's voice from their own texts, then writes, rewrites and checks text in that voice. What it learns stays in a folder the writer chooses, and nothing is learned until they approve the diff.</p>
+        <div class="project-tech"><span>Claude Skill</span><span>Python</span><span>14 languages</span><span>MIT</span></div>
+        <div class="project-links">
+          <a class="project-link primary" href="https://github.com/JeffWouters/Claude-Skill-Idiolect" target="_blank" rel="noopener">GitHub</a>
+          <a class="project-link" href="https://github.com/JeffWouters/Claude-Skill-Idiolect/blob/main/docs/quickstart.md" target="_blank" rel="noopener">Quickstart</a>
+          <a class="project-link" href="https://github.com/JeffWouters/Claude-Skill-Idiolect/releases/latest" target="_blank" rel="noopener">Latest release</a>
+        </div>
+      </div>
+
     </div>
 
     <div class="projects-oss-banner" style="margin-top:2.5rem;">
